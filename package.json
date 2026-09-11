@@ -2,40 +2,56 @@
   "name": "internship-tracker",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
+    "test:unit": "vitest --project unit",
+    "test:db": "vitest run --project db",
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "tsx --env-file-if-exists=.env scripts/db/migrate.ts",
+    "db:seed": "tsx --env-file-if-exists=.env scripts/db/seed.ts",
+    "ci": "node scripts/ci-local.mjs",
+    "batch:integrate": "node scripts/github/batch.mjs integrate",
+    "batch:pr": "node scripts/github/batch.mjs pr",
+    "github:sync": "node scripts/github/sync.mjs",
+    "hooks": "git config core.hooksPath .githooks",
+    "prepare": "node scripts/install-hooks.mjs"
   },
   "dependencies": {
-    "next": "^15.5.0",
+    "@aws-sdk/client-s3": "^3.907.0",
+    "@aws-sdk/s3-request-presigner": "^3.907.0",
+    "@hookform/resolvers": "^5.2.2",
+    "@node-rs/argon2": "^2.2.1",
+    "better-auth": "1.7.4",
+    "drizzle-orm": "^0.45.2",
+    "next": "16.3.4",
+    "pg": "^8.23.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "next-auth": "5.0.0-beta.29",
-    "drizzle-orm": "^0.44.0",
-    "@neondatabase/serverless": "^1.0.1",
-    "zod": "^4.1.0",
     "react-hook-form": "^7.63.0",
-    "@hookform/resolvers": "^5.2.2",
-    "@aws-sdk/client-s3": "^3.907.0",
-    "@aws-sdk/s3-request-presigner": "^3.907.0"
+    "zod": "^4.1.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^24",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "^15.5.0",
+    "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5",
-    "drizzle-kit": "^0.31.0",
-    "vitest": "^3.2.0",
-    "@playwright/test": "^1.55.0"
+    "vitest": "^5.0.0"
   }
 }
