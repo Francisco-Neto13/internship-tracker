@@ -7,13 +7,13 @@
 <br />
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=nextdotjs&logoColor=white">
+  <img src="https://img.shields.io/badge/Next.js_16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white">
   <img src="https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white">
   <img src="https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white">
   <img src="https://img.shields.io/badge/PostgreSQL_17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white">
   <img src="https://img.shields.io/badge/Drizzle_ORM-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black">
-  <img src="https://img.shields.io/badge/Auth.js-000000?style=for-the-badge&logo=auth0&logoColor=white">
+  <img src="https://img.shields.io/badge/Better_Auth-000000?style=for-the-badge&logoColor=white">
   <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white">
 </div>
 
@@ -34,7 +34,7 @@ A filosofia central do projeto prioriza, nessa ordem: **segurança** (seis perfi
 | M01 · Acesso e Usuários | Autenticação, perfis e permissões (RF001–RF003) | Todos / Administrador |
 | M02 · Gestão Acadêmica | Cursos, estudantes e parâmetros institucionais (RF004–RF006) | Administrador / Coordenação |
 | M03 · Concedentes e Convênios | Cadastro, vigência e histórico (RF007–RF014) | Coordenação / Administrador |
-| M04 · Gestão de Estágios | TCE, plano de atividades, responsáveis, apólice e assinaturas (RF015–RF022, RF031–RF035, RF044–RF047) | Coordenação / Professor / Concedente |
+| M04 · Gestão de Estágios | TCE, plano de atividades, responsáveis, apólice, assinaturas, afastamento, prorrogação e rescisão (RF015–RF022, RF031–RF035, RF044–RF047, RF059–RF064) | Coordenação / Professor / Concedente |
 | M05 · Acompanhamento | Frequência, carga horária, relatórios e avaliação (RF023–RF030, RF036–RF043) | Estudante / Professor / Supervisor |
 | M06 · Atividades Complementares | Cadastro, comprovante e análise (RF048–RF055) | Estudante / Coordenação |
 | M07 · Integralização Curricular | Progresso de carga horária e emissão de comprovantes (RF056–RF058) | Estudante / Coordenação |
@@ -42,7 +42,9 @@ A filosofia central do projeto prioriza, nessa ordem: **segurança** (seis perfi
 
 ## Modelo de segurança
 
-A autorização não vive na tela: cada tabela sensível tem política de **Row Level Security** no PostgreSQL, resolvida pela interseção de **perfil** e **vínculo** (ex.: um professor só enxerga os estágios em que consta como orientador vigente, não todos os estágios do curso). A identidade do usuário autenticado chega ao banco por um wrapper de transação que executa `set_config('app.user_id', ..., true)` local a cada transação, necessário porque o pooler do Neon reaproveita conexões entre requisições diferentes. Uma consulta que escape desse wrapper roda sem identidade e a política devolve zero linhas: falha visível, não silenciosa.
+A autorização não vive na tela: toda tabela tem política de **Row Level Security** no PostgreSQL, resolvida pela interseção de **perfil** e **vínculo** (ex.: um professor só enxerga os estágios em que consta como orientador vigente, não todos os estágios do curso). A identidade do usuário autenticado chega ao banco por um wrapper de transação que executa `set_config('app.user_id', ..., true)` local a cada transação, necessário porque o pooler do Neon reaproveita conexões entre requisições diferentes. Uma consulta que escape desse wrapper roda sem identidade e a política devolve zero linhas: falha visível, não silenciosa.
+
+RLS só vale para quem não é dono da tabela, superusuário ou `BYPASSRLS`. Por isso o banco usa três papéis: `migrator` é dono de tudo e só roda migrações; `app_runtime` executa o código de domínio sob RLS, sem permissão de `DELETE`; `auth_runtime` atende apenas a biblioteca de autenticação e é o único que alcança sessões e hashes de senha. A migração aborta se um papel de runtime puder contornar a RLS, e uma suíte de testes verifica essas invariantes contra um Postgres real a cada PR.
 
 Toda operação relevante é registrada por **gatilho de banco**, não por código de aplicação, para que nenhuma rota nova ou script de manutenção consiga contornar a auditoria. Documentos com prazo legal de guarda (RF069) têm duas barreiras independentes contra exclusão: um gatilho `BEFORE DELETE` no banco e o Bucket Locks do Cloudflare R2.
 
@@ -50,8 +52,9 @@ Toda operação relevante é registrada por **gatilho de banco**, não por códi
 
 ```
 RASCUNHO -> AGUARDANDO_ASSINATURAS -> PRONTO_PARA_ATIVACAO -> ATIVO -> CONCLUIDO
-                                                                |  \
-                                                          AFASTADO  RESCINDIDO
+ATIVO <-> AFASTADO
+ATIVO -> RESCINDIDO
+AFASTADO -> RESCINDIDO
 ```
 
 A transição para `ATIVO` verifica, na mesma transação: concedente não suspensa, convênio vigente, plano de atividades aprovado, orientador e supervisor vinculados, apólice registrada (quando exigida) e as três assinaturas do TCE. Se qualquer guarda falhar, a API responde com todos os impedimentos de uma vez, não um por requisição.
@@ -71,32 +74,28 @@ Pontos que antes admitiam mais de uma interpretação, definidos com o professor
 | Divergência relevante de carga horária | Percentual parametrizável, padrão de 10% |
 | Hospedagem em território nacional | Sem exigência |
 
-Detalhamento completo em `documentation/DAS.docx` §9.1.
-
 ## Requisitos de qualidade
 
 Metas de qualidade validadas pela equipe (não são garantia contratual: o projeto roda em planos gratuitos de terceiros, sem redundância paga):
 
-- **Segurança:** RLS sem exceção em qualquer tabela sensível; leitura de dado sensível (atestado médico) registrada em auditoria; sessão expira em 30 minutos de inatividade.
+- **Segurança:** RLS sem exceção em qualquer tabela; leitura de dado sensível (atestado médico) registrada em auditoria; sessão expira em 30 minutos de inatividade.
 - **Desempenho:** leitura sob carga normal com p95 < 800ms; geração de PDF em até 5s.
 - **Disponibilidade:** uptime mensal ≥ 99% em horário comercial, dentro do SLA gratuito de Vercel/Neon; cold start do Neon é restrição aceita, não bug.
 - **Manutenibilidade:** toda regra de negócio nova exige teste automatizado; acesso ao banco fora do wrapper de identidade é bloqueado por lint.
 - **Confiabilidade:** cálculo de carga horária é determinístico; escrita de auditoria nunca é perdida.
-
-As 13 métricas completas (QA-01 a QA-13) estão em `documentation/DAS.docx` §10.
 
 ## Stack Tecnológica
 
 | Camada | Tecnologia |
 |---|---|
 | Linguagem | TypeScript (modo estrito) |
-| Framework web | Next.js 15 (App Router) |
-| Runtime | Node.js 22 LTS |
+| Framework web | Next.js 16 (App Router) |
+| Runtime | Node.js 24 LTS |
 | Interface | React 19, Tailwind CSS 4, shadcn/ui |
 | Formulários e validação | React Hook Form e Zod |
 | Banco de dados | PostgreSQL 17 gerenciado (Neon), com Row Level Security |
-| Acesso a dados | Drizzle ORM e drizzle-kit |
-| Autenticação | Auth.js v5 |
+| Acesso a dados | Drizzle ORM, drizzle-kit e driver `pg` |
+| Autenticação | Better Auth (e-mail e senha com Argon2id, sessão em banco) |
 | Armazenamento de arquivos | Cloudflare R2 (compatível com S3); MinIO em desenvolvimento |
 | API | Route Handlers do Next.js, versionada em `/api/v1` |
 | Geração de PDF | React-PDF no servidor |
@@ -104,33 +103,61 @@ As 13 métricas completas (QA-01 a QA-13) estão em `documentation/DAS.docx` §1
 | Rotinas agendadas | Vercel Cron |
 | Deploy | Vercel (aplicação), Neon (banco), R2 (arquivos) |
 
-Justificativa completa de cada escolha, incluindo alternativas descartadas, em `documentation/Stack e API.docx`.
-
 ## Ambientes
 
 | Ambiente | Banco | Armazenamento | Aplicação |
 |---|---|---|---|
 | Desenvolvimento | PostgreSQL 17 em Docker | MinIO em Docker | `next dev` local |
-| Integração contínua | Branch efêmera do Neon | MinIO em contêiner | GitHub Actions |
+| Integração contínua | PostgreSQL 17 no mesmo `docker compose` | — | GitHub Actions |
 | Produção | Neon (branch principal) | Cloudflare R2 | Vercel |
+
+O CI usa o mesmo contêiner e o mesmo script de papéis do ambiente local, então um teste de RLS que passa na máquina passa no CI pelas mesmas razões.
 
 ## Como rodar localmente
 
+Requisitos: Node.js 24 (`.nvmrc`) e Docker.
+
 ```bash
-docker compose up -d      # Postgres 17 + MinIO
-cp .env.example .env
+docker compose up -d postgres --wait   # Postgres 17 com papéis e bancos
+cp .env.example .env                   # gere BETTER_AUTH_SECRET: openssl rand -base64 32
 npm install
-npm run dev                # http://localhost:3000
+npm run db:migrate
+npm run db:seed
+npm run dev                            # http://localhost:3000
 ```
+
+O seed cria usuários com a senha `senha-dev-internship`:
+
+| E-mail | Perfil |
+|---|---|
+| `admin@internship.local` | Administrador |
+| `coordenacao.software@internship.local` | Coordenação de Engenharia de Software |
+| `ana.estudante@internship.local` | Estudante de Engenharia de Software |
+| `bruno.estudante@internship.local` | Estudante de Administração |
+
+Se o volume do Postgres já existia antes dos papéis, recrie-o com `docker compose down -v`.
 
 Outros comandos úteis:
 
 ```bash
 npm run lint
-npm run test               # Vitest
-npm run test:e2e           # Playwright
-npm run db:generate        # gera migração a partir de src/db/schema
-npm run db:migrate         # aplica migração pendente
+npm run typecheck
+npm run test:unit          # Vitest sem banco
+npm run test:db            # RLS, auditoria e autenticação contra Postgres real
+npm run test:e2e           # Playwright (banco migrado e com seed)
+npm run db:generate        # gera migração de tabela a partir de src/db/schema
+npm run ci                 # CI inteira na máquina, espelho do ci.yml (--fast pula Docker)
+```
+
+O `npm install` ativa os hooks versionados em `.githooks` (se não ativar, `npm run hooks`). O `pre-push` recusa push direto para `develop` e `main` e, antes de todo push de `integration/*`, roda a CI local completa sobre o commit em checkout, com Docker obrigatório.
+
+### Produção (Neon)
+
+`DATABASE_MIGRATION_URL` aponta para o dono do banco na conexão direta. Depois da primeira migração, habilite o login dos papéis de runtime com senhas geradas e use-os, pela conexão com pooler, em `DATABASE_URL` (`app_runtime`) e `DATABASE_AUTH_URL` (`auth_runtime`):
+
+```sql
+alter role app_runtime with login password '<senha gerada>';
+alter role auth_runtime with login password '<senha gerada>';
 ```
 
 ## Estrutura do código
@@ -143,33 +170,65 @@ src/modules/           8 módulos de domínio, cada um com
                         { domain, services, repositories, schemas }
 src/shared/            transversal: documentos, notificacoes, auditoria, ui
 src/db/                client.ts (uso restrito), with-user.ts, schema/
-drizzle/sql/            políticas RLS, funções e triggers versionados como SQL
+src/lib/                auth, sessão, identidade, API e erros
+drizzle/migrations/     SQL de tabelas gerado pelo drizzle-kit
+drizzle/sql/            papéis, funções, políticas RLS e triggers versionados como SQL
+scripts/db/             migração e seed
+scripts/ci-local.mjs    CI local, espelho do workflow do GitHub
+.githooks/              pre-push que roda a CI local
+tests/db/               testes de integração contra Postgres real
+e2e/                    testes de ponta a ponta (Playwright)
 ```
 
 Convenções de código, mapa de arquitetura completo e pegadinhas conhecidas estão em `AGENTS.md`.
 
 ## Fluxo de branches e commits
 
-`main` e `develop` são protegidas e exigem CI verde no PR. Uma feature nasce de `develop` como `feature/<RF-curto>` (ex.: `feature/RF002-auth`) e volta por PR para `develop`; `develop` vai para `main` só quando estável.
+`main` e `develop` só mudam por pull request com CI verde. O trabalho é entregue em lotes: um lote nasce de `develop` como `integration/<lote>` (ex.: `integration/fase-1-fundacao`), e cada implementação nasce do lote como `feature/<RF-curto>` (ex.: `feature/RF002-auth`) e volta para ele. Com o lote completo, ele passa por revisão e depois pela bateria completa de testes (`npm run ci`); só quando os testes do lote se esgotam sai o PR para `develop`. Assim a `develop` nunca recebe trabalho não testado. `develop` vai para `main` só quando estável.
 
-Commits seguem `type(scope): summary`, no imperativo, com notas em bullet explicando a mudança real (não repetindo o resumo). Tipos: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, `revert`. Escopos genéricos: `api`, `ui`, `domain`, `db`, `auth`, `storage`, `jobs`, `config`, `deps`, `ci`, `docs`, `test`, `repo`. Convenção completa, com exemplos, em `documentation/padroes/PADRAOCOMMITS.MD`.
+O fluxo é automatizado (Docker ligado e porta 3000 livre para integrar):
+
+```bash
+npm run batch:integrate -- feature/<RF-curto>   # merge da feature no lote + push; o hook roda a CI completa
+npm run batch:pr                                # abre o PR integration/<lote> -> develop e devolve o link
+```
+
+Os dois comandos servem para qualquer colaborador com permissão de escrita e usam a credencial que o git já guarda para push por HTTPS (ou `GITHUB_TOKEN`). Sem credencial, `batch:pr` imprime o link para abrir o PR no navegador. O job `Source branch` do CI recusa PR para `develop` que não venha de `integration/*`, PR para `main` que não venha de `develop` e PR para um lote que não venha de `feature/*`.
+
+### Proteção das branches
+
+A proteção do GitHub fica versionada em `.github/rulesets/` e vale para todos, inclusive o dono:
+
+| Ruleset | Alvo | Regras |
+|---|---|---|
+| `develop e main` | `develop`, `main` | Sem exclusão, sem force push; merge só por PR, sem aprovação obrigatória, com os checks `Source branch`, `Lint, types, unit tests, build`, `Migrations, RLS and audit tests` e `End-to-end` verdes e a branch atualizada. Ninguém na lista de exceção |
+| `lotes` | `integration/**` | Sem exclusão, sem force push |
+
+```bash
+npm run github:rulesets -- --check   # qualquer colaborador: mostra se o GitHub difere dos arquivos
+npm run github:rulesets              # admin do repositório: aplica os arquivos no GitHub
+```
+
+Mudança de proteção entra por PR nos arquivos e depois é aplicada. Colegas ficam com papel `write`, que não altera rulesets. A `main` pode ser criada a partir da `develop` com `git push origin develop:main`, que o hook aceita só nesse caso.
+
+Commits seguem `type(scope): summary`, no imperativo, com notas em bullet explicando a mudança real (não repetindo o resumo). Tipos: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, `revert`. Escopos genéricos: `api`, `ui`, `domain`, `db`, `auth`, `storage`, `jobs`, `config`, `deps`, `ci`, `docs`, `test`, `repo`. Exemplo e regras de divisão de commits em `AGENTS.md`.
 
 ## Roadmap
 
 | Fase | Entrega |
 |---|---|
 | 0 · Fechamento da documentação | Stack, arquitetura, endpoints, DAS, padrão de commits, repositório (**concluída**) |
-| 1 · Fundação técnica | RNFs, DER lógico, migrações, wrapper de identidade, políticas RLS, auditoria, Auth.js, CI |
+| 1 · Fundação técnica | RNFs, DER lógico, migrações, wrapper de identidade, papéis e políticas RLS, auditoria, autenticação, CI (**em integração**) |
 | 2 · Cadastros e formalização | Cursos, estudantes, concedentes, convênios, TCE, ativação de estágio |
 | 3 · Acompanhamento | Frequência, carga horária, relatórios, avaliação |
 | 4 · Atividades complementares e integralização | Cadastro, análise, limites por categoria, apuração |
 | 5 · Ocorrências, conclusão e conformidade | Afastamento, prorrogação, rescisão, guarda documental, relatórios gerenciais |
 
-Critérios de saída de cada fase e ordem de dependência em `documentation/planejamento/PLANEJAMENTO.MD`.
+A ordem segue a dependência de dados, não a numeração dos requisitos. Critérios de saída de cada fase em `AGENTS.md`.
 
-## Documentação completa
+## Documentação
 
-Requisitos, regras de negócio, arquitetura, especificação de API e o Documento de Arquitetura de Software (DAS) vivem em `documentation/`, que ainda não é versionada neste repositório (arquivo de trabalho do grupo). Uma versão reduzida e versionada será adicionada depois.
+Requisitos, regras de negócio e documentos formais da disciplina são mantidos pela equipe fora deste repositório. Aqui, a referência é este README, o `AGENTS.md` e o próprio código: schema em `src/db/schema`, segurança em `drizzle/sql`, contratos da API em `src/modules/*/schemas` e comportamento esperado nos testes.
 
 ## Projeto Acadêmico
 
