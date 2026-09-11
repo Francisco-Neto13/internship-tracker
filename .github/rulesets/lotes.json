@@ -1,0 +1,15 @@
+{
+  "name": "lotes",
+  "target": "branch",
+  "enforcement": "active",
+  "bypass_actors": [],
+  "conditions": {
+    "ref_name": {
+      "include": ["refs/heads/integration/**"],
+      "exclude": []
+    }
+  },
+  "rules": [
+    { "type": "non_fast_forward" }
+  ]
+}
