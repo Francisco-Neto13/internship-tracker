@@ -149,7 +149,7 @@ npm run db:generate        # gera migração de tabela a partir de src/db/schema
 npm run ci                 # CI inteira na máquina, espelho do ci.yml (--fast pula Docker)
 ```
 
-O `npm install` ativa os hooks versionados em `.githooks` (se não ativar, `npm run hooks`). O `pre-push` recusa push direto para `develop` e `main` e, antes de todo push de `integration/*`, roda a CI local completa sobre o commit em checkout, com Docker obrigatório.
+O `npm install` ativa os hooks versionados em `.githooks` (se não ativar, `npm run hooks`). O `pre-push` recusa push direto para `develop` e `main`; push de `feature/*` e `integration/*` passa direto.
 
 ### Produção (Neon)
 
@@ -175,7 +175,8 @@ drizzle/migrations/     SQL de tabelas gerado pelo drizzle-kit
 drizzle/sql/            papéis, funções, políticas RLS e triggers versionados como SQL
 scripts/db/             migração e seed
 scripts/ci-local.mjs    CI local, espelho do workflow do GitHub
-.githooks/              pre-push que roda a CI local
+.githooks/              pre-push que recusa push direto em develop e main
+scripts/github/         automação do fluxo de lotes e da proteção das branches
 tests/db/               testes de integração contra Postgres real
 e2e/                    testes de ponta a ponta (Playwright)
 ```
@@ -184,16 +185,17 @@ Convenções de código, mapa de arquitetura completo e pegadinhas conhecidas es
 
 ## Fluxo de branches e commits
 
-`main` e `develop` só mudam por pull request com CI verde. O trabalho é entregue em lotes: um lote nasce de `develop` como `integration/<lote>` (ex.: `integration/fase-1-fundacao`), e cada implementação nasce do lote como `feature/<RF-curto>` (ex.: `feature/RF002-auth`) e volta para ele. Com o lote completo, ele passa por revisão e depois pela bateria completa de testes (`npm run ci`); só quando os testes do lote se esgotam sai o PR para `develop`. Assim a `develop` nunca recebe trabalho não testado. `develop` vai para `main` só quando estável.
+`main` e `develop` só mudam por pull request com CI verde. O trabalho é entregue em lotes: um lote nasce de `develop` como `integration/<lote>` (ex.: `integration/fase-1-fundacao`), e cada implementação nasce do lote como `feature/<RF-curto>` (ex.: `feature/RF002-auth`) e volta para ele. Com o lote completo, ele passa por revisão e depois pela bateria completa de testes, rodada na máquina (`npm run ci`); só quando os testes do lote se esgotam sai o PR para `develop`. Assim a `develop` nunca recebe trabalho não testado. `develop` vai para `main` só quando estável.
 
-O fluxo é automatizado (Docker ligado e porta 3000 livre para integrar):
+A branch de integração não tem CI remoto: o lote está em revisão e teste. O CI do GitHub roda no PR para a `develop` (e para a `main`), e o merge só é liberado com ele verde. O fluxo é automatizado:
 
 ```bash
-npm run batch:integrate -- feature/<RF-curto>   # merge da feature no lote + push; o hook roda a CI completa
-npm run batch:pr                                # abre o PR integration/<lote> -> develop e devolve o link
+npm run batch:integrate -- feature/<RF-curto>   # merge da feature no lote + push (sem CI)
+npm run batch:pr                                # esgota os testes do lote (npm run ci, Docker ligado e porta 3000 livre)
+                                                # e só então abre o PR integration/<lote> -> develop
 ```
 
-Os dois comandos servem para qualquer colaborador com permissão de escrita e usam a credencial que o git já guarda para push por HTTPS (ou `GITHUB_TOKEN`). Sem credencial, `batch:pr` imprime o link para abrir o PR no navegador. O job `Source branch` do CI recusa PR para `develop` que não venha de `integration/*`, PR para `main` que não venha de `develop` e PR para um lote que não venha de `feature/*`.
+Os dois comandos servem para qualquer colaborador com permissão de escrita e usam a credencial que o git já guarda para push por HTTPS (ou `GITHUB_TOKEN`). Sem credencial, `batch:pr` roda os testes e imprime o link para abrir o PR no navegador. O job `Source branch` do CI recusa PR para `develop` que não venha de `integration/*` e PR para `main` que não venha de `develop`.
 
 ### Proteção das branches
 

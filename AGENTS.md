@@ -34,36 +34,44 @@ funções e gatilhos de `drizzle/sql` e pode deixar o banco sem RLS.
 
 1. Um lote nasce de `develop` como `integration/<lote>` (ex.: `integration/fase-1-fundacao`).
 2. Cada implementação nasce do lote como `feature/<RF-curto>` (ex.: `feature/RF002-auth`)
-   e volta para o lote, por PR no GitHub ou por merge local seguido de push do lote.
+   e volta para o lote. **A branch de integração não tem CI remoto:** o lote está em
+   revisão e teste e pode estar incompleto.
 3. Com o lote completo, ele passa por revisão e depois pela bateria completa de
-   testes (lint, tipos, unidade, banco, e2e): `npm run ci`.
-4. Só quando os testes do lote se esgotam sai o PR `integration/<lote>` → `develop`
-   e o merge. Assim a `develop` nunca recebe trabalho não testado e o CI dela não quebra.
-5. `develop` vai para `main` só quando estável, por PR.
+   testes (lint, tipos, unidade, banco, e2e), rodada na máquina: `npm run ci`.
+4. Só quando os testes do lote se esgotam sai o PR `integration/<lote>` → `develop`.
+   É no PR para a `develop` que o CI remoto roda, e o merge só é liberado com ele verde.
+   Assim a `develop` nunca recebe trabalho não testado e o CI dela não quebra.
+5. `develop` vai para `main` só quando estável, por PR aberto manualmente na tela do GitHub
+   (o CI remoto roda de novo). Não há promoção automática nem deploy configurado: a `main`
+   só muda quando alguém decide promover.
 
-Comandos do fluxo (Docker ligado e porta 3000 livre para integrar):
+`main` é a branch padrão do GitHub: um clone novo abre nela. O trabalho nunca começa na
+`main`, e sim no lote: `git switch integration/<lote>` e, dali, `git switch -c feature/<RF-curto>`.
+
+Comandos do fluxo:
 
 ```bash
-npm run batch:integrate -- feature/<RF-curto>   # merge no lote + push; o hook roda a CI completa
-npm run batch:pr                                # abre o PR integration/<lote> -> develop
+npm run batch:integrate -- feature/<RF-curto>   # merge da feature no lote + push (sem CI)
+npm run batch:pr                                # esgota os testes do lote (npm run ci, Docker obrigatório)
+                                                # e só então abre o PR integration/<lote> -> develop
 npm run github:rulesets -- --check              # confere se a proteção do GitHub bate com os arquivos
 npm run github:rulesets                         # aplica a proteção (só admin do repositório)
 ```
 
 `batch:*` funcionam para qualquer colaborador com permissão de escrita: usam a credencial que o
-git já guarda para push por HTTPS (ou `GITHUB_TOKEN`). Sem credencial, `batch:pr` imprime o
-link para abrir o PR no navegador.
+git já guarda para push por HTTPS (ou `GITHUB_TOKEN`). Sem credencial, `batch:pr` roda os
+testes e imprime o link para abrir o PR no navegador.
 
 A garantia do fluxo tem três camadas, e nenhuma depende de lembrar da regra:
 
 | Camada | O que garante | Onde |
 |---|---|---|
-| Rulesets do GitHub | `develop` e `main` sem push direto, sem force push, sem exclusão; merge só por PR com os 4 checks verdes (sem aprovação obrigatória). Lotes sem force push nem exclusão. Valem para todos, inclusive o dono | `.github/rulesets/*.json`, aplicados por `npm run github:rulesets` |
-| Job `Source branch` do CI | PR para `develop` só vem de `integration/*`; para `main` só de `develop`; para um lote só de `feature/*` | `.github/workflows/ci.yml` |
-| Hook `.githooks/pre-push` | Recusa push direto para `develop`/`main`; push de `integration/*` só da branch em checkout, com árvore limpa e CI local completa, sem pular Docker | Máquina de cada um |
+| Rulesets do GitHub | `develop` e `main` sem push direto, sem force push, sem exclusão; merge só por PR com os 4 checks do CI verdes (sem aprovação obrigatória). Lotes sem force push nem exclusão. Valem para todos, inclusive o dono | `.github/rulesets/*.json`, aplicados por `npm run github:rulesets` |
+| CI remoto (só em PR e push de `develop`/`main`) | Lint, tipos, unidade, build, banco/RLS, e2e; job `Source branch`: PR para `develop` só vem de `integration/*`, para `main` só de `develop` | `.github/workflows/ci.yml` |
+| Máquina de cada um | `batch:pr` não abre PR sem a CI local completa verde; hook `pre-push` recusa push direto para `develop`/`main` | `scripts/github/batch.mjs`, `.githooks/pre-push` |
 
-O hook é a camada mais fraca (`git push --no-verify` pula, e só existe em clone que rodou
-`npm install`); a que não se contorna é o ruleset. Os arquivos de `.github/rulesets` são a
+As proteções locais são as mais fracas (dá para abrir o PR na mão ou usar
+`git push --no-verify`); as que não se contornam são o ruleset e o CI do PR. Os arquivos de `.github/rulesets` são a
 fonte da verdade: mudança de proteção entra por PR e é aplicada com `npm run github:rulesets`.
 Colegas ficam com papel `write`; papel `admin` consegue alterar rulesets pela tela.
 
@@ -166,7 +174,8 @@ drizzle/migrations/      SQL de tabelas gerado por drizzle-kit
 drizzle/sql/             roles/, functions/, policies/, triggers/ (aplicados nessa ordem)
 scripts/db/              migrate, seed
 scripts/ci-local.mjs     CI local, espelho do .github/workflows/ci.yml
-.githooks/               pre-push (ativado por core.hooksPath)
+.githooks/               pre-push que recusa push direto em develop/main (core.hooksPath)
+scripts/github/          batch:integrate, batch:pr, github:rulesets
 tests/db/                testes de integração contra Postgres real
 e2e/                     Playwright
 docker/postgres/init/    papéis e bancos criados quando o volume nasce
