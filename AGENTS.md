@@ -7,24 +7,83 @@ Projeto acadêmico (disciplina Project Lab). Especificação: 6 atores, 36 regra
 ## Comandos
 
 ```bash
-docker compose up -d    # Postgres 17 + MinIO
-cp .env.example .env
-npm install
-npm run dev              # http://localhost:3000
-npm run build
+docker compose up -d postgres --wait   # Postgres 17 com papéis e bancos (dev e _test)
+cp .env.example .env                   # preencher BETTER_AUTH_SECRET
+npm install               # também ativa os hooks de .githooks (prepare)
+npm run db:migrate        # tabelas (drizzle/migrations) + segurança (drizzle/sql)
+npm run db:seed           # usuários de desenvolvimento, senha "senha-dev-internship"
+npm run dev               # http://localhost:3000
 npm run lint
-npm run test              # Vitest (unidade/integração)
-npm run test:e2e          # Playwright
-npm run db:generate       # gera migração a partir de src/db/schema
-npm run db:migrate        # aplica migração pendente
+npm run typecheck
+npm run test:unit         # Vitest sem banco
+npm run test:db           # Vitest contra internship_tracker_test (recria o schema)
+npm run test              # unit + db
+npm run test:e2e          # Playwright; exige banco migrado e com seed
+npm run build
+npm run db:generate       # gera migração de tabela a partir de src/db/schema
+npm run ci                # CI inteira na máquina (espelho do ci.yml); --fast pula Docker
+npm run hooks             # ativa .githooks à mão, se o npm install não ativou
 ```
+
+Node 24 LTS (`.nvmrc`). Nunca rodar `drizzle-kit push`: ele ignora papéis, políticas,
+funções e gatilhos de `drizzle/sql` e pode deixar o banco sem RLS.
 
 ## Branches e commits
 
-`main` e `develop` são protegidas e exigem CI verde no PR. Uma feature nasce de
-`develop` como `feature/<RF-curto>` (ex.: `feature/RF002-auth`) e volta por PR
-para `develop`; `develop` vai para `main` só quando estável. Sem branch de
-integração intermediária.
+`main` e `develop` só mudam por pull request com CI verde. O trabalho é entregue em lotes:
+
+1. Um lote nasce de `develop` como `integration/<lote>` (ex.: `integration/fase-1-fundacao`).
+2. Cada implementação nasce do lote como `feature/<RF-curto>` (ex.: `feature/RF002-auth`)
+   e volta para o lote. **A branch de integração não tem CI remoto:** o lote está em
+   revisão e teste e pode estar incompleto.
+3. Com o lote completo, ele passa por revisão e depois pela bateria completa de
+   testes (lint, tipos, unidade, banco, e2e), rodada na máquina: `npm run ci`.
+   Lote pequeno: no máximo uma semana entre o primeiro commit e o PR (os comandos avisam).
+4. Só quando os testes do lote se esgotam sai o PR `integration/<lote>` → `develop`.
+   É no PR para a `develop` que o CI remoto roda. O PR nasce com auto-merge ligado: quando
+   os checks ficam verdes, o GitHub mescla sozinho e apaga a branch do lote.
+   Assim a `develop` nunca recebe trabalho não testado e o CI dela não quebra.
+5. `develop` vai para `main` só quando estável, por PR aberto manualmente na tela do GitHub
+   (o CI remoto roda de novo). Não há promoção automática nem deploy configurado: a `main`
+   só muda quando alguém decide promover.
+
+`main` é a branch padrão do GitHub: um clone novo abre nela. O trabalho nunca começa na
+`main`, e sim no lote: `git switch integration/<lote>` e, dali, `git switch -c feature/<RF-curto>`.
+
+Comandos do fluxo:
+
+```bash
+npm run batch:integrate -- feature/<RF-curto>   # merge da feature no lote + push (sem CI)
+npm run batch:pr                                # esgota os testes do lote (npm run ci, Docker obrigatório),
+                                                # abre o PR integration/<lote> -> develop e liga o auto-merge
+npm run github:sync -- --check                  # confere se o GitHub bate com .github/repository.json e rulesets
+npm run github:sync                             # aplica configurações e proteção (só admin do repositório)
+```
+
+Depois do merge, o próximo lote nasce da `develop` atualizada:
+`git fetch origin && git switch -c integration/<novo-lote> origin/develop && git push -u origin integration/<novo-lote>`.
+
+`batch:*` funcionam para qualquer colaborador com permissão de escrita: usam a credencial que o
+git já guarda para push por HTTPS (ou `GITHUB_TOKEN`). Sem credencial, `batch:pr` roda os
+testes e imprime o link para abrir o PR no navegador.
+
+A garantia do fluxo tem três camadas, e nenhuma depende de lembrar da regra:
+
+| Camada | O que garante | Onde |
+|---|---|---|
+| Rulesets e configurações do GitHub | `develop` e `main` sem push direto, sem force push, sem exclusão; merge só por PR com os 4 checks do CI verdes (sem aprovação obrigatória). Lotes sem force push; apagados após o merge. Auto-merge ligado, só merge commit (preserva os commits no padrão do projeto). Valem para todos, inclusive o dono | `.github/rulesets/*.json` e `.github/repository.json`, aplicados por `npm run github:sync` |
+| CI remoto (só em PR e push de `develop`/`main`) | Lint, tipos, unidade, build, banco/RLS, e2e; job `Source branch`: PR para `develop` só vem de `integration/*`, para `main` só de `develop` | `.github/workflows/ci.yml` |
+| Máquina de cada um | `batch:pr` não abre PR sem a CI local completa verde; hook `pre-push` recusa push direto para `develop`/`main` | `scripts/github/batch.mjs`, `.githooks/pre-push` |
+
+As proteções locais são as mais fracas (dá para abrir o PR na mão ou usar
+`git push --no-verify`); as que não se contornam são o ruleset e o CI do PR. Os arquivos de
+`.github/rulesets` e `.github/repository.json` são a fonte da verdade: mudança entra por PR e é
+aplicada com `npm run github:sync`.
+Colegas ficam com papel `write`; papel `admin` consegue alterar rulesets pela tela.
+
+Passo novo de CI entra em dois lugares: `.github/workflows/ci.yml` e
+`scripts/ci-local.mjs`. O último passo do `npm run ci` falha se o `ci.yml` tiver um
+passo nomeado sem equivalente local.
 
 Commit: `type(scope): summary` no imperativo, sob 72 caracteres, com notas em
 bullet explicando a mudança real, sem linha em branco entre elas, sem ponto
@@ -32,25 +91,47 @@ final. Não misturar mudança não relacionada no mesmo commit.
 
 Tipos: `feat` `fix` `refactor` `perf` `test` `docs` `build` `ci` `chore` `revert`.
 Escopos: `api` `ui` `domain` `db` `auth` `storage` `jobs` `config` `deps` `ci`
-`docs` `test` `repo`. Exemplos completos em `documentation/padroes/PADRAOCOMMITS.MD`.
+`docs` `test` `repo`. Mudança que quebra contrato leva `!` após o escopo e uma nota
+explicando a quebra.
+
+```text
+feat(domain): add hour accumulation service
+- Sum recorded hours against the total agreed in the agreement
+- Expose remaining balance and completion percentage
+- Keep the calculation in a single service used by every screen
+```
+
+Pelo terminal, passar a mensagem num único bloco ou arquivo: vários `-m` separam os
+bullets em parágrafos. Separar em commits diferentes quando a mudança pode ser
+revertida sozinha, quando mistura estrutura e comportamento, ou quando é só docs ou
+ferramenta.
 
 ## Convenções
 
 - Domínio (nomes de tabela, campo, regra de negócio) em português. Código,
-  identificadores e mensagens de commit em inglês.
-- Toda tabela sensível é protegida por Row Level Security. Nenhum código de
-  aplicação acessa `src/db/client.ts` diretamente: sempre pelo wrapper
-  `src/db/with-user.ts`, que propaga a identidade do usuário autenticado
-  para a transação via `set_config('app.user_id', ...)`. Uma consulta que
-  escape desse wrapper roda sem identidade e a política de RLS devolve
-  zero linhas, uma falha visível, não silenciosa.
+  identificadores e mensagens de commit em inglês. Na prática: substantivos do domínio
+  em português, verbos técnicos em inglês (`listEstudantes`, `findPerfisVigentes`).
+- Colunas em `snake_case` no banco, chaves `camelCase` no Drizzle, campos `snake_case`
+  no JSON da API.
+- Toda duração é inteiro em minutos, com sufixo `_minutos`. A API converte para horas.
+- Toda tabela tem RLS habilitada (testado em `tests/db/rls-invariants.test.ts`).
+  Código de aplicação nunca importa `src/db/client.ts` nem `pg`: sempre passa por
+  `withUser(identity, tx => ...)` de `src/db/with-user.ts`, que define
+  `app.user_id` na transação. O lint bloqueia o import direto.
+- `Identity` só é produzida por `src/lib/session.ts` a partir do cookie de sessão.
+  Não construir `Identity` com cast fora dali e dos testes.
+- Repositórios não filtram por usuário: quem decide quais linhas existem é a RLS.
+  Um `WHERE usuario_id = ...` defensivo esconderia bug de política.
 - Módulos de domínio ficam em `src/modules/<módulo>/{domain,services,repositories,schemas}`.
-  Um módulo não importa o `repositories` de outro diretamente; a
+  Um módulo não importa o `repositories` de outro (bloqueado por lint); a
   comunicação entre módulos passa por `services`.
 - A regra de negócio vive no domínio, não na tela. Componentes chamam a
   camada de domínio; nunca reimplementam validação de jornada ou soma de horas.
 - Nada relevante é apagado. Aditivos, substituições de responsável e versões
-  de relatório geram registro novo, nunca sobrescrevem o anterior.
+  de relatório geram registro novo, nunca sobrescrevem o anterior. O papel
+  `app_runtime` não tem `DELETE` em nenhuma tabela (testado); conceder exige decisão.
+- Erro de negócio é `DomainError` com código estável (`src/lib/errors.ts`); a
+  tradução para HTTP fica em `src/lib/api.ts`.
 - Toda decisão técnica cita o RF ou a RN que a motiva.
 
 ## Módulos de domínio
@@ -60,7 +141,7 @@ Escopos: `api` `ui` `domain` `db` `auth` `storage` `jobs` `config` `deps` `ci`
 | M01 Acesso e Usuários | `src/modules/acesso` | Usuario, Perfil, Vinculo | RF001–RF003 |
 | M02 Gestão Acadêmica | `src/modules/academico` | Curso, Estudante, ParametroInstitucional | RF004–RF006 |
 | M03 Concedentes e Convênios | `src/modules/concedentes` | Concedente, Convenio | RF007–RF014 |
-| M04 Gestão de Estágios | `src/modules/estagios` | Estagio, PlanoAtividades, Aditivo, Apolice, Assinatura | RF015–RF022, RF031–RF035, RF044–RF047 |
+| M04 Gestão de Estágios | `src/modules/estagios` | Estagio, PlanoAtividades, Aditivo, Apolice, Assinatura, Afastamento, Rescisao | RF015–RF022, RF031–RF035, RF044–RF047, RF059–RF064 |
 | M05 Acompanhamento | `src/modules/acompanhamento` | RegistroFrequencia, Relatorio, Avaliacao, Acompanhamento | RF023–RF030, RF036–RF043 |
 | M06 Atividades Complementares | `src/modules/atividades` | AtividadeComplementar, Comprovante, Analise | RF048–RF055 |
 | M07 Integralização | `src/modules/integralizacao` | ApuracaoIntegralizacao | RF056–RF058 |
@@ -79,28 +160,52 @@ M05 lê M04; M04 lê M02 e M03. Nenhuma dependência circular.
 | Persistência | Acesso ao Postgres e ao Storage | Decidir regra |
 | Banco | Integridade referencial, RLS, gatilhos de auditoria | |
 
-Fluxo de escrita: `Route Handler -> valida sessão -> valida schema (Zod) ->
-serviço de domínio -> repositório -> abre transação e define app.user_id ->
-RLS filtra -> trigger grava auditoria -> commit -> resposta`.
+Fluxo de escrita: `Route Handler (authenticatedRoute) -> valida sessão -> valida
+schema (Zod) -> serviço de domínio -> withUser abre transação e define app.user_id
+-> repositório -> RLS filtra -> trigger grava auditoria -> commit -> resposta`.
+Referência implementada: `src/app/api/v1/estudantes/route.ts`.
 
 ## Mapa de arquitetura
 
 ```
-src/app/(auth)/        rotas de login e recuperação de senha
-src/app/(app)/         telas autenticadas por perfil
-src/app/api/v1/        route handlers da API REST
-src/modules/           8 módulos de domínio (acesso, academico, concedentes,
-                        estagios, acompanhamento, atividades, integralizacao,
-                        administracao)
-src/shared/            transversal: documentos, notificacoes, auditoria, ui
-src/db/                client.ts (não importar direto), with-user.ts, schema/
-src/lib/                auth, erros, cliente S3, utilitarios
-drizzle/migrations/     SQL versionado gerado por drizzle-kit
-drizzle/sql/            políticas RLS, funções e triggers versionados como SQL
-docker-compose.yml      Postgres e MinIO para desenvolvimento
+src/app/(auth)/          login (e recuperação de senha, pendente)
+src/app/(app)/           telas autenticadas; layout redireciona sem sessão
+src/app/api/auth/        endpoints do Better Auth (/api/auth/*)
+src/app/api/v1/          route handlers da API REST
+src/modules/             8 módulos de domínio
+src/shared/              transversal: documentos, notificacoes, auditoria, ui
+src/db/                  client.ts (restrito), with-user.ts, errors.ts, schema/
+src/lib/                 auth, session, identity, password, api, errors
+drizzle/migrations/      SQL de tabelas gerado por drizzle-kit
+drizzle/sql/             roles/, functions/, policies/, triggers/ (aplicados nessa ordem)
+scripts/db/              migrate, seed
+scripts/ci-local.mjs     CI local, espelho do .github/workflows/ci.yml
+.githooks/               pre-push que recusa push direto em develop/main (core.hooksPath)
+scripts/github/          batch:integrate, batch:pr, github:sync
+tests/db/                testes de integração contra Postgres real
+e2e/                     Playwright
+docker/postgres/init/    papéis e bancos criados quando o volume nasce
 ```
 
-## Modelo de permissão (RLS)
+## Banco: papéis e RLS
+
+| Papel | Uso | Variável |
+|---|---|---|
+| `migrator` | Dono de tudo; roda migração e seed. Nunca usado pela aplicação | `DATABASE_MIGRATION_URL` |
+| `app_runtime` | Código de domínio; sujeito à RLS; sem `DELETE`; sem acesso a tabelas de auth | `DATABASE_URL` |
+| `auth_runtime` | Só o Better Auth; alcança `usuario`, `sessao`, `conta`, `verificacao`, `limite_requisicao` | `DATABASE_AUTH_URL` |
+
+RLS é ignorada por superusuário, por papel com `BYPASSRLS` e pelo dono da tabela. Por
+isso a aplicação nunca conecta como `migrator`, e `scripts/db/apply-migrations.ts`
+aborta a migração se um papel de runtime puder contornar a RLS.
+
+`drizzle/sql` é declarativo: a cada migração, todas as políticas e permissões de runtime
+são apagadas e recriadas na mesma transação. O arquivo é a fonte da verdade.
+
+Funções auxiliares ficam no schema `app`, em `security definer` com `search_path = ''`:
+`app.usuario_atual_id()`, `app.tem_perfil_vigente(perfil)`, `app.coordena_curso(curso_id)`,
+`app.coordena_estudante_usuario(usuario_id)`. Nas políticas, envolver chamadas que não
+dependem da linha em `(select ...)` para o Postgres avaliar uma vez por consulta.
 
 Perfil sozinho não basta. A permissão é a interseção de perfil e vínculo:
 
@@ -113,9 +218,17 @@ Perfil sozinho não basta. A permissão é a interseção de perfil e vínculo:
 | Concedente | Estágios da própria concedente |
 | Administrador | Parametrização e auditoria; sem acesso a conteúdo de relatório ou atestado |
 
-Cada tabela sensível recebe política RLS que resolve o vínculo por junção,
-usando funções auxiliares em `security definer`. Colunas usadas nessas
-junções precisam de índice, senão a política vira o gargalo.
+Colunas usadas nas junções das políticas precisam de índice, senão a política vira o
+gargalo. Toda política nova ganha teste que a viola isoladamente
+(modelo: `tests/db/estudante-access.test.ts`).
+
+## Autenticação
+
+Better Auth com e-mail e senha (hash Argon2id), sessão em banco e expiração por 30 min
+de inatividade. Cadastro próprio desabilitado: contas são criadas pelo administrador
+(RF001). Usuário `INATIVO` não abre sessão, e uma sessão existente deixa de resolver
+identidade assim que o usuário é inativado. O limite de tentativas de login fica em
+banco (`limite_requisicao`), não em memória.
 
 ## Máquina de estados do estágio
 
@@ -123,6 +236,7 @@ junções precisam de índice, senão a política vira o gargalo.
 RASCUNHO -> AGUARDANDO_ASSINATURAS -> PRONTO_PARA_ATIVACAO -> ATIVO -> CONCLUIDO
 ATIVO <-> AFASTADO
 ATIVO -> RESCINDIDO
+AFASTADO -> RESCINDIDO
 ```
 
 Guardas de `PRONTO_PARA_ATIVACAO -> ATIVO`, todas na mesma transação: concedente
@@ -147,7 +261,8 @@ alternativa descartada por engano):
 | Divergência relevante de carga horária | Percentual parametrizável, padrão 10% |
 | Hospedagem em território nacional | Sem exigência |
 
-Detalhamento em `documentation/DAS.docx` §9.1.
+Em aberto: recuperação de senha (RF002) precisa de um canal fora do sistema, mas
+notificação é só in-app. Não implementar envio de e-mail sem decisão registrada.
 
 ## Requisitos de qualidade (resumo)
 
@@ -155,16 +270,33 @@ Segurança > Confiabilidade > Manutenibilidade, nessa prioridade quando conflita
 RLS sem exceção (testado); leitura de atestado médico registrada em auditoria;
 sessão expira em 30min; leitura p95 < 800ms; PDF em até 5s; uptime ≥ 99% em
 horário comercial; toda RN nova exige teste; cálculo de horas é determinístico.
-13 cenários completos (QA-01 a QA-13) em `documentation/DAS.docx` §10.
 
 ## Pegadinhas conhecidas
 
-- Next.js está fixado em `^15.5.0`, não 16.x: o Auth.js (`next-auth@5` beta)
-  só declara suporte de peer dependency a Next 14/15; `npm install` recusa a
-  árvore de dependências com Next 16.
-- O Neon opera o pooler em modo transação. Qualquer conexão Drizzle precisa
-  de `prepare: false`, senão prepared statements do driver quebram contra
-  o pooler.
+- Hooks não têm extensão. Com CRLF, o `sh` do Git no Windows falha com "not found";
+  o `.gitattributes` força LF em `.githooks/*`. Não remover essa regra.
+- O e2e do `npm run ci` sobe o build de produção na porta 3000. Parar o `npm run dev`
+  antes, senão o passo falha avisando que a porta está ocupada.
+- O bit de execução do hook não sobrevive a um arquivo recém-criado no Windows. Ao adicionar
+  ou recriar `.githooks/pre-push`: `git add --chmod=+x .githooks/pre-push`.
+- Deploy na Vercel fica para o futuro. Quando entrar: a integração Neon + Vercel injeta
+  `DATABASE_URL` com o papel dono do banco, o que **contorna toda a RLS**. Em produção,
+  `DATABASE_URL` é `app_runtime`, `DATABASE_AUTH_URL` é `auth_runtime`, e a migração roda num
+  job separado com `DATABASE_MIGRATION_URL`, nunca no build da Vercel (o build não depende de
+  banco). Branch Neon por preview esgota o limite de 10 branches do plano gratuito.
+- O init do Postgres (`docker/postgres/init`) só roda quando o volume é criado. Se o
+  container já existia antes dos papéis, recriar: `docker compose down -v` e subir de novo.
+- No Neon, a migração cria `app_runtime` e `auth_runtime` sem login. Habilitar uma vez
+  por ambiente com senha gerada: `alter role app_runtime with login password '...'`
+  (idem `auth_runtime`). `DATABASE_MIGRATION_URL` usa o dono (`neondb_owner`) na
+  conexão direta; as outras duas usam a conexão com pooler.
+- O pooler do Neon opera em modo transação. `set_config(..., true)` é obrigatório
+  (local à transação); um valor de sessão vazaria a identidade para outra requisição.
+  O driver `pg` com Drizzle usa statements sem nome e funciona com esse pooler.
+- `next build` não pode depender de banco: `getAuth()` e os pools são criados sob
+  demanda. Não instanciar nada disso no topo de um módulo.
+- O Next renderiza um anunciador de rota com `role="alert"`. Em Playwright, filtrar
+  alertas por texto.
 - Primeira consulta após inatividade no plano gratuito do Neon leva
   ~0.5s a mais (cold start). Aquecer o banco antes de demonstração ao vivo.
 - Buckets do Cloudflare R2 são privados; download sempre passa por endpoint
@@ -177,8 +309,9 @@ horário comercial; toda RN nova exige teste; cálculo de horas é determinísti
 ## Roadmap (fases)
 
 0. Fechamento da documentação (**concluída**).
-1. Fundação técnica: RNFs (feito), DER lógico, migrações, wrapper de
-   identidade, políticas RLS, auditoria, Auth.js, CI.
+1. Fundação técnica: RNFs (feito), DER lógico (proposta), migrações, wrapper de
+   identidade, papéis e RLS, auditoria, autenticação e CI (feitos no lote
+   `integration/fase-1-fundacao`, com fatia vertical de curso e estudante).
 2. Cadastros e formalização: cursos, estudantes, concedentes, convênios,
    TCE, ativação de estágio.
 3. Acompanhamento: frequência, carga horária, relatórios, avaliação.
@@ -188,23 +321,21 @@ horário comercial; toda RN nova exige teste; cálculo de horas é determinísti
 
 A ordem segue dependência de dados, não a numeração dos RFs: sem perfil e
 vínculo (Fase 1), nenhuma política RLS pode ser escrita; sem curso e
-exigência curricular (Fase 2), não há como validar carga mínima. Detalhe
-completo, com critério de saída de cada fase, em
-`documentation/planejamento/PLANEJAMENTO.MD`.
+exigência curricular (Fase 2), não há como validar carga mínima.
 
-## Documentação completa
+Critérios de saída:
 
-Requisitos, regras de negócio, arquitetura detalhada, especificação de API e
-o Documento de Arquitetura de Software (DAS, modelo arc42) vivem em
-`documentation/`, que ainda não é versionada neste repositório (arquivo de
-trabalho pessoal). Uma versão reduzida e versionada será adicionada depois;
-quando isso acontecer, apontar aqui para ela.
+| Fase | Critério |
+|---|---|
+| 1 | Um usuário de cada perfil autentica e enxerga apenas o que lhe cabe, comprovado por teste automatizado. Orientador, supervisor e concedente completam o critério quando `estagio` existir |
+| 2 | Um estágio percorre `RASCUNHO → ATIVO`, e cada guarda de ativação é comprovada por teste que a viola isoladamente |
+| 4 | A vedação de dupla contagem (RN-36) tem teste que a força a falhar antes de passar |
 
-- `documentation/contexto/CONTEXTO.MD`: estado atual do projeto, lacunas conhecidas
-- `documentation/planejamento/PLANEJAMENTO.MD`: fases, ordem de implementação, riscos
-- `documentation/arquitetura/STACK.MD`: stack completa, restrições, alternativas descartadas
-- `documentation/arquitetura/ARQUITETURA.MD`: modelo de dados, segurança, estrutura de pastas
-- `documentation/arquitetura/ENDPOINTS-API.MD`: todos os endpoints, convenções, códigos de erro
-- `documentation/DAS.docx`: Documento de Arquitetura de Software (arc42)
-- `documentation/Stack e API.docx`: entrega formal de stack e API
-- `documentation/requisitos/Requisitos e Regras.docx`: requisitos e regras de negócio completos
+## Documentação
+
+Requisitos, regras de negócio e documentos formais da disciplina são mantidos fora
+do repositório pela equipe. Neste repositório, a referência é este arquivo, o
+`README.md` e o próprio código: schema em `src/db/schema`, segurança em
+`drizzle/sql`, contratos da API em `src/modules/*/schemas` e comportamento esperado
+nos testes. Quando uma regra de negócio não estiver coberta aqui nem no código,
+perguntar em vez de supor.
