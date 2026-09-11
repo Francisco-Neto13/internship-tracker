@@ -1,37 +1,155 @@
 name: CI
 
+# Runs on every integration batch as well, so a batch only reaches develop after its
+# full test run is green (AGENTS.md, branches and commits).
+# A new step goes in TWO places: here and in scripts/ci-local.mjs, whose last step
+# fails when a step named here has no local counterpart.
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [develop, main, "integration/**"]
   push:
-    branches: [develop, main]
+    branches: [develop, main, "integration/**"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-test:
+  source-branch:
+    name: Source branch
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # develop only receives batches, main only receives develop, a batch only receives
+      # features. Branch names come through env, never interpolated into the script:
+      # they are text controlled by whoever opens the pull request.
+      - name: Check source branch
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "push event: no source rule"
+            exit 0
+          fi
+          case "$BASE" in
+            develop) allowed="integration/*" ;;
+            main) allowed="develop" ;;
+            integration/*) allowed="feature/*" ;;
+            *) echo "no source rule for $BASE"; exit 0 ;;
+          esac
+          case "$HEAD" in
+            $allowed) echo "ok: $HEAD -> $BASE" ;;
+            *) echo "A pull request into '$BASE' only accepts '$allowed' (came from '$HEAD')."; exit 1 ;;
+          esac
 
-      - uses: actions/setup-node@v4
+  quality:
+    name: Lint, types, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-      - run: npm run lint
+      - name: No source hidden by .gitignore
+        run: node scripts/ci-local.mjs --only "No source hidden by .gitignore"
 
-      - run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
 
-      - run: npm run build
+      - name: Typecheck
+        run: npm run typecheck
 
-      - run: npm run test -- --run
+      - name: Unit tests
+        run: npx vitest run --project unit
 
-      # TODO (tarefa 1.2/1.3 do planejamento): quando existir schema em
-      # src/db/schema, criar uma branch efêmera do Neon aqui (com a API do
-      # Neon, usando os segredos NEON_API_KEY e NEON_PROJECT_ID) e rodar
-      # `npm run db:migrate` contra ela antes dos testes, destruindo a
-      # branch no fim do job.
+      # No credentials on purpose: the build must not need a database
+      - name: Build
+        run: npm run build
 
-      # TODO: adicionar job de Playwright (npm run test:e2e) quando existir
-      # fluxo de tela real para cobrir.
+  database:
+    name: Migrations, RLS and audit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Same container, roles and init script as local development (.env.test)
+      - name: Start database
+        run: docker compose up -d postgres --wait
+
+      - name: Database tests
+        run: npm run test:db
+
+      - name: Migrations are idempotent
+        run: node scripts/ci-local.mjs --only "Migrations are idempotent"
+
+  e2e:
+    name: End-to-end
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://app_runtime:app_runtime@localhost:5432/internship_tracker
+      DATABASE_AUTH_URL: postgres://auth_runtime:auth_runtime@localhost:5432/internship_tracker
+      DATABASE_MIGRATION_URL: postgres://migrator:migrator@localhost:5432/internship_tracker
+      BETTER_AUTH_SECRET: ci-only-secret-for-ephemeral-e2e-database-000000
+      BETTER_AUTH_URL: http://localhost:3000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start database
+        run: docker compose up -d postgres --wait
+
+      - name: Migrate development database
+        run: npm run db:migrate
+
+      - name: Seed development database
+        run: npm run db:seed
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
