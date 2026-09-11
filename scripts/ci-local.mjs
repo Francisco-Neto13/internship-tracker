@@ -1,10 +1,10 @@
 /**
- * Runs the whole CI on this machine: before the batch pull request to develop, and from
- * the pre-push hook on develop, main and integration/*.
+ * Runs the whole CI on this machine. It is how a batch exhausts its tests before the pull
+ * request into develop: `npm run batch:pr` runs it with --require-docker first.
  *
  *   npm run ci
  *   npm run ci -- --fast             # skips every step that needs Docker
- *   npm run ci -- --require-docker   # fails instead of skipping when Docker is down (pre-push)
+ *   npm run ci -- --require-docker   # fails instead of skipping when Docker is down (batch:pr)
  *   npm run ci -- --only "<step>"    # one step; ci.yml uses it to share logic with this file
  *
  * The value is not repeating commands, it is reproducing the CI environment: a clean

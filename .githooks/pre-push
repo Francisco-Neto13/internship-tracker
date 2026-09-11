@@ -2,22 +2,20 @@
 #
 # Guards the branch flow before anything leaves the machine (AGENTS.md, Branches e commits):
 #
-#   feature/*      -> integration/<lote>  push passes straight through
-#   integration/*  -> PR to develop       full local CI must pass on the exact commit pushed
-#   develop, main                         never pushed directly: they only change through PRs
+#   feature/* -> integration/<lote> -> PR -> develop -> PR -> main
 #
-# The same rules exist on GitHub (rulesets and the "Source branch" CI job). This hook is
-# the early, local copy: it fails in seconds instead of after a remote CI run.
+# Pushes to feature/* and integration/* pass straight through: the batch is still under
+# review and test and may be incomplete. Its tests are exhausted before the pull request
+# into develop (`npm run batch:pr` runs the full local CI first), and that pull request is
+# where the remote CI runs.
+#
+# develop and main never receive a direct push: they only change through pull requests.
+# GitHub enforces the same rule (rulesets); this hook fails earlier, on the machine.
 #
 # Installed by `npm install` (prepare script) or by hand, once per clone:
 #     npm run hooks
 #
-# To skip it for a one-off push:
-#     git push --no-verify
-#
 zero_sha=0000000000000000000000000000000000000000
-head_sha=$(git rev-parse HEAD)
-batch=""
 
 while read -r local_ref local_sha remote_ref remote_sha; do
   # A sha made only of zeros means the remote branch is being deleted
@@ -39,32 +37,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
       echo "[pre-push] Fluxo: feature/* -> integration/<lote> -> PR para develop -> PR para main."
       exit 1
       ;;
-    integration/*)
-      if [ "$local_sha" != "$head_sha" ]; then
-        echo "[pre-push] $branch nao e o commit em checkout, e a CI local testaria o codigo errado."
-        echo "[pre-push] Rode: git switch $branch  (e faca o push de la)"
-        exit 1
-      fi
-      batch="$branch"
-      ;;
   esac
 done
 
-if [ -z "$batch" ]; then
-  echo "[pre-push] branch de trabalho: CI local nao roda aqui (antes do PR do lote: npm run ci)"
-  exit 0
-fi
-
-# Uncommitted or untracked files would make the local CI test something the push lacks
-if [ -n "$(git status --porcelain)" ]; then
-  echo "[pre-push] ha alteracoes nao commitadas; a CI local nao testaria o que vai subir:"
-  git status --short
-  exit 1
-fi
-
-echo "[pre-push] push do lote $batch: rodando a CI local completa (git push --no-verify pula)"
-npm run ci -- --require-docker || {
-  echo ""
-  echo "[pre-push] push cancelado: a CI de $batch falharia."
-  exit 1
-}
+exit 0

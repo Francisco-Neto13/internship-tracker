@@ -1,14 +1,20 @@
 name: CI
 
-# Runs on every integration batch as well, so a batch only reaches develop after its
-# full test run is green (AGENTS.md, branches and commits).
+# Branch flow (AGENTS.md, Branches e commits):
+#
+#   feature/* -> integration/<lote> -> PR -> develop -> PR -> main
+#
+# Remote CI does NOT run on integration/*: the batch is still under review and test, and
+# its tests are exhausted locally (`npm run batch:pr` runs `npm run ci` before opening the
+# pull request). The gate is the pull request into develop: this is where it breaks.
+#
 # A new step goes in TWO places: here and in scripts/ci-local.mjs, whose last step
 # fails when a step named here has no local counterpart.
 on:
   pull_request:
-    branches: [develop, main, "integration/**"]
+    branches: [develop, main]
   push:
-    branches: [develop, main, "integration/**"]
+    branches: [develop, main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -22,9 +28,9 @@ jobs:
     name: Source branch
     runs-on: ubuntu-latest
     steps:
-      # develop only receives batches, main only receives develop, a batch only receives
-      # features. Branch names come through env, never interpolated into the script:
-      # they are text controlled by whoever opens the pull request.
+      # develop only receives batches, main only receives develop. Branch names come
+      # through env, never interpolated into the script: they are text controlled by
+      # whoever opens the pull request.
       - name: Check source branch
         env:
           EVENT: ${{ github.event_name }}
@@ -38,7 +44,6 @@ jobs:
           case "$BASE" in
             develop) allowed="integration/*" ;;
             main) allowed="develop" ;;
-            integration/*) allowed="feature/*" ;;
             *) echo "no source rule for $BASE"; exit 0 ;;
           esac
           case "$HEAD" in
