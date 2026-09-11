@@ -4,11 +4,18 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: internship_tracker
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Runs only when the volume is created: roles and databases (RF003, RN-37)
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d internship_tracker_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
 
   minio:
     image: minio/minio

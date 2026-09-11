@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# Guards the branch flow before anything leaves the machine (AGENTS.md, Branches e commits):
+#
+#   feature/* -> integration/<lote> -> PR -> develop -> PR -> main
+#
+# Pushes to feature/* and integration/* pass straight through: the batch is still under
+# review and test and may be incomplete. Its tests are exhausted before the pull request
+# into develop (`npm run batch:pr` runs the full local CI first), and that pull request is
+# where the remote CI runs.
+#
+# develop and main never receive a direct push: they only change through pull requests.
+# GitHub enforces the same rule (rulesets); this hook fails earlier, on the machine.
+#
+# Installed by `npm install` (prepare script) or by hand, once per clone:
+#     npm run hooks
+#
+zero_sha=0000000000000000000000000000000000000000
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # A sha made only of zeros means the remote branch is being deleted
+  case "$local_sha" in
+    *[!0]*) ;;
+    *) continue ;;
+  esac
+
+  branch="${remote_ref#refs/heads/}"
+  case "$branch" in
+    develop | main)
+      # Only exception: creating main for the first time from a commit develop already has
+      if [ "$branch" = "main" ] && [ "$remote_sha" = "$zero_sha" ] &&
+        git merge-base --is-ancestor "$local_sha" refs/remotes/origin/develop 2>/dev/null; then
+        echo "[pre-push] criando main a partir de um commit que ja esta na develop"
+        continue
+      fi
+      echo "[pre-push] push direto para $branch recusado: $branch so muda por pull request."
+      echo "[pre-push] Fluxo: feature/* -> integration/<lote> -> PR para develop -> PR para main."
+      exit 1
+      ;;
+  esac
+done
+
+exit 0
