@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 // Seeded by scripts/db/seed.ts
 const SEED_PASSWORD = "senha-dev-internship";
-const COORDENACAO = { email: "coordenacao.software@internship.local", nome: "Coordenacao de Software" };
+const COORDENACAO = { email: "coordenacao.software@internship.local", nome: "Coordena??o de Software" };
 
 test("redirects an anonymous visitor to the login page (RF002)", async ({ page }) => {
   await page.goto("/dashboard");
@@ -29,7 +29,7 @@ test("signs in, shows the profiles in force and signs out (RF002, RF003)", async
 
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByTestId("usuario-autenticado")).toHaveText(COORDENACAO.nome);
-  await expect(page.getByTestId("perfis-vigentes")).toContainText("Coordenacao");
+  await expect(page.getByTestId("perfis-vigentes")).toContainText("Coordena??o");
 
   const estudantes = await page.request.get("/api/v1/estudantes");
   expect(estudantes.status()).toBe(200);
