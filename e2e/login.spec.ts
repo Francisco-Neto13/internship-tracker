@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 // Seeded by scripts/db/seed.ts
 const SEED_PASSWORD = "senha-dev-internship";
-const COORDENACAO = { email: "coordenacao.software@internship.local", nome: "Coordena??o de Software" };
+const COORDENACAO = { email: "coordenacao.software@internship.local", nome: "Coordenação de Software" };
 
 test("redirects an anonymous visitor to the login page (RF002)", async ({ page }) => {
   await page.goto("/dashboard");
@@ -29,7 +29,7 @@ test("signs in, shows the profiles in force and signs out (RF002, RF003)", async
 
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByTestId("usuario-autenticado")).toHaveText(COORDENACAO.nome);
-  await expect(page.getByTestId("perfis-vigentes")).toContainText("Coordena??o");
+  await expect(page.getByTestId("perfis-vigentes")).toContainText("Coordenação");
 
   const estudantes = await page.request.get("/api/v1/estudantes");
   expect(estudantes.status()).toBe(200);
@@ -38,7 +38,8 @@ test("signs in, shows the profiles in force and signs out (RF002, RF003)", async
   expect(body.data.map((item) => item.matricula)).toContain("2026000001");
   expect(body.data.map((item) => item.matricula)).not.toContain("2026000002");
 
-  await page.getByRole("button", { name: "Sair" }).click();
+  await page.getByRole("button", { name: COORDENACAO.nome }).click();
+  await page.getByRole("menuitem", { name: "Sair" }).click();
   await expect(page).toHaveURL(/\/login$/);
 
   const depois = await page.request.get("/api/v1/estudantes");
