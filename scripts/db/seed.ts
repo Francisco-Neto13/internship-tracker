@@ -75,12 +75,12 @@ async function main() {
   const passwordHash = await hashPassword(SEED_PASSWORD);
 
   const software = await upsertCurso("ENG-SOFT", "Engenharia de Software");
-  const administracao = await upsertCurso("ADM", "Administracao");
+  const administracao = await upsertCurso("ADM", "Administração");
 
   const admin = await upsertUsuario("admin@internship.local", "Administrador do Sistema", passwordHash);
   await ensurePerfil(admin.id, "ADMINISTRADOR");
 
-  const coordenacao = await upsertUsuario("coordenacao.software@internship.local", "Coordenacao de Software", passwordHash);
+  const coordenacao = await upsertUsuario("coordenacao.software@internship.local", "Coordenação de Software", passwordHash);
   await ensurePerfil(coordenacao.id, "COORDENACAO", software.id);
 
   const ana = await upsertUsuario("ana.estudante@internship.local", "Ana Estudante", passwordHash);

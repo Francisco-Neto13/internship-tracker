@@ -26,7 +26,7 @@ function translateWriteError(error: unknown): unknown {
     return new DomainError({
       code: "ACESSO_NEGADO",
       kind: "FORBIDDEN",
-      message: "O perfil atual nao permite cadastrar estudante neste curso.",
+      message: "O perfil atual não permite cadastrar estudante neste curso.",
       requisito: "RF003",
     });
   }
@@ -34,7 +34,7 @@ function translateWriteError(error: unknown): unknown {
     return new DomainError({
       code: "MATRICULA_DUPLICADA",
       kind: "CONFLICT",
-      message: "Ja existe estudante com esta matricula.",
+      message: "Já existe estudante com esta matrícula.",
       requisito: "RF005",
     });
   }
@@ -42,7 +42,7 @@ function translateWriteError(error: unknown): unknown {
     return new DomainError({
       code: "USUARIO_JA_ESTUDANTE",
       kind: "CONFLICT",
-      message: "Este usuario ja possui cadastro de estudante.",
+      message: "Este usuário já possui cadastro de estudante.",
       requisito: "RF005",
     });
   }
@@ -50,7 +50,7 @@ function translateWriteError(error: unknown): unknown {
     return new DomainError({
       code: "USUARIO_INEXISTENTE",
       kind: "UNPROCESSABLE",
-      message: "O usuario informado nao existe.",
+      message: "O usuário informado não existe.",
       requisito: "RF005",
     });
   }
@@ -58,7 +58,7 @@ function translateWriteError(error: unknown): unknown {
     return new DomainError({
       code: "CURSO_INEXISTENTE",
       kind: "UNPROCESSABLE",
-      message: "O curso informado nao existe.",
+      message: "O curso informado não existe.",
       requisito: "RF005",
     });
   }

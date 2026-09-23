@@ -44,7 +44,7 @@ export function authenticatedRoute<TParams = Record<string, never>>(
     try {
       const identity = await getIdentity();
       if (!identity) {
-        return errorResponse(401, { code: "NAO_AUTENTICADO", message: "Sessao ausente ou expirada.", requisito: "RF002" });
+        return errorResponse(401, { code: "NAO_AUTENTICADO", message: "Sessão ausente ou expirada.", requisito: "RF002" });
       }
       return await handler({ request, identity, params: await context.params });
     } catch (error) {
@@ -56,13 +56,13 @@ export function authenticatedRoute<TParams = Record<string, never>>(
 export function toErrorResponse(error: unknown): Response {
   // request.json() on a malformed body
   if (error instanceof SyntaxError) {
-    return errorResponse(400, { code: "PAYLOAD_INVALIDO", message: "O corpo da requisicao nao e JSON valido." });
+    return errorResponse(400, { code: "PAYLOAD_INVALIDO", message: "O corpo da requisição não é JSON válido." });
   }
 
   if (error instanceof z.ZodError) {
     return errorResponse(400, {
       code: "PAYLOAD_INVALIDO",
-      message: "O payload nao atende ao formato esperado.",
+      message: "O payload não atende ao formato esperado.",
       details: error.issues.map((issue) => ({ field: issue.path.join("."), issue: issue.message })),
     });
   }
