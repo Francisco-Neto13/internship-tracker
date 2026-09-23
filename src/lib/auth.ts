@@ -102,7 +102,7 @@ function createAuth() {
               .where(eq(usuario.id, session.userId));
 
             if (row?.situacao !== "ATIVO") {
-              throw new APIError("FORBIDDEN", { message: "Usuario inativo" });
+              throw new APIError("FORBIDDEN", { message: "Usuário inativo" });
             }
           },
         },
