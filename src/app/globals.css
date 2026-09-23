@@ -1,26 +1,123 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Identidade "Navy Confiança" (documentation/design/internship-tracker-identidade-visual.pdf,
+   v1, 22/09/2026). Quatro tons cobrem a interface; as cores de status formam uma familia
+   separada da marca e so aparecem em selo (StatusBadge), nunca como fundo ou botao. */
+@theme {
+  --color-navy-900: #0f1b3d; /* menu lateral, faixas de topo, texto principal */
+  --color-navy-700: #1e3a5f; /* botao primario, titulos, elementos de acao */
+  --color-azul-500: #3b6fa0; /* links, estado de foco, graficos, destaques */
+  --color-nevoa-100: #e8edf3; /* fundos suaves, cabecalho de tabela, codigos */
+  --color-nevoa-50: #f5f7fa; /* fundo da pagina: cartao branco precisa de um plano atras */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-status-ok-text: #2f7d54;
+  --color-status-ok-bg: #eaf5ee;
+  --color-status-pending-text: #b07514;
+  --color-status-pending-bg: #fbf2e1;
+  --color-status-danger-text: #b03a2b;
+  --color-status-danger-bg: #fbeae7;
+  --color-status-neutral-text: #5b6472;
+  --color-status-neutral-bg: #eef1f5;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Familia isolada do resto do tema: a sidebar fica sempre no navy da marca,
+     independente do que o restante da interface fizer (padrao observado nos
+     tres CRMs mapeados — a sidebar nunca "pisca" clara). */
+  --color-sidebar-background: #0f1b3d; /* navy-900 */
+  --color-sidebar-foreground: #e8edf3; /* nevoa-100 */
+  --color-sidebar-primary: #1e3a5f; /* navy-700 */
+  --color-sidebar-primary-foreground: #ffffff;
+  /* O item ativo precisa mudar de matiz, nao so de claridade: navy-700 sobre navy-900
+     da ~1.5:1 e some. Azul 500 e o tom de destaque da identidade e le como selecao. */
+  --color-sidebar-accent: #3b6fa0; /* azul-500 — fundo do item ativo */
+  --color-sidebar-accent-foreground: #ffffff;
+  --color-sidebar-border: rgba(255, 255, 255, 0.14);
+  --color-sidebar-ring: #3b6fa0; /* azul-500 */
+
+  --shadow-card: 0 1px 2px rgba(15, 27, 61, 0.06), 0 1px 3px rgba(15, 27, 61, 0.08);
+  --shadow-elevated:
+    0 1px 2px rgba(15, 27, 61, 0.05), 0 8px 24px -10px rgba(15, 27, 61, 0.16),
+    0 24px 48px -24px rgba(15, 27, 61, 0.18);
+
+  --animate-fade-in: fade-in 0.35s ease-out;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
+/* Inter cobre corpo e titulo; font-display continua existindo como papel (titulo/KPI)
+   para o dia em que a marca quiser separar as duas faces de novo. */
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+/* Interface desenhada só clara: o guia de marca não define um tema escuro */
+:root {
+  color-scheme: light;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-nevoa-50);
+  color: var(--color-navy-900);
+  font-family: var(--font-sans), "Segoe UI", system-ui, sans-serif;
+}
+
+/* Titulos, numeros de destaque e KPIs (mesma familia do corpo, papel separado por token) */
+h1, h2, h3, h4 {
+  font-family: var(--font-display), var(--font-sans), "Segoe UI", system-ui, sans-serif;
+}
+
+/* Inter em tamanho grande le solta com o espacamento optico padrao;
+   aperta o tracking nos tres niveis de titulo (nao no h4, que so aparece em
+   rotulo pequeno onde o padrao ja fica bem). */
+h1, h2, h3 {
+  letter-spacing: -0.015em;
+}
+
+/* O Tailwind v4 tirou do preflight o `cursor: pointer` que o v3 dava aos botoes;
+   sem isto, todo elemento clicavel que nao e <a> fica com a seta padrao. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([data-disabled]),
+  summary,
+  label[for],
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* Superficie unica para "isto e um cartao": tabela, KPI, secao de formulario.
+   Um so lugar pra ajustar raio/sombra em vez de cada componente reinventar a propria borda. */
+@layer components {
+  .surface-card {
+    @apply rounded-xl border border-navy-900/10 bg-white shadow-card;
+  }
+  .surface-elevated {
+    @apply rounded-xl border border-navy-900/10 bg-white shadow-elevated;
+  }
+  /* Filete que nasce e morre transparente: separa sem cortar o bloco em dois. */
+  .divider-rule {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-navy-900/15 to-transparent;
+  }
+}
+
+/* prefers-reduced-motion desliga toda animacao decorativa de uma vez, inclusive as
+   dos componentes Radix (data-[state=open]:animate-in etc.) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
