@@ -73,6 +73,7 @@ Pontos que antes admitiam mais de uma interpretação, definidos com o professor
 | Recurso contra recusa de atividade complementar | Não existe. O estudante cadastra uma nova atividade |
 | Divergência relevante de carga horária | Percentual parametrizável, padrão de 10% |
 | Hospedagem em território nacional | Sem exigência |
+| Recuperação de senha (RF002) | O administrador emite senha provisória de 72 h, entregue fora do sistema, com troca obrigatória no primeiro acesso. Sem e-mail |
 
 ## Requisitos de qualidade
 
@@ -137,13 +138,17 @@ O seed cria usuários com a senha `senha-dev-internship`:
 
 Se o volume do Postgres já existia antes dos papéis, recrie-o com `docker compose down -v`.
 
+Para ver o primeiro acesso: entre como `admin@internship.local`, crie um usuário em
+Administração > Usuários e anote a senha provisória exibida (só aparece uma vez). Ao entrar
+com ela, o sistema exige uma senha nova de pelo menos 15 caracteres antes de qualquer tela.
+
 Outros comandos úteis:
 
 ```bash
 npm run lint
 npm run typecheck
 npm run test:unit          # Vitest sem banco
-npm run test:db            # RLS, auditoria e autenticação contra Postgres real
+npm run test:db            # RLS, auditoria, autenticação, usuários e senha contra Postgres real
 npm run test:e2e           # Playwright (banco migrado e com seed)
 npm run db:generate        # gera migração de tabela a partir de src/db/schema
 npm run ci                 # CI inteira na máquina, espelho do ci.yml (--fast pula Docker)
@@ -163,7 +168,7 @@ alter role auth_runtime with login password '<senha gerada>';
 ## Estrutura do código
 
 ```
-src/app/(auth)/        rotas de login e recuperação de senha
+src/app/(auth)/        login e troca de senha
 src/app/(app)/         telas autenticadas por perfil
 src/app/api/v1/        route handlers da API REST
 src/modules/           8 módulos de domínio, cada um com
@@ -221,7 +226,7 @@ Commits seguem `type(scope): summary`, no imperativo, com notas em bullet explic
 | Fase | Entrega |
 |---|---|
 | 0 · Fechamento da documentação | Stack, arquitetura, endpoints, DAS, padrão de commits, repositório (**concluída**) |
-| 1 · Fundação técnica | RNFs, DER lógico, migrações, wrapper de identidade, papéis e políticas RLS, auditoria, autenticação, CI (**em integração**) |
+| 1 · Fundação técnica | RNFs, DER lógico, migrações, wrapper de identidade, papéis e políticas RLS, auditoria, autenticação, CI, usuários e perfis, senha provisória, consulta e exportação da auditoria (**concluída**) |
 | 2 · Cadastros e formalização | Cursos, estudantes, concedentes, convênios, TCE, ativação de estágio |
 | 3 · Acompanhamento | Frequência, carga horária, relatórios, avaliação |
 | 4 · Atividades complementares e integralização | Cadastro, análise, limites por categoria, apuração |
