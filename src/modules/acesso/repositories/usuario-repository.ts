@@ -1,5 +1,6 @@
 import { and, asc, count, eq, exists, ilike, or, sql, type SQL } from "drizzle-orm";
 import { usuario, vinculoPerfil } from "@/db/schema";
+import { padraoContendo } from "@/db/like";
 import type { Transaction } from "@/db/with-user";
 import { vinculoVigente } from "./vinculo-perfil-repository";
 
@@ -30,12 +31,6 @@ const colunas = {
   criadoEm: usuario.criadoEm,
 };
 
-// LIKE treats %, _ and the escape character as wildcards; escape them so a search for
-// "50%" matches the literal text (PostgreSQL's default LIKE escape is the backslash)
-function padraoBusca(texto: string) {
-  return `%${texto.replace(/[\\%_]/g, (caractere) => `\\${caractere}`)}%`;
-}
-
 export async function findUsuarios(
   tx: Transaction,
   filter: { perfil?: Perfil; situacao?: Situacao; busca?: string; limit: number; offset: number },
@@ -43,7 +38,7 @@ export async function findUsuarios(
   const condicoes: SQL[] = [];
   if (filter.situacao) condicoes.push(eq(usuario.situacao, filter.situacao));
   if (filter.busca) {
-    const padrao = padraoBusca(filter.busca);
+    const padrao = padraoContendo(filter.busca);
     condicoes.push(or(ilike(usuario.nome, padrao), ilike(usuario.email, padrao))!);
   }
   if (filter.perfil) {
