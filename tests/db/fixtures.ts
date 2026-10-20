@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "@/db/schema";
@@ -85,12 +86,59 @@ export async function createCurso() {
 export async function grantPerfil(
   usuarioId: string,
   perfil: Perfil,
-  options: { cursoId?: string; vigenciaInicio?: Date; vigenciaFim?: Date } = {},
+  options: { cursoId?: string; concedenteId?: string; vigenciaInicio?: Date; vigenciaFim?: Date } = {},
 ) {
   const [row] = await ownerDatabase()
     .insert(schema.vinculoPerfil)
     .values({ usuarioId, perfil, ...options })
     .returning();
+  return row;
+}
+
+/** Valid numeric CNPJ built from a random 12-digit base, so every fixture is unique. */
+export function cnpjAleatorio(): string {
+  const base = Array.from({ length: 12 }, () => Math.floor(Math.random() * 10)).join("");
+  const dv = (corpo: string, pesos: number[]) => {
+    const resto = [...corpo].reduce((total, c, i) => total + Number(c) * pesos[i], 0) % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  const primeiro = dv(base, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const segundo = dv(base + primeiro, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  return `${base}${primeiro}${segundo}`;
+}
+
+export async function createConcedente(options: { situacao?: "ATIVA" | "SUSPENSA" } = {}) {
+  const id = suffix();
+  const [row] = await ownerDatabase()
+    .insert(schema.concedente)
+    .values({
+      razaoSocial: `Concedente ${id}`,
+      cnpj: cnpjAleatorio(),
+      logradouro: "Rua Teste",
+      numeroEndereco: "100",
+      bairro: "Centro",
+      municipio: "Maceió",
+      uf: "AL",
+      cep: "57000000",
+      emailContato: `contato-${id}@concedente.local`,
+      representanteLegalNome: `Representante ${id}`,
+      areaAtuacao: "Tecnologia",
+    })
+    .returning();
+  if (options.situacao === "SUSPENSA") {
+    // Same transaction rule the trigger enforces: history first, then the situation
+    await ownerDatabase().transaction(async (tx) => {
+      const [autor] = await tx.insert(schema.usuario).values({ nome: `Autor ${id}`, email: `autor-${id}@teste.local` }).returning();
+      await tx.insert(schema.historicoSituacaoConcedente).values({
+        concedenteId: row.id,
+        situacaoNova: "SUSPENSA",
+        motivo: "fixture",
+        decididoPorUsuarioId: autor.id,
+      });
+      await tx.update(schema.concedente).set({ situacao: "SUSPENSA" }).where(eq(schema.concedente.id, row.id));
+    });
+    return { ...row, situacao: "SUSPENSA" as const };
+  }
   return row;
 }
 

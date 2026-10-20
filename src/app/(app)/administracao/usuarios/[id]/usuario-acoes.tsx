@@ -15,9 +15,10 @@ type Props = {
   perfis: VinculoEscolhido[];
   catalogo: OpcaoPerfil[];
   cursos: { id: string; nome: string }[];
+  concedentes: { id: string; nome: string }[];
 };
 
-export function UsuarioAcoes({ usuario, perfis: perfisIniciais, catalogo, cursos }: Props) {
+export function UsuarioAcoes({ usuario, perfis: perfisIniciais, catalogo, cursos, concedentes }: Props) {
   const router = useRouter();
   const [nome, setNome] = useState(usuario.nome);
   const [email, setEmail] = useState(usuario.email);
@@ -79,7 +80,7 @@ export function UsuarioAcoes({ usuario, perfis: perfisIniciais, catalogo, cursos
           void enviar("/perfis", "PUT", { perfis }, "Perfis atualizados. Valem a partir da próxima requisição do usuário.");
         }}
       >
-        <PerfisCampo catalogo={catalogo} cursos={cursos} value={perfis} onChange={setPerfis} />
+        <PerfisCampo catalogo={catalogo} cursos={cursos} concedentes={concedentes} value={perfis} onChange={setPerfis} />
         <Button type="submit" variant="outline" disabled={enviando} className="sm:w-fit">
           Salvar perfis
         </Button>
