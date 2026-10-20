@@ -14,11 +14,16 @@ create policy conta_auth on public.conta for all to auth_runtime using (true) wi
 create policy verificacao_auth on public.verificacao for all to auth_runtime using (true) with check (true);
 create policy limite_requisicao_auth on public.limite_requisicao for all to auth_runtime using (true) with check (true);
 
--- usuario: auth_runtime signs users in; domain code only reads what the profile allows
+-- usuario: auth_runtime signs users in; domain code reads what the profile allows and only
+-- the administrator writes (RF001). Writes go through app_runtime, not the auth pool, so the
+-- audit trigger records who created, edited or inactivated each account (RN-28).
+-- Column grants keep email_verificado, imagem and the timestamps out of reach.
 alter table public.usuario enable row level security;
 
 grant select, insert, update on public.usuario to auth_runtime;
 grant select on public.usuario to app_runtime;
+grant insert (nome, email, troca_senha_obrigatoria, senha_provisoria_expira_em) on public.usuario to app_runtime;
+grant update (nome, email, situacao, troca_senha_obrigatoria, senha_provisoria_expira_em) on public.usuario to app_runtime;
 
 create policy usuario_auth on public.usuario for all to auth_runtime using (true) with check (true);
 
@@ -27,6 +32,15 @@ create policy usuario_leitura on public.usuario for select to app_runtime using 
   or (select app.tem_perfil_vigente('ADMINISTRADOR'))
   or app.coordena_estudante_usuario(id)
 );
+
+create policy usuario_insercao on public.usuario for insert to app_runtime
+  with check ((select app.tem_perfil_vigente('ADMINISTRADOR')));
+
+-- The user clears their own pending password change through app.concluir_troca_senha(),
+-- never through this policy: a self-update grant would also expose nome and situacao
+create policy usuario_atualizacao on public.usuario for update to app_runtime
+  using ((select app.tem_perfil_vigente('ADMINISTRADOR')))
+  with check ((select app.tem_perfil_vigente('ADMINISTRADOR')));
 
 -- vinculo_perfil: history is preserved, so updates may only close vigencia_fim
 alter table public.vinculo_perfil enable row level security;
