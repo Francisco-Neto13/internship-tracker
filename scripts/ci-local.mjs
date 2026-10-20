@@ -183,6 +183,18 @@ const steps = [
   },
   { name: "Seed development database", docker: true, run: () => run("npm", ["run", "db:seed"]) },
   {
+    name: "Prepare storage",
+    docker: true,
+    // D8: the private bucket the upload flow and the e2e use (SeaweedFS locally, R2 in production)
+    run: () => {
+      const subir = run("docker", ["compose", "up", "-d", "storage", "--wait"]);
+      if (subir.status !== 0) return subir;
+      const preparar = run("npm", ["run", "storage:init"]);
+      if (preparar.status !== 0) return preparar;
+      return run("npm", ["run", "storage:check"]);
+    },
+  },
+  {
     name: "End-to-end tests",
     docker: true,
     // CI=1 makes Playwright serve the production build from the Build step

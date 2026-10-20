@@ -18,6 +18,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=.env scripts/db/migrate.ts",
     "db:seed": "tsx --env-file-if-exists=.env scripts/db/seed.ts",
+    "storage:init": "tsx --env-file-if-exists=.env scripts/storage/init.ts",
+    "storage:check": "tsx --env-file-if-exists=.env scripts/storage/check.ts",
     "ci": "node scripts/ci-local.mjs",
     "batch:integrate": "node scripts/github/batch.mjs integrate",
     "batch:pr": "node scripts/github/batch.mjs pr",
