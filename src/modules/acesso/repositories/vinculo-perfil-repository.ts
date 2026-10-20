@@ -7,6 +7,7 @@ type Perfil = (typeof vinculoPerfil.perfil.enumValues)[number];
 export type PerfilVigente = {
   perfil: Perfil;
   cursoId: string | null;
+  concedenteId: string | null;
 };
 
 export type VinculoRow = {
@@ -14,6 +15,7 @@ export type VinculoRow = {
   usuarioId: string;
   perfil: Perfil;
   cursoId: string | null;
+  concedenteId: string | null;
   vigenciaInicio: Date;
   vigenciaFim: Date | null;
 };
@@ -23,6 +25,7 @@ const colunas = {
   usuarioId: vinculoPerfil.usuarioId,
   perfil: vinculoPerfil.perfil,
   cursoId: vinculoPerfil.cursoId,
+  concedenteId: vinculoPerfil.concedenteId,
   vigenciaInicio: vinculoPerfil.vigenciaInicio,
   vigenciaFim: vinculoPerfil.vigenciaFim,
 };
@@ -35,7 +38,7 @@ export function vinculoVigente() {
 
 export async function findPerfisVigentes(tx: Transaction, usuarioId: string): Promise<PerfilVigente[]> {
   return tx
-    .select({ perfil: vinculoPerfil.perfil, cursoId: vinculoPerfil.cursoId })
+    .select({ perfil: vinculoPerfil.perfil, cursoId: vinculoPerfil.cursoId, concedenteId: vinculoPerfil.concedenteId })
     .from(vinculoPerfil)
     .where(and(eq(vinculoPerfil.usuarioId, usuarioId), vinculoVigente()))
     .orderBy(asc(vinculoPerfil.perfil));
@@ -62,12 +65,14 @@ export async function findHistoricoVinculos(tx: Transaction, usuarioId: string):
 export async function insertVinculos(
   tx: Transaction,
   usuarioId: string,
-  vinculos: { perfil: Perfil; cursoId: string | null }[],
+  vinculos: { perfil: Perfil; cursoId: string | null; concedenteId?: string | null }[],
 ): Promise<VinculoRow[]> {
   if (vinculos.length === 0) return [];
   return tx
     .insert(vinculoPerfil)
-    .values(vinculos.map((vinculo) => ({ usuarioId, perfil: vinculo.perfil, cursoId: vinculo.cursoId })))
+    .values(
+      vinculos.map((vinculo) => ({ usuarioId, perfil: vinculo.perfil, cursoId: vinculo.cursoId, concedenteId: vinculo.concedenteId ?? null })),
+    )
     .returning(colunas);
 }
 

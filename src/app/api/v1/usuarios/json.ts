@@ -9,6 +9,7 @@ export function vinculoJson(vinculo: Vinculo) {
     id: vinculo.id,
     perfil: vinculo.perfil,
     curso_id: vinculo.cursoId,
+    concedente_id: vinculo.concedenteId,
     vigencia_inicio: vinculo.vigenciaInicio.toISOString(),
     vigencia_fim: vinculo.vigenciaFim?.toISOString() ?? null,
   };
