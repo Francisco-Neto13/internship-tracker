@@ -2,12 +2,44 @@ import { isForeignKeyViolation, isRlsViolation, isUniqueViolation } from "@/db/e
 import { withUser } from "@/db/with-user";
 import { DomainError } from "@/lib/errors";
 import type { Identity } from "@/lib/identity";
-import { findEstudantes, insertEstudante } from "../repositories/estudante-repository";
+import {
+  findEstudanteById,
+  findEstudantes,
+  insertEstudante,
+  updateEstudante,
+  type EstudanteRow,
+} from "../repositories/estudante-repository";
 
-export async function listEstudantes(identity: Identity, query: { page: number; limit: number; cursoId?: string }) {
+type SituacaoAcademica = EstudanteRow["situacaoAcademica"];
+
+const naoEncontrado = () =>
+  new DomainError({
+    code: "ESTUDANTE_NAO_ENCONTRADO",
+    kind: "NOT_FOUND",
+    message: "Estudante não encontrado.",
+    requisito: "RF005",
+  });
+
+export async function listEstudantes(
+  identity: Identity,
+  query: { page: number; limit: number; cursoId?: string; situacao?: SituacaoAcademica; busca?: string },
+) {
   return withUser(identity, (tx) =>
-    findEstudantes(tx, { cursoId: query.cursoId, limit: query.limit, offset: (query.page - 1) * query.limit }),
+    findEstudantes(tx, {
+      cursoId: query.cursoId,
+      situacao: query.situacao,
+      busca: query.busca,
+      limit: query.limit,
+      offset: (query.page - 1) * query.limit,
+    }),
   );
+}
+
+/** RF005: a student hidden by RLS answers 404, the same as one that does not exist. */
+export async function getEstudante(identity: Identity, id: string): Promise<EstudanteRow> {
+  const row = await withUser(identity, (tx) => findEstudanteById(tx, id));
+  if (!row) throw naoEncontrado();
+  return row;
 }
 
 export async function createEstudante(
@@ -17,19 +49,45 @@ export async function createEstudante(
   try {
     return await withUser(identity, (tx) => insertEstudante(tx, input));
   } catch (error) {
-    throw translateWriteError(error);
+    throw translateWriteError(error, "cadastrar estudante neste curso");
   }
 }
 
-function translateWriteError(error: unknown): unknown {
-  if (isRlsViolation(error)) {
-    return new DomainError({
-      code: "ACESSO_NEGADO",
-      kind: "FORBIDDEN",
-      message: "O perfil atual não permite cadastrar estudante neste curso.",
-      requisito: "RF003",
+/**
+ * RF005: the administrator, or the coordination of the student's course, edits course,
+ * enrolment number, period and academic situation. RLS checks the row before and after
+ * the change, so coordination cannot move a student into a course it does not coordinate.
+ * A visible student that the caller cannot edit (the student itself) is 403, not 404.
+ */
+export async function updateEstudanteDados(
+  identity: Identity,
+  id: string,
+  input: { cursoId?: string; matricula?: string; periodo?: number; situacaoAcademica?: SituacaoAcademica },
+): Promise<EstudanteRow> {
+  try {
+    return await withUser(identity, async (tx) => {
+      const atualizado = await updateEstudante(tx, id, input);
+      const row = await findEstudanteById(tx, id);
+      if (!row) throw naoEncontrado();
+      if (!atualizado) throw acessoNegado("editar este estudante");
+      return row;
     });
+  } catch (error) {
+    throw translateWriteError(error, "mover o estudante para este curso");
   }
+}
+
+function acessoNegado(acao: string) {
+  return new DomainError({
+    code: "ACESSO_NEGADO",
+    kind: "FORBIDDEN",
+    message: `O perfil atual não permite ${acao}.`,
+    requisito: "RF003",
+  });
+}
+
+function translateWriteError(error: unknown, acao: string): unknown {
+  if (isRlsViolation(error)) return acessoNegado(acao);
   if (isUniqueViolation(error, "estudante_matricula_unique")) {
     return new DomainError({
       code: "MATRICULA_DUPLICADA",
