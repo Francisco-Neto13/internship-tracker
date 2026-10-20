@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
 
 // Seeded by scripts/db/seed.ts
 const SEED_PASSWORD = "senha-dev-internship";
@@ -12,10 +12,18 @@ async function entrar(page: Page, email: string, senha: string) {
   await page.getByRole("button", { name: "Entrar" }).click();
 }
 
+// Better Auth allows 3 sign-ins per 10 seconds per client address in the production build.
+// This test signs in twice; a client address of its own (TEST-NET-3, RFC 5737) keeps it
+// from spending the budget of login.spec.ts, which runs in parallel from the same machine.
+function contextoProprio(browser: Browser) {
+  return browser.newContext({ extraHTTPHeaders: { "x-forwarded-for": "203.0.113.10" } });
+}
+
 test("a user created by the administrator must replace the temporary password first (RF001, RF002)", async ({
-  page,
   browser,
 }) => {
+  const contextoAdmin = await contextoProprio(browser);
+  const page = await contextoAdmin.newPage();
   await entrar(page, ADMIN, SEED_PASSWORD);
   await expect(page).toHaveURL(/\/dashboard$/);
 
@@ -27,7 +35,9 @@ test("a user created by the administrator must replace the temporary password fi
   expect(criado.headers()["cache-control"]).toBe("no-store");
   const { data } = (await criado.json()) as { data: { senha_provisoria: string } };
 
-  const contexto = await browser.newContext();
+  await contextoAdmin.close();
+
+  const contexto = await contextoProprio(browser);
   const novo = await contexto.newPage();
   await entrar(novo, email, data.senha_provisoria);
 
