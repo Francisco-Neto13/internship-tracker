@@ -19,6 +19,7 @@ import {
 import { usuario } from "./acesso";
 import { parametroInstitucional } from "./academico";
 import { documento } from "./documentos";
+import { perfil } from "./enums";
 import { estagio } from "./estagios";
 
 // M05 Acompanhamento (DER-LOGICO §4.5). Enums are complete from this first migration.
@@ -32,6 +33,8 @@ export const tipoRelatorio = pgEnum("tipo_relatorio", ["PERIODICO", "FINAL"]);
 // Requisitos v1.2 §8.6: no ENVIADO; "em atraso" is derived from the deadline, never stored
 export const situacaoRelatorio = pgEnum("situacao_relatorio", ["PENDENTE", "EM_ANALISE", "DEVOLVIDO", "APROVADO"]);
 export const decisaoParecer = pgEnum("decisao_parecer", ["APROVADO", "DEVOLVIDO"]);
+export const momentoAvaliacao = pgEnum("momento_avaliacao", ["PERIODICA", "FINAL"]);
+export const tipoAcompanhamento = pgEnum("tipo_acompanhamento", ["VISITA", "CONTATO", "REUNIAO"]);
 
 // Entries that count as hours worked (RF026): the one entry in force for the day (D2)
 export const SITUACOES_VIGENTES = ["REGISTRADO", "SINALIZADO", "HOMOLOGADO"] as const;
@@ -249,5 +252,102 @@ export const parecerRelatorio = pgTable(
   (t) => [
     index("parecer_relatorio_emitido_por_idx").on(t.emitidoPorUsuarioId),
     check("parecer_devolucao_com_texto", sql`${t.decisao} <> 'DEVOLVIDO' or ${t.texto} is not null`),
+  ],
+);
+
+// RF042, RN-15: criteria defined by the institution. A criterion already answered keeps its
+// meaning (description and scale frozen by trigger): it is deactivated and replaced.
+export const criterioAvaliacao = pgTable(
+  "criterio_avaliacao",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    codigo: text("codigo").notNull().unique(),
+    descricao: text("descricao").notNull(),
+    escalaMinima: smallint("escala_minima").notNull(),
+    escalaMaxima: smallint("escala_maxima").notNull(),
+    ordem: smallint("ordem").notNull().default(0),
+    ativo: boolean("ativo").notNull().default(true),
+    criadoEm: criadoEm(),
+    atualizadoEm: atualizadoEm(),
+  },
+  (t) => [
+    index("criterio_avaliacao_ativo_ordem_idx").on(t.ativo, t.ordem),
+    check("criterio_escala_valida", sql`${t.escalaMinima} >= 0 and ${t.escalaMaxima} > ${t.escalaMinima} and ${t.escalaMaxima} <= 100`),
+  ],
+);
+
+// RF042, RF043, RN-15: the concedente's evaluation (supervisor or representative), periodic or
+// final; one final per internship (guard of the conclusion). Immutable.
+export const avaliacaoDesempenho = pgTable(
+  "avaliacao_desempenho",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    estagioId: uuid("estagio_id")
+      .notNull()
+      .references(() => estagio.id),
+    momento: momentoAvaliacao("momento").notNull(),
+    periodoInicio: date("periodo_inicio"),
+    periodoFim: date("periodo_fim"),
+    observacoes: text("observacoes"),
+    avaliadorUsuarioId: uuid("avaliador_usuario_id")
+      .notNull()
+      .references(() => usuario.id),
+    // Profile under which the evaluation was made (SUPERVISOR or CONCEDENTE), set by trigger
+    avaliadorPerfil: perfil("avaliador_perfil").notNull(),
+    criadoEm: criadoEm(),
+  },
+  (t) => [
+    uniqueIndex("avaliacao_uma_final").on(t.estagioId).where(sql`${t.momento} = 'FINAL'`),
+    index("avaliacao_estagio_idx").on(t.estagioId),
+    index("avaliacao_avaliador_idx").on(t.avaliadorUsuarioId),
+    check("avaliacao_periodo_valido", sql`${t.momento} = 'FINAL' or (${t.periodoInicio} is not null and ${t.periodoFim} >= ${t.periodoInicio})`),
+    check("avaliacao_perfil_avaliador", sql`${t.avaliadorPerfil} in ('SUPERVISOR', 'CONCEDENTE')`),
+  ],
+);
+
+// RF042: one grade per criterion, within its scale (trigger); every active criterion answered
+// (checked at commit)
+export const respostaAvaliacao = pgTable(
+  "resposta_avaliacao",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    avaliacaoId: uuid("avaliacao_id")
+      .notNull()
+      .references(() => avaliacaoDesempenho.id),
+    criterioId: uuid("criterio_id")
+      .notNull()
+      .references(() => criterioAvaliacao.id),
+    nota: smallint("nota").notNull(),
+    comentario: text("comentario"),
+    criadoEm: criadoEm(),
+  },
+  (t) => [
+    uniqueIndex("resposta_avaliacao_criterio_unique").on(t.avaliacaoId, t.criterioId),
+    index("resposta_avaliacao_criterio_idx").on(t.criterioId),
+  ],
+);
+
+// RF033, RN-11: visits, contacts and meetings of the advisor. Editable by its author while the
+// internship is ATIVO (audited).
+export const acompanhamento = pgTable(
+  "acompanhamento",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    estagioId: uuid("estagio_id")
+      .notNull()
+      .references(() => estagio.id),
+    tipo: tipoAcompanhamento("tipo").notNull(),
+    dataOcorrencia: date("data_ocorrencia").notNull(),
+    participantes: text("participantes").notNull(),
+    observacoes: text("observacoes").notNull(),
+    registradoPorUsuarioId: uuid("registrado_por_usuario_id")
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: criadoEm(),
+    atualizadoEm: atualizadoEm(),
+  },
+  (t) => [
+    index("acompanhamento_estagio_data_idx").on(t.estagioId, t.dataOcorrencia),
+    index("acompanhamento_registrado_por_idx").on(t.registradoPorUsuarioId),
   ],
 );
