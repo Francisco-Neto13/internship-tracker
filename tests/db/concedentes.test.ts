@@ -97,12 +97,10 @@ describe("concedente registration (RF007, RF013)", () => {
 });
 
 describe("concedente representative and contacts (RF007, RN-37)", () => {
-  let s: Scenario;
   let alvo: Awaited<ReturnType<typeof concedenteFixture>>;
   let representante: Awaited<ReturnType<typeof createUsuario>>;
 
   beforeAll(async () => {
-    s = await createAccessScenario();
     alvo = await concedenteFixture();
     representante = await createUsuario();
     await grantPerfil(representante.id, "CONCEDENTE", { concedenteId: alvo.id });
