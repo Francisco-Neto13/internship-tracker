@@ -412,6 +412,8 @@ as $$
     when p_tipo = 'PLANO_ATIVIDADES' then
       app.coordena_curso_do_estagio(p_estagio_id) or app.e_estudante_do_estagio(p_estagio_id)
       or app.e_responsavel_vigente(p_estagio_id, 'ORIENTADOR')
+    -- RF037: attachments of a report are sent by the student
+    when p_tipo = 'RELATORIO' then app.e_estudante_do_estagio(p_estagio_id)
     else false
   end
 $$;
@@ -435,10 +437,15 @@ as $$
         (d.tipo = 'CONVENIO' and (
           app.tem_perfil_vigente('ADMINISTRADOR') or app.tem_perfil_vigente('COORDENACAO') or app.representa_concedente(d.concedente_id)
         ))
-        or (d.estagio_id is not null and not d.sensivel and app.pode_ler_estagio(d.estagio_id))
+        or (d.estagio_id is not null and not d.sensivel and d.tipo <> 'RELATORIO' and app.pode_ler_estagio(d.estagio_id))
+        -- Report attachments follow the report readers: student, advisor and coordination (DER §4.5)
+        or (d.estagio_id is not null and d.tipo = 'RELATORIO' and (
+          app.e_estudante_do_estagio(d.estagio_id) or app.e_responsavel_vigente(d.estagio_id, 'ORIENTADOR')
+          or app.coordena_curso_do_estagio(d.estagio_id)
+        ))
         or (d.estagio_id is not null and d.sensivel
             and (app.coordena_curso_do_estagio(d.estagio_id) or app.e_estudante_do_estagio(d.estagio_id)))
-        or (d.enviado_por_usuario_id = app.usuario_atual_id() and not d.sensivel)
+        or (d.enviado_por_usuario_id = app.usuario_atual_id() and not d.sensivel and d.tipo <> 'RELATORIO')
       )
   )
 $$;

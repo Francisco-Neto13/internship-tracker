@@ -9,6 +9,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  smallint,
   text,
   time,
   timestamp,
@@ -17,6 +18,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { usuario } from "./acesso";
 import { parametroInstitucional } from "./academico";
+import { documento } from "./documentos";
 import { estagio } from "./estagios";
 
 // M05 Acompanhamento (DER-LOGICO §4.5). Enums are complete from this first migration.
@@ -26,6 +28,10 @@ const atualizadoEm = () => timestamp("atualizado_em", { withTimezone: true }).no
 
 export const situacaoFrequencia = pgEnum("situacao_frequencia", ["REGISTRADO", "SINALIZADO", "HOMOLOGADO", "SUBSTITUIDO", "CANCELADO"]);
 export const situacaoDivergencia = pgEnum("situacao_divergencia", ["ABERTA", "ANALISADA"]);
+export const tipoRelatorio = pgEnum("tipo_relatorio", ["PERIODICO", "FINAL"]);
+// Requisitos v1.2 §8.6: no ENVIADO; "em atraso" is derived from the deadline, never stored
+export const situacaoRelatorio = pgEnum("situacao_relatorio", ["PENDENTE", "EM_ANALISE", "DEVOLVIDO", "APROVADO"]);
+export const decisaoParecer = pgEnum("decisao_parecer", ["APROVADO", "DEVOLVIDO"]);
 
 // Entries that count as hours worked (RF026): the one entry in force for the day (D2)
 export const SITUACOES_VIGENTES = ["REGISTRADO", "SINALIZADO", "HOMOLOGADO"] as const;
@@ -148,5 +154,100 @@ export const divergenciaCargaHoraria = pgTable(
       "divergencia_analise_consistente",
       sql`(${t.situacao} = 'ANALISADA') = (${t.analisadaEm} is not null) and (${t.analisadaEm} is null) = (${t.analisadaPorUsuarioId} is null) and (${t.situacao} = 'ABERTA' or ${t.parecer} is not null)`,
     ),
+  ],
+);
+
+// RF036, RF037, RF040, RF041, RN-13, RN-17 (DER §5.8): the reports an internship owes, generated
+// as PENDENTE when it becomes ATIVO (app.gerar_relatorios), so a report not sent yet is visible.
+// Its situation moves only through versions (sending) and opinions (analysis), by trigger.
+export const relatorio = pgTable(
+  "relatorio",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    estagioId: uuid("estagio_id")
+      .notNull()
+      .references(() => estagio.id),
+    tipo: tipoRelatorio("tipo").notNull(),
+    sequencia: smallint("sequencia").notNull(),
+    periodoInicio: date("periodo_inicio"),
+    periodoFim: date("periodo_fim"),
+    prazoEntrega: date("prazo_entrega").notNull(),
+    situacao: situacaoRelatorio("situacao").notNull().default("PENDENTE"),
+    aprovadoEm: timestamp("aprovado_em", { withTimezone: true }),
+    criadoEm: criadoEm(),
+    atualizadoEm: atualizadoEm(),
+  },
+  (t) => [
+    uniqueIndex("relatorio_estagio_tipo_sequencia_unique").on(t.estagioId, t.tipo, t.sequencia),
+    // RF041: one final report per internship
+    uniqueIndex("relatorio_um_final").on(t.estagioId).where(sql`${t.tipo} = 'FINAL'`),
+    // RF040: pending and late reports by deadline
+    index("relatorio_situacao_prazo_idx").on(t.situacao, t.prazoEntrega),
+    check("relatorio_sequencia_positiva", sql`${t.sequencia} >= 1`),
+    check("relatorio_periodo_valido", sql`${t.tipo} = 'FINAL' or (${t.periodoInicio} is not null and ${t.periodoFim} >= ${t.periodoInicio})`),
+    check("relatorio_aprovacao_consistente", sql`(${t.situacao} = 'APROVADO') = (${t.aprovadoEm} is not null)`),
+  ],
+);
+
+// RF037, RF039, RN-14: each sending is a version, never edited; content or at least one
+// attachment (checked at commit, since attachments are inserted after the version)
+export const versaoRelatorio = pgTable(
+  "versao_relatorio",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    relatorioId: uuid("relatorio_id")
+      .notNull()
+      .references(() => relatorio.id),
+    numero: smallint("numero").notNull(),
+    conteudo: text("conteudo"),
+    enviadoPorUsuarioId: uuid("enviado_por_usuario_id")
+      .notNull()
+      .references(() => usuario.id),
+    // Instant of the sending: compared with the deadline to show "em atraso" (RF037)
+    criadoEm: criadoEm(),
+  },
+  (t) => [
+    uniqueIndex("versao_relatorio_numero_unique").on(t.relatorioId, t.numero),
+    index("versao_relatorio_enviado_por_idx").on(t.enviadoPorUsuarioId),
+    check("versao_relatorio_numero_positivo", sql`${t.numero} >= 1`),
+  ],
+);
+
+// RF037: files of a version (documento of type RELATORIO, uploaded straight to the bucket, D8)
+export const anexoRelatorio = pgTable(
+  "anexo_relatorio",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    versaoRelatorioId: uuid("versao_relatorio_id")
+      .notNull()
+      .references(() => versaoRelatorio.id),
+    documentoId: uuid("documento_id")
+      .notNull()
+      .unique()
+      .references(() => documento.id),
+    criadoEm: criadoEm(),
+  },
+  (t) => [index("anexo_relatorio_versao_idx").on(t.versaoRelatorioId)],
+);
+
+// RF038, RF039, RN-14, RN-28: the advisor's decision on a version, with date and time
+export const parecerRelatorio = pgTable(
+  "parecer_relatorio",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    versaoRelatorioId: uuid("versao_relatorio_id")
+      .notNull()
+      .unique()
+      .references(() => versaoRelatorio.id),
+    decisao: decisaoParecer("decisao").notNull(),
+    texto: text("texto"),
+    emitidoPorUsuarioId: uuid("emitido_por_usuario_id")
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: criadoEm(),
+  },
+  (t) => [
+    index("parecer_relatorio_emitido_por_idx").on(t.emitidoPorUsuarioId),
+    check("parecer_devolucao_com_texto", sql`${t.decisao} <> 'DEVOLVIDO' or ${t.texto} is not null`),
   ],
 );
