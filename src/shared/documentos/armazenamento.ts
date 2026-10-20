@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-// Private object storage (RNF-06): Cloudflare R2 in production, MinIO in development, both
+// Private object storage (RNF-06): Cloudflare R2 in production, SeaweedFS in development, both
 // through the S3 API. Nothing here is public; every URL is signed and short-lived.
 // Tests replace the implementation with an in-memory one (armazenamento-memoria.ts).
 
@@ -31,12 +31,17 @@ function configuracaoS3() {
   return {
     bucket: R2_BUCKET,
     client: new S3Client({
-      // R2 accepts "auto"; MinIO ignores the region
+      // R2 accepts "auto"; SeaweedFS ignores the region
       region: "auto",
       endpoint: R2_ENDPOINT || `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-      // MinIO serves buckets by path (localhost:9000/bucket/key), R2 by virtual host
+      // SeaweedFS serves buckets by path (localhost:8333/bucket/key), R2 by virtual host
       forcePathStyle: process.env.R2_FORCE_PATH_STYLE === "true",
       credentials: { accessKeyId: R2_ACCESS_KEY_ID, secretAccessKey: R2_SECRET_ACCESS_KEY },
+      // Presigned PUTs are signed before the body exists: a default checksum would be the CRC32
+      // of an empty body and the bucket would refuse the real upload. Integrity is the SHA-256
+      // the server checks on confirmation (D8)
+      requestChecksumCalculation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
     }),
   };
 }
