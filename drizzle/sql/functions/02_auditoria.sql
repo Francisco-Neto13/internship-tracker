@@ -24,7 +24,10 @@ insert into app.coluna_sensivel (tabela, coluna, motivo) values
   -- ("faltei por consulta"); the administrator has no access to these tables (RN-37)
   ('registro_frequencia', 'observacao', 'Texto livre do estudante sobre o dia (RF023; LGPD art. 6º, III)'),
   ('homologacao_frequencia', 'observacao', 'Parecer do supervisor sobre o período (RF027)'),
-  ('divergencia_carga_horaria', 'parecer', 'Análise do orientador sobre a divergência (RF028)');
+  ('divergencia_carga_horaria', 'parecer', 'Análise do orientador sobre a divergência (RF028)'),
+  ('avaliacao_desempenho', 'observacoes', 'Apreciação da concedente sobre o estudante (RF042)'),
+  ('resposta_avaliacao', 'comentario', 'Comentário por critério da avaliação (RF042)'),
+  ('acompanhamento', 'observacoes', 'Registro do orientador sobre visita, contato ou reunião (RF033)');
 
 create or replace function app.registrar_auditoria()
 returns trigger

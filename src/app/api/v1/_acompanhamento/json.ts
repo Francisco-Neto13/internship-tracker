@@ -1,6 +1,7 @@
 import { minutosParaHoras } from "@/lib/horas";
 import type { Divergencia, TotaisFrequencia } from "@/modules/acompanhamento/domain/carga";
 import type { DivergenciaRow, EstagioAcompanhado, FrequenciaRow, HomologacaoRow } from "@/modules/acompanhamento/repositories/frequencia-repository";
+import type { AcompanhamentoRow, AvaliacaoRow, CriterioRow, RespostaRow } from "@/modules/acompanhamento/repositories/avaliacao-repository";
 import type { AnexoRow, ParecerRow, RelatorioRow, VersaoRow } from "@/modules/acompanhamento/repositories/relatorio-repository";
 
 // JSON shape of the M05 routes: snake_case, hours instead of minutes (AGENTS.md). Kept in a
@@ -156,5 +157,50 @@ export function versaoJson(versao: Versao) {
     enviada_com_atraso: versao.enviadaComAtraso,
     anexos: versao.anexos.map((anexo) => ({ documento_id: anexo.documentoId, nome_original: anexo.nomeOriginal })),
     parecer: versao.parecer ? parecerJson(versao.parecer) : null,
+  };
+}
+
+export function criterioJson(row: CriterioRow) {
+  return {
+    id: row.id,
+    codigo: row.codigo,
+    descricao: row.descricao,
+    escala_minima: row.escalaMinima,
+    escala_maxima: row.escalaMaxima,
+    ordem: row.ordem,
+    ativo: row.ativo,
+  };
+}
+
+export function avaliacaoJson(row: AvaliacaoRow & { respostas: RespostaRow[] }) {
+  return {
+    id: row.id,
+    estagio_id: row.estagioId,
+    momento: row.momento,
+    periodo_inicio: row.periodoInicio,
+    periodo_fim: row.periodoFim,
+    observacoes: row.observacoes,
+    avaliador_usuario_id: row.avaliadorUsuarioId,
+    ...(row.avaliadorNome !== undefined ? { avaliador_nome: row.avaliadorNome } : {}),
+    avaliador_perfil: row.avaliadorPerfil,
+    // RF014: grades normalized to 0..10 and averaged
+    ...(row.media !== undefined ? { media: row.media } : {}),
+    respostas: row.respostas.map((resposta) => ({ criterio_id: resposta.criterioId, nota: resposta.nota, comentario: resposta.comentario })),
+    criado_em: row.criadoEm.toISOString(),
+  };
+}
+
+export function acompanhamentoJson(row: AcompanhamentoRow) {
+  return {
+    id: row.id,
+    estagio_id: row.estagioId,
+    tipo: row.tipo,
+    data_ocorrencia: row.dataOcorrencia,
+    participantes: row.participantes,
+    observacoes: row.observacoes,
+    registrado_por_usuario_id: row.registradoPorUsuarioId,
+    ...(row.registradoPorNome !== undefined ? { registrado_por_nome: row.registradoPorNome } : {}),
+    criado_em: row.criadoEm.toISOString(),
+    atualizado_em: row.atualizadoEm.toISOString(),
   };
 }
