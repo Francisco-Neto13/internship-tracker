@@ -71,3 +71,27 @@ export function verificacaoSenhaVazadaAtiva(env: Env): boolean {
   }
   return valor === "ativa";
 }
+
+const URL_RANGE_PADRAO = "https://api.pwnedpasswords.com/range/";
+
+/**
+ * Range endpoint of the breached-password check. HIBP_RANGE_URL replaces it for the e2e
+ * stub; in production only HTTPS or a loopback address is accepted, so a typo cannot send
+ * hash prefixes over plain HTTP to another host.
+ */
+export function urlRangeSenhasVazadas(env: Env): string {
+  const valor = env.HIBP_RANGE_URL?.trim();
+  if (!valor) return URL_RANGE_PADRAO;
+
+  let url: URL;
+  try {
+    url = new URL(valor);
+  } catch {
+    throw new Error(`HIBP_RANGE_URL inválida: ${valor}`);
+  }
+  const loopback = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
+  if (env.NODE_ENV === "production" && url.protocol !== "https:" && !loopback) {
+    throw new Error("HIBP_RANGE_URL precisa ser HTTPS em produção (ou loopback, para o stub do e2e)");
+  }
+  return valor.endsWith("/") ? valor : `${valor}/`;
+}

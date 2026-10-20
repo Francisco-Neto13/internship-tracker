@@ -177,3 +177,23 @@ jobs:
             playwright-report
             test-results
           retention-days: 7
+
+  # Not a required check: the pipeline uses a local stub (e2e/support/hibp-stub.mjs). This
+  # job only reports whether the real Have I Been Pwned service answers as expected.
+  hibp-live:
+    name: HIBP live check
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: HIBP live check (non-blocking)
+        run: node scripts/check-hibp-live.mjs
+        env:
+          HIBP_LIVE_STRICT: "1"

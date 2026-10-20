@@ -198,6 +198,12 @@ const steps = [
     },
   },
   {
+    name: "HIBP live check (non-blocking)",
+    // Reports only: the e2e uses a local stub, and an outage of the real service must not
+    // fail the run (scripts/check-hibp-live.mjs exits 0 unless HIBP_LIVE_STRICT=1)
+    run: () => run("node", ["scripts/check-hibp-live.mjs"]),
+  },
+  {
     name: "Mirror of ci.yml",
     // Someone adds a step to ci.yml and forgets this file: `npm run ci` starts lying
     run: () => {
