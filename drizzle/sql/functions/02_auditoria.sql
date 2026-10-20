@@ -102,3 +102,18 @@ $$;
 revoke all on function app.registrar_auditoria() from public;
 revoke all on function app.bloquear_alteracao_auditoria() from public;
 revoke all on function app.definir_atualizado_em() from public;
+
+-- Immutable tables (versioned parameters, history rows): no UPDATE for any role, the
+-- owner included. Runtime roles also lack the grant; this covers scripts and migrations.
+create or replace function app.bloquear_alteracao()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  raise exception 'REGISTRO_IMUTAVEL: % em % não é permitido', tg_op, tg_table_name
+    using errcode = 'P0001';
+end
+$$;
+
+revoke all on function app.bloquear_alteracao() from public;
