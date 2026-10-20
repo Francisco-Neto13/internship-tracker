@@ -34,7 +34,10 @@ export function LoginForm() {
     if (error) {
       // Same message for unknown e-mail and wrong password, so accounts cannot be enumerated.
       // The 403 reasons come only after the password matched (session hook in src/lib/auth.ts).
-      if (error.code === "SENHA_PROVISORIA_EXPIRADA") {
+      if (error.status === 429) {
+        // Better Auth allows 3 sign-in attempts per 10 seconds per address
+        setErro("Muitas tentativas seguidas. Aguarde alguns segundos e tente de novo.");
+      } else if (error.code === "SENHA_PROVISORIA_EXPIRADA") {
         setErro("Senha provisória expirada. Solicite uma nova ao administrador.");
       } else {
         setErro(error.status === 403 ? "Usuário inativo." : "E-mail ou senha incorretos.");
