@@ -43,6 +43,13 @@
       "when": 1792498844152,
       "tag": "0005_estagios",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792536280335,
+      "tag": "0006_frequencia",
+      "breakpoints": true
     }
   ]
 }
