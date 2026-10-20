@@ -226,3 +226,27 @@ export async function createMundoEstagio() {
 
   return { curso, coordenador, aluno, estudante, concedente, representante, supervisor, orientador, convenio };
 }
+
+/** A confirmed document of an internship, as if uploaded through /documentos/upload (D8). */
+export async function createDocumentoDoEstagio(
+  estagioId: string,
+  tipo: (typeof schema.tipoDocumento.enumValues)[number],
+  enviadoPorUsuarioId: string,
+) {
+  const id = suffix();
+  const [row] = await ownerDatabase()
+    .insert(schema.documento)
+    .values({
+      tipo,
+      chaveObjeto: `documentos/fixture-${id}.pdf`,
+      nomeOriginal: `${tipo.toLowerCase()}-${id}.pdf`,
+      tipoMime: "application/pdf",
+      tamanhoBytes: 100,
+      sha256: "0".repeat(64),
+      sensivel: tipo === "ATESTADO_AFASTAMENTO" || tipo === "DISPENSA_DURACAO",
+      estagioId,
+      enviadoPorUsuarioId,
+    })
+    .returning();
+  return row;
+}
