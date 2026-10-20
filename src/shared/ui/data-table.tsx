@@ -22,7 +22,7 @@ type DataTableProps<T> = {
  */
 export function DataTable<T>({ columns, items, getRowKey, testId }: DataTableProps<T>) {
   return (
-    <div className="surface-card overflow-hidden">
+    <div className="surface-card overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead className="bg-nevoa-100/60">
           <tr>
