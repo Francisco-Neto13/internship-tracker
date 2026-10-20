@@ -5,6 +5,7 @@ import { nextCookies } from "better-auth/next-js";
 import { eq } from "drizzle-orm";
 import { getAuthDatabase } from "@/db/client";
 import { conta, limiteRequisicao, sessao, usuario, verificacao } from "@/db/schema";
+import { senhaProvisoriaExpirada } from "@/modules/acesso/domain/senha-provisoria";
 import { hashPassword, verifyPassword } from "./password";
 
 // QA: an idle session expires after 30 minutes. Each request older than a minute
@@ -36,6 +37,9 @@ function createAuth() {
       },
       additionalFields: {
         situacao: { type: "string", required: false, input: false },
+        // RF002: set when the administrator issues a temporary password
+        trocaSenhaObrigatoria: { type: "boolean", required: false, input: false },
+        senhaProvisoriaExpiraEm: { type: "date", required: false, input: false },
       },
     },
     session: {
@@ -87,22 +91,33 @@ function createAuth() {
       enabled: true,
       // RF001: accounts are created by the administrator, never by self sign-up
       disableSignUp: true,
-      minPasswordLength: 12,
+      // NIST SP 800-63B-4, 3.1.1.2: at least 15 characters when the password is the only
+      // factor. Sign-in does not check the length, so older 12-character passwords still work.
+      minPasswordLength: 15,
+      maxPasswordLength: 128,
       password: { hash: hashPassword, verify: verifyPassword },
       revokeSessionsOnPasswordReset: true,
     },
     databaseHooks: {
       session: {
         create: {
-          // RF001: an inactive user cannot open a session even with the right password
+          // RF001: an inactive user cannot open a session even with the right password.
+          // RF002: neither can an expired temporary password; the administrator issues a new one.
           before: async (session) => {
             const [row] = await database
-              .select({ situacao: usuario.situacao })
+              .select({
+                situacao: usuario.situacao,
+                trocaSenhaObrigatoria: usuario.trocaSenhaObrigatoria,
+                senhaProvisoriaExpiraEm: usuario.senhaProvisoriaExpiraEm,
+              })
               .from(usuario)
               .where(eq(usuario.id, session.userId));
 
             if (row?.situacao !== "ATIVO") {
-              throw new APIError("FORBIDDEN", { message: "Usuário inativo" });
+              throw new APIError("FORBIDDEN", { message: "Usuário inativo", code: "USUARIO_INATIVO" });
+            }
+            if (senhaProvisoriaExpirada(row)) {
+              throw new APIError("FORBIDDEN", { message: "Senha provisória expirada", code: "SENHA_PROVISORIA_EXPIRADA" });
             }
           },
         },
