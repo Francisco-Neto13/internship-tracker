@@ -17,6 +17,8 @@ import { UserMenu } from "./user-menu";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/login");
+  // RF002: nothing but the change screen while a temporary password is in use
+  if (session.user.trocaSenhaObrigatoria) redirect("/trocar-senha");
 
   const vinculos = await listPerfisVigentes(session.identity);
   const perfis = vinculos.map((vinculo) => vinculo.perfil);
