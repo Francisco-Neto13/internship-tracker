@@ -36,6 +36,13 @@
       "when": 1792497740922,
       "tag": "0004_documentos_convenios",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792498844152,
+      "tag": "0005_estagios",
+      "breakpoints": true
     }
   ]
 }
