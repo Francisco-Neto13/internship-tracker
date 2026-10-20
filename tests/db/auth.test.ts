@@ -3,18 +3,9 @@ import { describe, expect, it } from "vitest";
 import { conta, sessao, usuario } from "@/db/schema";
 import { getAuth } from "@/lib/auth";
 import { resolveSession } from "@/lib/session";
-import { createUsuario, owner } from "./fixtures";
+import { createUsuario, owner, signIn } from "./fixtures";
 
 const SENHA = "senha-de-teste-segura";
-
-async function signIn(email: string, password: string) {
-  const { headers } = await getAuth().api.signInEmail({ body: { email, password }, returnHeaders: true });
-  const cookie = headers
-    .getSetCookie()
-    .map((value) => value.split(";")[0])
-    .join("; ");
-  return new Headers({ cookie });
-}
 
 describe("authentication (RF001, RF002)", () => {
   it("stores passwords as Argon2id hashes", async () => {
