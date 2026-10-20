@@ -3,6 +3,7 @@ import { DomainError } from "@/lib/errors";
 import { getIdentity } from "@/lib/session";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { catalogoPerfis } from "@/modules/acesso/domain/catalogo-perfis";
+import { listConcedentes } from "@/modules/concedentes/services/concedente-service";
 import { ROTULO_PERFIL } from "@/modules/acesso/schemas/perfil";
 import { idParamSchema } from "@/modules/acesso/schemas/usuario";
 import { getUsuario } from "@/modules/acesso/services/usuario-service";
@@ -23,7 +24,10 @@ export default async function UsuarioPage({ params }: { params: Promise<{ id: st
     if (error instanceof DomainError && error.kind === "NOT_FOUND") notFound();
     throw error;
   });
-  const { items: cursos } = await listCursos(identity, { page: 1, limit: 100 });
+  const [{ items: cursos }, { items: concedentes }] = await Promise.all([
+    listCursos(identity, { page: 1, limit: 100 }),
+    listConcedentes(identity, { page: 1, limit: 100 }),
+  ]);
   const nomeCurso = new Map(cursos.map((curso) => [curso.id, curso.nome]));
 
   return (
@@ -42,9 +46,10 @@ export default async function UsuarioPage({ params }: { params: Promise<{ id: st
 
       <UsuarioAcoes
         usuario={{ id: usuario.id, nome: usuario.nome, email: usuario.email, situacao: usuario.situacao }}
-        perfis={usuario.perfis.map((vinculo) => ({ perfil: vinculo.perfil, curso_id: vinculo.cursoId }))}
+        perfis={usuario.perfis.map((vinculo) => ({ perfil: vinculo.perfil, curso_id: vinculo.cursoId, concedente_id: vinculo.concedenteId }))}
         catalogo={catalogoPerfis()}
         cursos={cursos.map((curso) => ({ id: curso.id, nome: curso.nome }))}
+        concedentes={concedentes.map((concedente) => ({ id: concedente.id, nome: concedente.razaoSocial }))}
       />
 
       <div>
