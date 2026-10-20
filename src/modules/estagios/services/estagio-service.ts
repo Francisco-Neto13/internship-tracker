@@ -298,7 +298,5 @@ export async function getHistoricoConcedente(identity: Identity, concedenteId: s
     porSituacao,
     // Share of the finished internships that reached the end (RF014 "taxa de conclusão")
     taxaConclusao: concluidos + rescindidos === 0 ? null : concluidos / (concluidos + rescindidos),
-    // RF014 asks for the average evaluation too: it arrives with avaliacao_desempenho (Fase 3)
-    mediaAvaliacoes: null,
   };
 }
