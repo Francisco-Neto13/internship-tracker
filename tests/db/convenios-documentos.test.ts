@@ -12,7 +12,8 @@ import { definirArmazenamento } from "@/shared/documentos/armazenamento";
 import { armazenamentoMemoria } from "@/shared/documentos/armazenamento-memoria";
 import { sha256Hex } from "@/shared/documentos/conteudo";
 import { confirmarUpload, obterDocumento, solicitarUpload } from "@/shared/documentos/documento-service";
-import { createAccessScenario, createConcedente, createUsuario, grantPerfil, identityOf, owner } from "./fixtures";
+import { createEstagio, definirDispensaDuracao, updateTce } from "@/modules/estagios/services/estagio-service";
+import { createAccessScenario, createConcedente, createMundoEstagio, createUsuario, grantPerfil, identityOf, owner } from "./fixtures";
 
 type Scenario = Awaited<ReturnType<typeof createAccessScenario>>;
 
@@ -233,5 +234,66 @@ describe("agreements and periods (RF009 to RF012, RN-02)", () => {
     expect((await getConvenio(identityOf(representante.id), criado.id)).numero).toBe(criado.numero);
     await expect(encerrarConvenio(identityOf(representante.id), criado.id, "x")).rejects.toMatchObject({ code: "ACESSO_NEGADO" });
     await expect(getConvenio(identityOf(s.alunoA.id), criado.id)).rejects.toMatchObject({ code: "CONVENIO_NAO_ENCONTRADO" });
+  });
+});
+
+describe("internship documents and the art. 11 exemption (D5, RN-38, RF071)", () => {
+  it("records the exemption with a sensitive document the administrator cannot download", async () => {
+    const mundo = await createMundoEstagio();
+    const criado = await createEstagio(identityOf(mundo.coordenador.id), {
+      estudanteId: mundo.estudante.id,
+      concedenteId: mundo.concedente.id,
+      convenioId: mundo.convenio.id,
+      tipo: "OBRIGATORIO",
+      dataInicio: "2026-11-02",
+      dataFimPactuada: "2027-11-01",
+      cargaDiariaMinutos: 360,
+      cargaSemanalMinutos: 1800,
+      cargaTotalMinutos: 24000,
+      condicoesPactuadas: "Atividades",
+      bolsaValor: null,
+      auxilioTransporteValor: null,
+      seguroExigido: true,
+    });
+    const administrador = await createUsuario();
+    await grantPerfil(administrador.id, "ADMINISTRADOR");
+
+    await expect(
+      solicitarUpload(identityOf(mundo.aluno.id), {
+        tipo: "DISPENSA_DURACAO",
+        tipoMime: "application/pdf",
+        tamanhoBytes: PDF.length,
+        sha256: sha256Hex(PDF),
+        nomeOriginal: "laudo.pdf",
+        concedenteId: null,
+        estagioId: criado.id,
+        estudanteId: null,
+      }),
+    ).rejects.toMatchObject({ code: "ACESSO_NEGADO" });
+
+    const pedido = await solicitarUpload(identityOf(mundo.coordenador.id), {
+      tipo: "DISPENSA_DURACAO",
+      tipoMime: "application/pdf",
+      tamanhoBytes: PDF.length,
+      sha256: sha256Hex(PDF),
+      nomeOriginal: "laudo.pdf",
+      concedenteId: null,
+      estagioId: criado.id,
+      estudanteId: null,
+    });
+    armazenamento.enviar(decodeURIComponent(pedido.url.replace("memoria://envio/", "")), PDF);
+    const laudo = await confirmarUpload(identityOf(mundo.coordenador.id), pedido.uploadId);
+    expect(laudo.sensivel).toBe(true);
+
+    await definirDispensaDuracao(identityOf(mundo.coordenador.id), criado.id, laudo.id);
+    const longo = await updateTce(identityOf(mundo.coordenador.id), criado.id, { dataFimPactuada: "2029-06-30" });
+    expect(longo.dataFimPactuada).toBe("2029-06-30");
+
+    expect((await obterDocumento(identityOf(mundo.coordenador.id), laudo.id)).url).not.toBeNull();
+    expect((await obterDocumento(identityOf(mundo.aluno.id), laudo.id)).url).not.toBeNull();
+    const vistoPeloAdministrador = await obterDocumento(identityOf(administrador.id), laudo.id);
+    expect(vistoPeloAdministrador.documento.id).toBe(laudo.id);
+    expect(vistoPeloAdministrador.url).toBeNull();
+    await expect(obterDocumento(identityOf(mundo.supervisor.id), laudo.id)).rejects.toMatchObject({ code: "DOCUMENTO_NAO_ENCONTRADO" });
   });
 });

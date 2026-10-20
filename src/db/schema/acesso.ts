@@ -13,6 +13,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { curso } from "./academico";
+import { perfil } from "./enums";
 import { concedente } from "./concedentes";
 
 const criadoEm = () => timestamp("criado_em", { withTimezone: true }).notNull().defaultNow();
@@ -20,14 +21,7 @@ const atualizadoEm = () => timestamp("atualizado_em", { withTimezone: true }).no
 
 export const situacaoUsuario = pgEnum("situacao_usuario", ["ATIVO", "INATIVO"]);
 
-export const perfil = pgEnum("perfil", [
-  "ESTUDANTE",
-  "PROFESSOR_ORIENTADOR",
-  "SUPERVISOR",
-  "COORDENACAO",
-  "CONCEDENTE",
-  "ADMINISTRADOR",
-]);
+export { perfil } from "./enums";
 
 // Identity shared with the auth library (RF001, RF002). Inactivation flips situacao
 // and revokes sessions; the row is never deleted (RN-28).

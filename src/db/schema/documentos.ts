@@ -1,8 +1,9 @@
 import { sql } from "drizzle-orm";
-import { bigint, boolean, check, date, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { type AnyPgColumn, bigint, boolean, check, date, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { usuario } from "./acesso";
 import { estudante } from "./academico";
 import { concedente } from "./concedentes";
+import { estagio } from "./estagios";
 
 // Files live in the private bucket; this table keeps metadata, hash and access scope
 // (DER-LOGICO §4.9). The enum is complete from the first migration that uses it.
@@ -37,8 +38,8 @@ export const documento = pgTable(
     sha256: text("sha256").notNull(),
     sensivel: boolean("sensivel").notNull().default(false),
     estudanteId: uuid("estudante_id").references(() => estudante.id),
-    // estagio_id arrives with the estagio table (migration 0005), FK added there
-    estagioId: uuid("estagio_id"),
+    // AnyPgColumn breaks the type cycle documento <-> estagio (Drizzle docs, self and circular references)
+    estagioId: uuid("estagio_id").references((): AnyPgColumn => estagio.id),
     concedenteId: uuid("concedente_id").references(() => concedente.id),
     dataLiberacaoGuarda: date("data_liberacao_guarda"),
     eliminadoEm: timestamp("eliminado_em", { withTimezone: true }),

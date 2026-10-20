@@ -175,3 +175,54 @@ export async function createAccessScenario() {
 
   return { cursoA, cursoB, alunoA, alunoB, estudanteA, estudanteB, coordenadorA, administrador, semPerfil };
 }
+
+/**
+ * Everything an internship needs, written as the owner: course with coordination, enrolled
+ * student, concedente with representative and supervisor, advisor, and an agreement valid
+ * from 2026 to 2030 with its document. Each call builds an independent world.
+ */
+export async function createMundoEstagio() {
+  const curso = await createCurso();
+  const coordenador = await createUsuario();
+  await grantPerfil(coordenador.id, "COORDENACAO", { cursoId: curso.id });
+
+  const aluno = await createUsuario();
+  await grantPerfil(aluno.id, "ESTUDANTE");
+  const estudante = await createEstudante(aluno.id, curso.id);
+
+  const concedente = await createConcedente();
+  const representante = await createUsuario();
+  await grantPerfil(representante.id, "CONCEDENTE", { concedenteId: concedente.id });
+  const supervisor = await createUsuario();
+  await grantPerfil(supervisor.id, "SUPERVISOR", { concedenteId: concedente.id });
+  const orientador = await createUsuario();
+  await grantPerfil(orientador.id, "PROFESSOR_ORIENTADOR");
+
+  const id = suffix();
+  const [documento] = await ownerDatabase()
+    .insert(schema.documento)
+    .values({
+      tipo: "CONVENIO",
+      chaveObjeto: `documentos/fixture-${id}.pdf`,
+      nomeOriginal: "convenio.pdf",
+      tipoMime: "application/pdf",
+      tamanhoBytes: 100,
+      sha256: "0".repeat(64),
+      concedenteId: concedente.id,
+      enviadoPorUsuarioId: coordenador.id,
+    })
+    .returning();
+  const [convenio] = await ownerDatabase()
+    .insert(schema.convenio)
+    .values({ concedenteId: concedente.id, numero: `CV-${id}` })
+    .returning();
+  await ownerDatabase().insert(schema.convenioVigencia).values({
+    convenioId: convenio.id,
+    vigenciaInicio: "2026-01-01",
+    vigenciaFim: "2030-12-31",
+    documentoId: documento.id,
+    registradoPorUsuarioId: coordenador.id,
+  });
+
+  return { curso, coordenador, aluno, estudante, concedente, representante, supervisor, orientador, convenio };
+}
