@@ -1,5 +1,6 @@
-import { isExclusionViolation, isForeignKeyViolation, isRlsViolation, isTriggerRule, isUniqueViolation } from "@/db/errors";
+import { isExclusionViolation, isForeignKeyViolation, isRlsViolation, isTriggerRule, isUniqueViolation, triggerRuleDetail } from "@/db/errors";
 import { DomainError, type DomainErrorKind } from "@/lib/errors";
+import { detalharImpedimentos } from "../domain/conclusao";
 
 // Database rules of M04 (triggers, unique and exclusion constraints) translated into stable
 // domain codes. The services check most of them first for a clear message; these are the
@@ -30,6 +31,17 @@ const UNICOS: Record<string, { codigo: string; mensagem: string; requisito: stri
 
 export function traduzirErroEstagio(error: unknown, acao: string): unknown {
   if (error instanceof DomainError) return error;
+  // DER §5.2: the conclusion refused by the database lists every impediment at once
+  const impedimentos = triggerRuleDetail(error, "CONCLUSAO_BLOQUEADA");
+  if (impedimentos !== undefined) {
+    return new DomainError({
+      code: "CONCLUSAO_BLOQUEADA",
+      kind: "CONFLICT",
+      message: "O estágio ainda não pode ser concluído.",
+      requisito: "RF045",
+      details: detalharImpedimentos(impedimentos.split(",").filter(Boolean)),
+    });
+  }
   if (isRlsViolation(error)) {
     return new DomainError({ code: "ACESSO_NEGADO", kind: "FORBIDDEN", message: `O perfil atual não permite ${acao}.`, requisito: "RF003" });
   }
