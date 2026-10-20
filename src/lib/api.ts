@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { DomainError, type DomainErrorDetail, type DomainErrorKind } from "./errors";
 import type { Identity } from "./identity";
-import { getIdentity } from "./session";
+import { getSession } from "./session";
 
 // HTTP boundary for /api/v1: authenticate, validate, translate errors into the
 // { error: { code, message, requisito, details } } envelope. Business rules never live here.
@@ -33,20 +33,42 @@ export function errorResponse(status: number, body: ErrorBody) {
   return NextResponse.json({ error: body }, { status });
 }
 
-export function dataResponse<T>(data: T, init?: { status?: number; meta?: Record<string, unknown> }) {
-  return NextResponse.json(init?.meta ? { data, meta: init.meta } : { data }, { status: init?.status ?? 200 });
+export function dataResponse<T>(
+  data: T,
+  init?: { status?: number; meta?: Record<string, unknown>; headers?: HeadersInit },
+) {
+  return NextResponse.json(init?.meta ? { data, meta: init.meta } : { data }, {
+    status: init?.status ?? 200,
+    headers: init?.headers,
+  });
 }
+
+/** For responses carrying a secret shown once, such as a temporary password (OWASP ASVS V8.2). */
+export const SEM_CACHE = { "Cache-Control": "no-store" } as const;
+
+type RouteOptions = {
+  /** RF002: reachable while a temporary password is still in use (change password, session). */
+  permitirTrocaSenhaPendente?: boolean;
+};
 
 export function authenticatedRoute<TParams = Record<string, never>>(
   handler: (context: AuthenticatedRequest<TParams>) => Promise<Response>,
+  options: RouteOptions = {},
 ) {
   return async (request: Request, context: RouteContext<TParams>): Promise<Response> => {
     try {
-      const identity = await getIdentity();
-      if (!identity) {
+      const session = await getSession();
+      if (!session) {
         return errorResponse(401, { code: "NAO_AUTENTICADO", message: "Sessão ausente ou expirada.", requisito: "RF002" });
       }
-      return await handler({ request, identity, params: await context.params });
+      if (session.user.trocaSenhaObrigatoria && !options.permitirTrocaSenhaPendente) {
+        return errorResponse(403, {
+          code: "TROCA_SENHA_OBRIGATORIA",
+          message: "Defina uma nova senha antes de continuar.",
+          requisito: "RF002",
+        });
+      }
+      return await handler({ request, identity: session.identity, params: await context.params });
     } catch (error) {
       return toErrorResponse(error);
     }

@@ -1,28 +1,7 @@
 import { authenticatedRoute, dataResponse, searchParamsOf } from "@/lib/api";
 import { createEstudanteBodySchema, listEstudantesQuerySchema } from "@/modules/academico/schemas/estudante";
 import { createEstudante, listEstudantes } from "@/modules/academico/services/estudante-service";
-
-type EstudanteResult = {
-  id: string;
-  usuarioId: string;
-  cursoId: string;
-  nome?: string | null;
-  matricula: string;
-  periodo: number;
-  situacaoAcademica: string;
-};
-
-function toJson(row: EstudanteResult) {
-  return {
-    id: row.id,
-    usuario_id: row.usuarioId,
-    curso_id: row.cursoId,
-    nome: row.nome ?? null,
-    matricula: row.matricula,
-    periodo: row.periodo,
-    situacao_academica: row.situacaoAcademica,
-  };
-}
+import { estudanteJson } from "./json";
 
 // RF005: the list already comes filtered by RLS for the caller's profile and links
 export const GET = authenticatedRoute(async ({ request, identity }) => {
@@ -31,8 +10,10 @@ export const GET = authenticatedRoute(async ({ request, identity }) => {
     page: query.page,
     limit: query.limit,
     cursoId: query.curso_id,
+    situacao: query.situacao,
+    busca: query.busca,
   });
-  return dataResponse(items.map(toJson), { meta: { total, page: query.page, limit: query.limit } });
+  return dataResponse(items.map(estudanteJson), { meta: { total, page: query.page, limit: query.limit } });
 });
 
 export const POST = authenticatedRoute(async ({ request, identity }) => {
@@ -43,5 +24,5 @@ export const POST = authenticatedRoute(async ({ request, identity }) => {
     matricula: body.matricula,
     periodo: body.periodo,
   });
-  return dataResponse(toJson(created), { status: 201 });
+  return dataResponse(estudanteJson(created), { status: 201 });
 });

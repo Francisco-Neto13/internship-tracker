@@ -42,7 +42,7 @@ A filosofia central do projeto prioriza, nessa ordem: **segurança** (seis perfi
 
 ## Modelo de segurança
 
-A autorização não vive na tela: toda tabela tem política de **Row Level Security** no PostgreSQL, resolvida pela interseção de **perfil** e **vínculo** (ex.: um professor só enxerga os estágios em que consta como orientador vigente, não todos os estágios do curso). A identidade do usuário autenticado chega ao banco por um wrapper de transação que executa `set_config('app.user_id', ..., true)` local a cada transação, necessário porque o pooler do Neon reaproveita conexões entre requisições diferentes. Uma consulta que escape desse wrapper roda sem identidade e a política devolve zero linhas: falha visível, não silenciosa.
+A autorização não vive na tela: toda tabela tem política de **Row Level Security** no PostgreSQL, resolvida pela interseção de **perfil** e **vínculo** (ex.: um professor só enxerga os estágios em que consta como orientador vigente, não todos os estágios do curso). A identidade do usuário autenticado chega ao banco por um wrapper de transação que executa `set_config('app.usuario_id', ..., true)` local a cada transação, necessário porque o pooler do Neon reaproveita conexões entre requisições diferentes. Uma consulta que escape desse wrapper roda sem identidade e a política devolve zero linhas: falha visível, não silenciosa.
 
 RLS só vale para quem não é dono da tabela, superusuário ou `BYPASSRLS`. Por isso o banco usa três papéis: `migrator` é dono de tudo e só roda migrações; `app_runtime` executa o código de domínio sob RLS, sem permissão de `DELETE`; `auth_runtime` atende apenas a biblioteca de autenticação e é o único que alcança sessões e hashes de senha. A migração aborta se um papel de runtime puder contornar a RLS, e uma suíte de testes verifica essas invariantes contra um Postgres real a cada PR.
 
@@ -73,6 +73,7 @@ Pontos que antes admitiam mais de uma interpretação, definidos com o professor
 | Recurso contra recusa de atividade complementar | Não existe. O estudante cadastra uma nova atividade |
 | Divergência relevante de carga horária | Percentual parametrizável, padrão de 10% |
 | Hospedagem em território nacional | Sem exigência |
+| Recuperação de senha (RF002) | O administrador emite senha provisória de 72 h, entregue fora do sistema, com troca obrigatória no primeiro acesso. Sem e-mail |
 
 ## Requisitos de qualidade
 
@@ -137,13 +138,17 @@ O seed cria usuários com a senha `senha-dev-internship`:
 
 Se o volume do Postgres já existia antes dos papéis, recrie-o com `docker compose down -v`.
 
+Para ver o primeiro acesso: entre como `admin@internship.local`, crie um usuário em
+Administração > Usuários e anote a senha provisória exibida (só aparece uma vez). Ao entrar
+com ela, o sistema exige uma senha nova de pelo menos 15 caracteres antes de qualquer tela.
+
 Outros comandos úteis:
 
 ```bash
 npm run lint
 npm run typecheck
 npm run test:unit          # Vitest sem banco
-npm run test:db            # RLS, auditoria e autenticação contra Postgres real
+npm run test:db            # RLS, auditoria, autenticação, usuários e senha contra Postgres real
 npm run test:e2e           # Playwright (banco migrado e com seed)
 npm run db:generate        # gera migração de tabela a partir de src/db/schema
 npm run ci                 # CI inteira na máquina, espelho do ci.yml (--fast pula Docker)
@@ -163,7 +168,7 @@ alter role auth_runtime with login password '<senha gerada>';
 ## Estrutura do código
 
 ```
-src/app/(auth)/        rotas de login e recuperação de senha
+src/app/(auth)/        login e troca de senha
 src/app/(app)/         telas autenticadas por perfil
 src/app/api/v1/        route handlers da API REST
 src/modules/           8 módulos de domínio, cada um com
@@ -221,7 +226,7 @@ Commits seguem `type(scope): summary`, no imperativo, com notas em bullet explic
 | Fase | Entrega |
 |---|---|
 | 0 · Fechamento da documentação | Stack, arquitetura, endpoints, DAS, padrão de commits, repositório (**concluída**) |
-| 1 · Fundação técnica | RNFs, DER lógico, migrações, wrapper de identidade, papéis e políticas RLS, auditoria, autenticação, CI (**em integração**) |
+| 1 · Fundação técnica | RNFs, DER lógico, migrações, wrapper de identidade, papéis e políticas RLS, auditoria, autenticação, CI, usuários e perfis, senha provisória, consulta e exportação da auditoria (**concluída**) |
 | 2 · Cadastros e formalização | Cursos, estudantes, concedentes, convênios, TCE, ativação de estágio |
 | 3 · Acompanhamento | Frequência, carga horária, relatórios, avaliação |
 | 4 · Atividades complementares e integralização | Cadastro, análise, limites por categoria, apuração |

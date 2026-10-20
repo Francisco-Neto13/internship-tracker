@@ -9,7 +9,7 @@ revoke all on schema app from public;
 grant usage on schema app to app_runtime, auth_runtime;
 alter default privileges in schema app revoke execute on functions from public;
 
--- Set per transaction by src/db/with-user.ts through set_config('app.user_id', ..., true).
+-- Set per transaction by src/db/with-user.ts through set_config('app.usuario_id', ..., true).
 -- After a transaction ends the setting reads as '', hence nullif.
 create or replace function app.usuario_atual_id()
 returns uuid
@@ -17,7 +17,7 @@ language sql
 stable
 set search_path = ''
 as $$
-  select nullif(current_setting('app.user_id', true), '')::uuid
+  select nullif(current_setting('app.usuario_id', true), '')::uuid
 $$;
 
 create or replace function app.tem_perfil_vigente(p_perfil public.perfil)
