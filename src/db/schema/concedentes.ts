@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, date, index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { usuario } from "./acesso";
+import { documento } from "./documentos";
 
 const criadoEm = () => timestamp("criado_em", { withTimezone: true }).notNull().defaultNow();
 const atualizadoEm = () => timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow();
@@ -88,5 +89,57 @@ export const historicoSituacaoConcedente = pgTable(
     index("historico_situacao_concedente_idx").on(t.concedenteId, t.criadoEm),
     index("historico_situacao_decidido_por_idx").on(t.decididoPorUsuarioId),
     check("historico_suspensao_exige_motivo", sql`${t.situacaoNova} <> 'SUSPENSA' or ${t.motivo} is not null`),
+  ],
+);
+
+export const situacaoConvenio = pgEnum("situacao_convenio", ["ATIVO", "ENCERRADO"]);
+
+// RF009, RN-02: agreement with a concedente. Validity is not a column here: every period is
+// a row of convenio_vigencia (RF011). ENCERRADO is an early termination.
+export const convenio = pgTable(
+  "convenio",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    concedenteId: uuid("concedente_id")
+      .notNull()
+      .references(() => concedente.id),
+    numero: text("numero").notNull().unique(),
+    observacao: text("observacao"),
+    situacao: situacaoConvenio("situacao").notNull().default("ATIVO"),
+    motivoEncerramento: text("motivo_encerramento"),
+    criadoEm: criadoEm(),
+    atualizadoEm: atualizadoEm(),
+  },
+  (t) => [
+    index("convenio_concedente_idx").on(t.concedenteId),
+    check("convenio_encerramento_exige_motivo", sql`${t.situacao} <> 'ENCERRADO' or ${t.motivoEncerramento} is not null`),
+  ],
+);
+
+// RF009, RF011: each period, inclusive on both ends (RN-02: valid until the last day).
+// Periods of the same agreement never overlap (exclusion constraint in migration 0004).
+export const convenioVigencia = pgTable(
+  "convenio_vigencia",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    convenioId: uuid("convenio_id")
+      .notNull()
+      .references(() => convenio.id),
+    vigenciaInicio: date("vigencia_inicio").notNull(),
+    vigenciaFim: date("vigencia_fim").notNull(),
+    renovaVigenciaId: uuid("renova_vigencia_id").unique(),
+    documentoId: uuid("documento_id")
+      .notNull()
+      .references(() => documento.id),
+    registradoPorUsuarioId: uuid("registrado_por_usuario_id")
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: criadoEm(),
+  },
+  (t) => [
+    index("convenio_vigencia_fim_idx").on(t.convenioId, t.vigenciaFim),
+    index("convenio_vigencia_documento_idx").on(t.documentoId),
+    index("convenio_vigencia_registrado_por_idx").on(t.registradoPorUsuarioId),
+    check("convenio_vigencia_periodo_valido", sql`${t.vigenciaFim} >= ${t.vigenciaInicio}`),
   ],
 );

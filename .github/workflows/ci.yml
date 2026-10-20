@@ -129,6 +129,12 @@ jobs:
       BETTER_AUTH_URL: http://localhost:3000
       # Production build without a proxy in front: trust the header the tests send
       AUTH_IP_HEADERS: x-forwarded-for
+      # Local S3 (SeaweedFS of docker compose), same values as .env.example
+      R2_ENDPOINT: http://localhost:8333
+      R2_FORCE_PATH_STYLE: "true"
+      R2_ACCESS_KEY_ID: storage-local
+      R2_SECRET_ACCESS_KEY: storage-local-secret
+      R2_BUCKET: internship-tracker
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -150,6 +156,12 @@ jobs:
 
       - name: Seed development database
         run: npm run db:seed
+
+      - name: Prepare storage
+        run: |
+          docker compose up -d storage --wait
+          npm run storage:init
+          npm run storage:check
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
