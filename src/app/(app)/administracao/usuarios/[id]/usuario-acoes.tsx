@@ -26,7 +26,7 @@ export function UsuarioAcoes({ usuario, perfis: perfisIniciais, catalogo, cursos
   const [aviso, setAviso] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  async function enviar(caminho: string, method: string, body: unknown, sucesso: string) {
+  async function enviar(caminho: string, method: string, body: unknown, sucesso: string | ((data: { senha_provisoria?: string }) => string)) {
     setErro(null);
     setAviso(null);
     setEnviando(true);
@@ -40,7 +40,8 @@ export function UsuarioAcoes({ usuario, perfis: perfisIniciais, catalogo, cursos
         setErro(await mensagemDeErro(response, "Não foi possível concluir a operação."));
         return;
       }
-      setAviso(sucesso);
+      const { data } = await response.json();
+      setAviso(typeof sucesso === "function" ? sucesso(data) : sucesso);
       router.refresh();
     } finally {
       setEnviando(false);
@@ -85,6 +86,20 @@ export function UsuarioAcoes({ usuario, perfis: perfisIniciais, catalogo, cursos
       </form>
 
       <div className="flex flex-wrap gap-3">
+        <Button
+          variant="outline"
+          disabled={enviando}
+          onClick={() =>
+            void enviar(
+              "/senha-provisoria",
+              "POST",
+              undefined,
+              (data) => `Nova senha provisória (válida por 72 horas, não será exibida de novo): ${data.senha_provisoria}`,
+            )
+          }
+        >
+          Emitir senha provisória
+        </Button>
         {usuario.situacao === "ATIVO" ? (
           <Button
             variant="destructive"

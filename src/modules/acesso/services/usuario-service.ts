@@ -4,7 +4,7 @@ import { definirSenha, revogarSessoes } from "@/lib/credenciais";
 import { DomainError } from "@/lib/errors";
 import type { Identity } from "@/lib/identity";
 import { generateTemporaryPassword } from "@/lib/password";
-import { expiracaoSenhaProvisoria } from "../domain/senha-provisoria";
+import { expiracaoSenhaProvisoria, impedirAutoemissaoSenha } from "../domain/senha-provisoria";
 import {
   diferencaVinculos,
   impedirAutoinativacao,
@@ -205,6 +205,33 @@ export async function reativarUsuario(identity: Identity, id: string): Promise<U
     const [comVigentes] = await comPerfis(tx, [atualizado]);
     return comVigentes;
   });
+}
+
+/**
+ * RF002: the administrator issues a new temporary password (forgotten password, expired
+ * temporary one). The flag and expiry are written first, under RLS and audited; then the
+ * credential is replaced and every session ends, so whoever held the old one is out.
+ */
+export async function emitirSenhaProvisoria(
+  identity: Identity,
+  id: string,
+): Promise<{ usuario: UsuarioComPerfis; senhaProvisoria: string }> {
+  impedirAutoemissaoSenha(identity.userId, id);
+
+  const usuario = await withUser(identity, async (tx) => {
+    const atualizado = await updateUsuario(tx, id, {
+      trocaSenhaObrigatoria: true,
+      senhaProvisoriaExpiraEm: expiracaoSenhaProvisoria(),
+    });
+    if (!atualizado) return explicarFalha(tx, id, "emitir senha provisória");
+    const [comVigentes] = await comPerfis(tx, [atualizado]);
+    return comVigentes;
+  });
+
+  const senhaProvisoria = generateTemporaryPassword();
+  await definirSenha(id, senhaProvisoria);
+  await revogarSessoes(id);
+  return { usuario, senhaProvisoria };
 }
 
 /**
