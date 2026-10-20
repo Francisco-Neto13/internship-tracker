@@ -17,7 +17,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { usuario } from "./acesso";
-import { perfil } from "./enums";
+import { perfil, tipoEstagio } from "./enums";
 import { curso, estudante } from "./academico";
 import { concedente, convenio } from "./concedentes";
 import { documento } from "./documentos";
@@ -27,7 +27,7 @@ import { documento } from "./documentos";
 const criadoEm = () => timestamp("criado_em", { withTimezone: true }).notNull().defaultNow();
 const atualizadoEm = () => timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow();
 
-export const tipoEstagio = pgEnum("tipo_estagio", ["OBRIGATORIO", "NAO_OBRIGATORIO"]);
+export { tipoEstagio };
 // Requisitos v1.2/v1.3 §8.6 (D9): four states; afastamento and formalization steps are derived
 export const situacaoEstagio = pgEnum("situacao_estagio", ["EM_FORMALIZACAO", "ATIVO", "CONCLUIDO", "RESCINDIDO"]);
 export const situacaoPlano = pgEnum("situacao_plano", ["RASCUNHO", "AGUARDANDO_APROVACAO", "APROVADO", "DEVOLVIDO", "SUBSTITUIDO"]);

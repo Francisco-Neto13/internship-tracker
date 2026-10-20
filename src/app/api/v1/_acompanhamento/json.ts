@@ -1,6 +1,7 @@
 import { minutosParaHoras } from "@/lib/horas";
 import type { Divergencia, TotaisFrequencia } from "@/modules/acompanhamento/domain/carga";
 import type { DivergenciaRow, EstagioAcompanhado, FrequenciaRow, HomologacaoRow } from "@/modules/acompanhamento/repositories/frequencia-repository";
+import type { AnexoRow, ParecerRow, RelatorioRow, VersaoRow } from "@/modules/acompanhamento/repositories/relatorio-repository";
 
 // JSON shape of the M05 routes: snake_case, hours instead of minutes (AGENTS.md). Kept in a
 // private folder (_acompanhamento) so it never becomes a route.
@@ -103,5 +104,57 @@ export function estagioAcompanhadoJson(estagio: EstagioAcompanhado) {
     data_fim_prevista: estagio.dataFimPrevista,
     carga_horas_semanal: minutosParaHoras(estagio.cargaSemanalMinutos),
     carga_horas_total: minutosParaHoras(estagio.cargaTotalMinutos),
+  };
+}
+
+type RelatorioExibido = RelatorioRow & {
+  emAtraso: boolean;
+  pendenteDe: "ESTUDANTE" | "ORIENTADOR" | null;
+};
+
+export function relatorioJson(row: RelatorioExibido) {
+  return {
+    id: row.id,
+    estagio_id: row.estagioId,
+    tipo: row.tipo,
+    sequencia: row.sequencia,
+    periodo_inicio: row.periodoInicio,
+    periodo_fim: row.periodoFim,
+    prazo_entrega: row.prazoEntrega,
+    situacao: row.situacao,
+    // Requisitos v1.2 §8.6: shown, derived from the deadline, never stored
+    em_atraso: row.emAtraso,
+    pendente_de: row.pendenteDe,
+    aprovado_em: instante(row.aprovadoEm),
+  };
+}
+
+type Versao = VersaoRow & {
+  enviadaComAtraso: boolean;
+  anexos: AnexoRow[];
+  parecer: ParecerRow | null;
+};
+
+export function parecerJson(parecer: { id: string; decisao: string; texto: string | null; emitidoPorUsuarioId: string; criadoEm: Date; emitidoPorNome?: string | null }) {
+  return {
+    id: parecer.id,
+    decisao: parecer.decisao,
+    texto: parecer.texto,
+    emitido_por_usuario_id: parecer.emitidoPorUsuarioId,
+    ...(parecer.emitidoPorNome !== undefined ? { emitido_por_nome: parecer.emitidoPorNome } : {}),
+    criado_em: parecer.criadoEm.toISOString(),
+  };
+}
+
+export function versaoJson(versao: Versao) {
+  return {
+    id: versao.id,
+    numero: versao.numero,
+    conteudo: versao.conteudo,
+    enviado_por_usuario_id: versao.enviadoPorUsuarioId,
+    enviado_em: versao.criadoEm.toISOString(),
+    enviada_com_atraso: versao.enviadaComAtraso,
+    anexos: versao.anexos.map((anexo) => ({ documento_id: anexo.documentoId, nome_original: anexo.nomeOriginal })),
+    parecer: versao.parecer ? parecerJson(versao.parecer) : null,
   };
 }

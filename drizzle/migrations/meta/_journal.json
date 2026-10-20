@@ -50,6 +50,13 @@
       "when": 1792536280335,
       "tag": "0006_frequencia",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792536980069,
+      "tag": "0007_relatorios",
+      "breakpoints": true
     }
   ]
 }

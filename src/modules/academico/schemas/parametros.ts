@@ -64,3 +64,19 @@ export const definirExigenciasBodySchema = z.object({
 });
 
 export const uuidParamSchema = z.object({ id: z.uuid() });
+
+// RF036: periodicity by internship type (Lei 11.788/2008, art. 7º, IV: at most 6 months)
+export const definirPeriodicidadesBodySchema = z.object({
+  periodicidades: z
+    .array(
+      z.object({
+        tipo_estagio: z.enum(["OBRIGATORIO", "NAO_OBRIGATORIO"]),
+        intervalo_meses: z.number().int().min(1).max(6),
+        prazo_entrega_dias: z.number().int().min(0).max(90),
+        prazo_relatorio_final_dias: z.number().int().min(0).max(90),
+      }),
+    )
+    .min(1)
+    .max(2)
+    .refine((itens) => new Set(itens.map((item) => item.tipo_estagio)).size === itens.length, { message: "Um item por tipo de estágio" }),
+});
