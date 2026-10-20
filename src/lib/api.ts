@@ -12,6 +12,7 @@ const STATUS_BY_KIND: Record<DomainErrorKind, number> = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   UNPROCESSABLE: 422,
+  UNAVAILABLE: 503,
 };
 
 type ErrorBody = {
