@@ -117,7 +117,7 @@ ferramenta.
 - Toda tabela tem RLS habilitada (testado em `tests/db/rls-invariants.test.ts`).
   Código de aplicação nunca importa `src/db/client.ts` nem `pg`: sempre passa por
   `withUser(identity, tx => ...)` de `src/db/with-user.ts`, que define
-  `app.user_id` na transação. O lint bloqueia o import direto.
+  `app.usuario_id` na transação. O lint bloqueia o import direto.
 - `Identity` só é produzida por `src/lib/session.ts` a partir do cookie de sessão.
   Não construir `Identity` com cast fora dali e dos testes.
 - Repositórios não filtram por usuário: quem decide quais linhas existem é a RLS.
@@ -161,7 +161,7 @@ M05 lê M04; M04 lê M02 e M03. Nenhuma dependência circular.
 | Banco | Integridade referencial, RLS, gatilhos de auditoria | |
 
 Fluxo de escrita: `Route Handler (authenticatedRoute) -> valida sessão -> valida
-schema (Zod) -> serviço de domínio -> withUser abre transação e define app.user_id
+schema (Zod) -> serviço de domínio -> withUser abre transação e define app.usuario_id
 -> repositório -> RLS filtra -> trigger grava auditoria -> commit -> resposta`.
 Referência implementada: `src/app/api/v1/estudantes/route.ts`.
 
@@ -197,7 +197,13 @@ docker/postgres/init/    papéis e bancos criados quando o volume nasce
 
 RLS é ignorada por superusuário, por papel com `BYPASSRLS` e pelo dono da tabela. Por
 isso a aplicação nunca conecta como `migrator`, e `scripts/db/apply-migrations.ts`
-aborta a migração se um papel de runtime puder contornar a RLS.
+aborta a migração se um papel de runtime puder contornar a RLS. Em tempo de execução,
+`src/db/client.ts` recusa criar o pool se `DATABASE_URL` não conectar como `app_runtime`
+(ou `DATABASE_AUTH_URL` como `auth_runtime`).
+
+Não usar `FORCE ROW LEVEL SECURITY`: as funções `security definer` de `app.*` rodam como
+dono justamente para ler `vinculo_perfil` sem recursão na própria política, e o gatilho de
+auditoria grava como dono. Com `FORCE`, as políticas e a auditoria quebram.
 
 `drizzle/sql` é declarativo: a cada migração, todas as políticas e permissões de runtime
 são apagadas e recriadas na mesma transação. O arquivo é a fonte da verdade.
