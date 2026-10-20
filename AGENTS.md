@@ -1,8 +1,9 @@
 # AGENTS.md
 
 Internship Tracker: Plataforma de Acompanhamento de Estágios e Atividades Complementares.
-Projeto acadêmico (disciplina Project Lab). Especificação: 6 atores, 36 regras de negócio
-(RN-01 a RN-37), 70 requisitos funcionais (RF001 a RF070), 23 casos de uso, 8 módulos.
+Projeto acadêmico (disciplina Project Lab). Especificação: 6 atores, 37 regras de negócio
+(RN-01 a RN-38, com RN-20 suprimida), 73 requisitos funcionais (RF001 a RF073), 23 casos
+de uso, 8 módulos. Documento oficial: `documentation/requisitos/Internship_Tracker_Documento_Final_v1.3.docx`.
 
 ## Comandos
 
@@ -145,7 +146,7 @@ ferramenta.
 | M05 Acompanhamento | `src/modules/acompanhamento` | RegistroFrequencia, Relatorio, Avaliacao, Acompanhamento | RF023–RF030, RF036–RF043 |
 | M06 Atividades Complementares | `src/modules/atividades` | AtividadeComplementar, Comprovante, Analise | RF048–RF055 |
 | M07 Integralização | `src/modules/integralizacao` | ApuracaoIntegralizacao | RF056–RF058 |
-| M08 Administração e Controle | `src/modules/administracao` | RegistroAuditoria, RelatorioGerencial, GuardaDocumental | RF065–RF070 |
+| M08 Administração e Controle | `src/modules/administracao` | RegistroAuditoria, RelatorioGerencial, GuardaDocumental, AcessoDocumentoSensivel | RF065–RF073 |
 
 Dependência entre módulos só nas direções previstas: M07 lê M04, M05 e M06;
 M05 lê M04; M04 lê M02 e M03. Nenhuma dependência circular.
@@ -236,8 +237,22 @@ de inatividade. Cadastro próprio desabilitado: contas são criadas pelo adminis
 identidade assim que o usuário é inativado. O limite de tentativas de login fica em
 banco (`limite_requisicao`), não em memória.
 
-Senha: 15 a 128 caracteres (NIST SP 800-63B-4). Conta nova ou senha esquecida recebe
-senha provisória (`usuario.troca_senha_obrigatoria`, `senha_provisoria_expira_em`).
+Senha: 15 a 128 caracteres (NIST SP 800-63B-4). Senha nova é recusada se aparecer em
+vazamentos (plugin `haveIBeenPwned`: só 5 caracteres do SHA-1 saem do servidor, com padding;
+se a consulta falhar, a troca é recusada) ou se for o nome do sistema, o e-mail, o nome do
+usuário ou derivações (`senha-contextual.ts`, comparação da senha inteira).
+`SENHAS_VAZADAS_VERIFICACAO=desligada` só vale fora de produção (os testes de banco usam).
+Rotas HTTP de conta que o domínio cobre ficam fechadas em `disabledPaths` (`/update-user`,
+`/change-password` e outras); chamadas `auth.api.*` no servidor não são afetadas. Senha
+provisória gerada é gravada com `hashPassword` direto (`definirSenha`), porque o plugin exige
+contexto de rota da biblioteca.
+
+Limite de login por IP: a origem do endereço vem de `AUTH_IP_HEADERS` e
+`AUTH_TRUSTED_PROXIES` (`src/lib/auth-options.ts`). Na Vercel o padrão confia em
+`x-vercel-forwarded-for`/`x-forwarded-for`, que a plataforma sobrescreve. Em hospedagem
+própria, produção sem essas variáveis não inicia.
+
+Conta nova ou senha esquecida recebe senha provisória (`usuario.troca_senha_obrigatoria`, `senha_provisoria_expira_em`).
 Enquanto a troca estiver pendente, `authenticatedRoute` responde 403
 `TROCA_SENHA_OBRIGATORIA` (exceto rotas com `permitirTrocaSenhaPendente`) e `getIdentity()`
 redireciona as telas para `/trocar-senha`. Páginas usam `getIdentity()`, não `getSession()`,
@@ -250,18 +265,40 @@ grant por coluna exige SQL com a lista explícita (modelo: `insertUsuario`).
 
 ## Máquina de estados do estágio
 
+Fonte: documento de requisitos v1.2, §8.6 (Figura 2). São quatro estados, com os mesmos
+nomes exibidos na interface:
+
 ```
-RASCUNHO -> AGUARDANDO_ASSINATURAS -> PRONTO_PARA_ATIVACAO -> ATIVO -> CONCLUIDO
-ATIVO <-> AFASTADO
-ATIVO -> RESCINDIDO
-AFASTADO -> RESCINDIDO
+[cadastro] -> EM_FORMALIZACAO -> ATIVO -> CONCLUIDO
+                                 ATIVO -> RESCINDIDO
+                                 ATIVO -> ATIVO   (aditivo, prorrogação, afastamento)
 ```
 
-Guardas de `PRONTO_PARA_ATIVACAO -> ATIVO`, todas na mesma transação: concedente
-não suspensa (RF008), convênio vigente na data de início (RF010), plano de
-atividades aprovado (RF017), orientador e supervisor vinculados (RF032),
-apólice vigente quando exigida (RF018), três assinaturas registradas (RF019).
-Se qualquer guarda falhar, a resposta é 409 com todos os impedimentos de uma vez.
+Aditivo, prorrogação e afastamento não mudam o estado: o estágio segue `ATIVO`, com
+prazos e cargas recalculados. Não existem `AFASTADO`, `RASCUNHO`,
+`AGUARDANDO_ASSINATURAS` nem `PRONTO_PARA_ATIVACAO`: "em afastamento" e as etapas da
+formalização (TCE em edição, TCE fechado para assinatura, assinaturas coletadas) são
+derivadas dos dados (`DER-LOGICO.MD` §5.1 e §9 D9). Reabrir um TCE fechado anula as
+assinaturas por divergência de hash, sem apagá-las.
+
+Guardas de `EM_FORMALIZACAO -> ATIVO`, todas na mesma transação: concedente não suspensa
+(RF008), convênio vigente na data de início (RF010), plano de atividades aprovado (RF017),
+orientador e supervisor vinculados (RF032), apólice vigente quando exigida (RF018), três
+assinaturas sobre o hash do TCE fechado (RF019), estudante `MATRICULADO` (Lei
+11.788/2008, art. 3º, I) e nenhum outro estágio `ATIVO` do estudante. Se qualquer guarda
+falhar, a resposta é 409 com todos os impedimentos de uma vez.
+
+Guardas de `ATIVO -> CONCLUIDO`: avaliação de desempenho registrada (RF043) e, se
+obrigatório, carga mínima homologada e relatório final aprovado (RF045); nenhum lançamento
+de frequência pendente de homologação.
+
+Relatório periódico: `PENDENTE -> EM_ANALISE -> APROVADO | DEVOLVIDO`, `DEVOLVIDO ->
+EM_ANALISE`; "em atraso" é derivado do prazo. Atividade complementar: `EM_ANALISE ->
+APROVADA | RECUSADA | DEVOLVIDA`, `DEVOLVIDA -> EM_ANALISE`; `RECUSADA` é final.
+
+Situação acadêmica (implementada, serviço e gatilho): `MATRICULADO -> TRANCADO | FORMADO |
+DESLIGADO`, `TRANCADO -> MATRICULADO | DESLIGADO`; `FORMADO` e `DESLIGADO` finais.
+Leitura mais restritiva da lei, **pendente de validação com o orientador**.
 
 ## Decisões de negócio já fechadas
 
@@ -278,14 +315,29 @@ alternativa descartada por engano):
 | Recurso contra recusa de atividade complementar | Não existe; cadastra-se nova atividade |
 | Divergência relevante de carga horária | Percentual parametrizável, padrão 10% |
 | Hospedagem em território nacional | Sem exigência |
+| Situação acadêmica (RF005) | Transições restritas (acima), validadas no serviço e por gatilho, auditadas. **Pendente de validação com o orientador** |
+| Duração máxima e afastamento (RF060, RF062) | O afastamento estende `data_fim` só até o teto de 2 anos no par estudante–concedente; a exceção do art. 11 (estagiário com deficiência) é marcada no estágio pela coordenação, com documento, nunca no estudante |
+| Frequência (RF023, RF024) | Um lançamento vigente por dia, com intervalo; limite semanal pela semana ISO (segunda a domingo); conclusão bloqueada se houver lançamento pendente de homologação |
+| Relatório e atividade fora do prazo (RF037) | Relatório enviado depois do prazo é aceito e marcado como em atraso |
+| Aproveitamento de estágio não obrigatório (RF046) | Concluído ou rescindido, limitado aos minutos homologados, sempre com análise do responsável |
+| Mudança de curso | Estágio mantém o curso de origem; a apuração conta só estágios do curso atual, e os anteriores entram por decisão da coordenação |
+| Upload | PDF, JPEG ou PNG, até 10 MiB, direto ao R2 por URL assinada; o servidor confere tamanho, tipo pelos bytes e SHA-256 antes de aceitar |
+| Dados de saúde (RN-38, RF071–RF073) | Atestado e documento de dispensa são sensíveis: acesso só por vínculo, criptografia em repouso do R2, cada visualização ou download registrado; o administrador não lê o conteúdo |
 | Recuperação de senha (RF002) | O administrador emite senha provisória (`POST /usuarios/{id}/senha-provisoria`), entregue fora do sistema; 72 h de validade; troca obrigatória no primeiro acesso. Sem e-mail |
 
 ## Requisitos de qualidade (resumo)
 
 Segurança > Confiabilidade > Manutenibilidade, nessa prioridade quando conflitam.
-RLS sem exceção (testado); leitura de atestado médico registrada em auditoria;
-sessão expira em 30min; leitura p95 < 800ms; PDF em até 5s; uptime ≥ 99% em
-horário comercial; toda RN nova exige teste; cálculo de horas é determinístico.
+Fonte: RNF-01 a RNF-13 do documento de requisitos v1.2. Essenciais: RLS na camada de dados
+(RNF-01, testado), hash adaptativo de senha (RNF-02), inativação na requisição seguinte
+(RNF-03), auditoria só de inserção (RNF-04), dado de saúde com acesso por vínculo,
+criptografia em repouso e leitura registrada (RNF-05), arquivo privado com link temporário
+(RNF-06), cálculo de horas único e determinístico no servidor (RNF-07), hash SHA-256 de TCE e
+aditivo assinados (RNF-08). Importantes: 360 px sem rolagem horizontal (RNF-09), WCAG 2.1 AA
+(RNF-10), p95 de 2 s nas consultas (RNF-11), backup com restauração a ponto no tempo
+(RNF-12), duas últimas versões de Chrome, Edge, Firefox e Safari (RNF-13). Sessão expira em
+30 min; toda RN nova exige teste. As metas mais apertadas do `DAS.docx` §10 (p95 < 800 ms,
+PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
 
 ## Pegadinhas conhecidas
 

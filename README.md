@@ -23,7 +23,7 @@
 
 O Internship Tracker substitui o controle manual (planilhas e processos em papel) da gestão de estágios em um curso de graduação. Formaliza o vínculo entre estudante, instituição, concedente e supervisores por meio de termo de compromisso, plano de atividades e apólice de seguro; ao longo do estágio, controla frequência, carga horária, relatórios periódicos, avaliações de desempenho e ocorrências como afastamento, prorrogação e rescisão.
 
-A especificação cobre **6 atores**, **36 regras de negócio**, **70 requisitos funcionais** e **23 casos de uso**, organizados em **8 módulos** de domínio, com rastreabilidade fechada entre requisito e regra: nenhum requisito sem origem, nenhuma regra sem requisito que a implemente.
+A especificação cobre **6 atores**, **37 regras de negócio**, **73 requisitos funcionais** e **23 casos de uso**, organizados em **8 módulos** de domínio, com rastreabilidade fechada entre requisito e regra: nenhum requisito sem origem, nenhuma regra sem requisito que a implemente.
 
 A filosofia central do projeto prioriza, nessa ordem: **segurança** (seis perfis distintos enxergam fatias diferentes dos mesmos dados, incluindo dado sensível como atestado médico), **confiabilidade** (auditoria e guarda documental não podem falhar silenciosamente) e **manutenibilidade** (equipe pequena, prazo de semestre: a regra de negócio precisa ficar isolada para não virar retrabalho a cada tela nova).
 
@@ -38,7 +38,7 @@ A filosofia central do projeto prioriza, nessa ordem: **segurança** (seis perfi
 | M05 · Acompanhamento | Frequência, carga horária, relatórios e avaliação (RF023–RF030, RF036–RF043) | Estudante / Professor / Supervisor |
 | M06 · Atividades Complementares | Cadastro, comprovante e análise (RF048–RF055) | Estudante / Coordenação |
 | M07 · Integralização Curricular | Progresso de carga horária e emissão de comprovantes (RF056–RF058) | Estudante / Coordenação |
-| M08 · Administração e Controle | Auditoria, relatórios gerenciais e conformidade (RF065–RF070) | Coordenação / Administrador |
+| M08 · Administração e Controle | Auditoria, relatórios gerenciais, conformidade e acesso a dados sensíveis (RF065–RF073) | Coordenação / Administrador |
 
 ## Modelo de segurança
 
@@ -50,14 +50,15 @@ Toda operação relevante é registrada por **gatilho de banco**, não por códi
 
 ## Máquina de estados do estágio
 
+Conforme o documento de requisitos v1.2 (§8.6, Figura 2):
+
 ```
-RASCUNHO -> AGUARDANDO_ASSINATURAS -> PRONTO_PARA_ATIVACAO -> ATIVO -> CONCLUIDO
-ATIVO <-> AFASTADO
-ATIVO -> RESCINDIDO
-AFASTADO -> RESCINDIDO
+[cadastro] -> EM_FORMALIZACAO -> ATIVO -> CONCLUIDO
+                                 ATIVO -> RESCINDIDO
+                                 ATIVO -> ATIVO   (aditivo, prorrogação, afastamento)
 ```
 
-A transição para `ATIVO` verifica, na mesma transação: concedente não suspensa, convênio vigente, plano de atividades aprovado, orientador e supervisor vinculados, apólice registrada (quando exigida) e as três assinaturas do TCE. Se qualquer guarda falhar, a API responde com todos os impedimentos de uma vez, não um por requisição.
+Aditivo, prorrogação e afastamento não mudam o estado: o estágio segue `ATIVO`, com prazos e cargas recalculados. A ativação verifica, na mesma transação: concedente não suspensa, convênio vigente, plano de atividades aprovado, orientador e supervisor vinculados, apólice registrada (quando exigida), as três assinaturas sobre o TCE fechado, estudante matriculado e nenhum outro estágio ativo. Se qualquer guarda falhar, a API responde com todos os impedimentos de uma vez, não um por requisição.
 
 ## Decisões de negócio já fechadas
 
@@ -73,14 +74,15 @@ Pontos que antes admitiam mais de uma interpretação, definidos com o professor
 | Recurso contra recusa de atividade complementar | Não existe. O estudante cadastra uma nova atividade |
 | Divergência relevante de carga horária | Percentual parametrizável, padrão de 10% |
 | Hospedagem em território nacional | Sem exigência |
+| Situação acadêmica (RF005) | Transições restritas: matriculado pode trancar, formar ou ser desligado; trancado volta a matriculado ou é desligado; formado e desligado são finais. Pendente de validação com o orientador |
 | Recuperação de senha (RF002) | O administrador emite senha provisória de 72 h, entregue fora do sistema, com troca obrigatória no primeiro acesso. Sem e-mail |
 
 ## Requisitos de qualidade
 
-Metas de qualidade validadas pela equipe (não são garantia contratual: o projeto roda em planos gratuitos de terceiros, sem redundância paga):
+Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com as metas mais apertadas da equipe (`DAS.docx` §10) como alvo, não como garantia: o projeto roda em planos gratuitos de terceiros, sem redundância paga.
 
-- **Segurança:** RLS sem exceção em qualquer tabela; leitura de dado sensível (atestado médico) registrada em auditoria; sessão expira em 30 minutos de inatividade.
-- **Desempenho:** leitura sob carga normal com p95 < 800ms; geração de PDF em até 5s.
+- **Segurança:** RLS sem exceção em qualquer tabela (RNF-01); senha com hash Argon2id, mínimo de 15 caracteres e recusa de senha vazada ou previsível (RNF-02); dado de saúde com acesso por vínculo, criptografia em repouso e cada leitura registrada (RNF-05, RN-38); sessão expira em 30 minutos de inatividade.
+- **Desempenho:** consultas com p95 de até 2 s (RNF-11); alvo da equipe p95 < 800 ms e PDF em até 5 s.
 - **Disponibilidade:** uptime mensal ≥ 99% em horário comercial, dentro do SLA gratuito de Vercel/Neon; cold start do Neon é restrição aceita, não bug.
 - **Manutenibilidade:** toda regra de negócio nova exige teste automatizado; acesso ao banco fora do wrapper de identidade é bloqueado por lint.
 - **Confiabilidade:** cálculo de carga horária é determinístico; escrita de auditoria nunca é perdida.
