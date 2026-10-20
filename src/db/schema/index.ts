@@ -4,3 +4,4 @@ export * from "./auditoria";
 export * from "./concedentes";
 export * from "./documentos";
 export * from "./estagios";
+export * from "./acompanhamento";

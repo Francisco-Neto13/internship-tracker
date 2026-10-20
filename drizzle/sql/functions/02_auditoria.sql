@@ -19,7 +19,12 @@ delete from app.coluna_sensivel;
 insert into app.coluna_sensivel (tabela, coluna, motivo) values
   ('versao_relatorio', 'conteudo', 'Conteúdo de relatório: o administrador não lê (RF037, AGENTS.md)'),
   ('parecer_relatorio', 'texto', 'Parecer sobre relatório: o administrador não lê (RF038, AGENTS.md)'),
-  ('afastamento', 'descricao', 'Dado de saúde (LGPD art. 5º, II; RN-38)');
+  ('afastamento', 'descricao', 'Dado de saúde (LGPD art. 5º, II; RN-38)'),
+  -- M05: free text on hours and their analysis may carry personal or health information
+  -- ("faltei por consulta"); the administrator has no access to these tables (RN-37)
+  ('registro_frequencia', 'observacao', 'Texto livre do estudante sobre o dia (RF023; LGPD art. 6º, III)'),
+  ('homologacao_frequencia', 'observacao', 'Parecer do supervisor sobre o período (RF027)'),
+  ('divergencia_carga_horaria', 'parecer', 'Análise do orientador sobre a divergência (RF028)');
 
 create or replace function app.registrar_auditoria()
 returns trigger
