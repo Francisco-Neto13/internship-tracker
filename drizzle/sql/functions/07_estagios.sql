@@ -174,6 +174,19 @@ begin
     raise exception 'TRANSICAO_ESTAGIO_INVALIDA: % para %', old.situacao, new.situacao using errcode = 'P0001';
   end if;
 
+  -- DER §5.2 (RF043, RF045, D3): the conclusion waits for every guard of
+  -- app.impedimentos_conclusao (functions/11_conclusao.sql), listed together in the message
+  if old.situacao = 'ATIVO' and new.situacao = 'CONCLUIDO' then
+    declare
+      -- null when the caller cannot see the internship: refuse rather than let it pass
+      v_impedimentos text[] := coalesce(app.impedimentos_conclusao(new.id), array['ESTAGIO_NAO_ENCONTRADO']);
+    begin
+      if cardinality(v_impedimentos) > 0 then
+        raise exception 'CONCLUSAO_BLOQUEADA: %', array_to_string(v_impedimentos, ',') using errcode = 'P0001';
+      end if;
+    end;
+  end if;
+
   -- TCE in edition: everything editable except the identity columns above
   if old.situacao = 'EM_FORMALIZACAO' and old.hash_tce is null then
     return new;
