@@ -8,11 +8,13 @@ de uso, 8 módulos. Documento oficial: `documentation/requisitos/Internship_Trac
 ## Comandos
 
 ```bash
-docker compose up -d postgres --wait   # Postgres 17 com papéis e bancos (dev e _test)
+docker compose up -d postgres storage --wait   # Postgres 17 (papéis, dev e _test) e SeaweedFS (S3)
 cp .env.example .env                   # preencher BETTER_AUTH_SECRET
 npm install               # também ativa os hooks de .githooks (prepare)
 npm run db:migrate        # tabelas (drizzle/migrations) + segurança (drizzle/sql)
 npm run db:seed           # usuários de desenvolvimento, senha "senha-dev-internship"
+npm run storage:init      # bucket privado e CORS do upload direto (idempotente)
+npm run storage:check     # confere bucket e CORS
 npm run dev               # http://localhost:3000
 npm run lint
 npm run typecheck
@@ -28,6 +30,11 @@ npm run hooks             # ativa .githooks à mão, se o npm install não ativo
 
 Node 24 LTS (`.nvmrc`). Nunca rodar `drizzle-kit push`: ele ignora papéis, políticas,
 funções e gatilhos de `drizzle/sql` e pode deixar o banco sem RLS.
+
+Toda migração de tabela nova ganha `drizzle/rollback/<migração>.down.sql`, testado à mão
+(ordem: tabelas, depois funções que usam os tipos na assinatura, depois os tipos). Mudança
+em tabela com dados entra sem quebrá-los: coluna nova anulável ou com padrão, check criado
+`NOT VALID` e validado quando os dados permitem (modelo: `0003_concedentes`).
 
 ## Branches e commits
 
@@ -178,13 +185,16 @@ src/shared/              transversal: documentos, notificacoes, auditoria, ui
 src/db/                  client.ts (restrito), with-user.ts, errors.ts, schema/
 src/lib/                 auth, session, identity, password, api, errors
 drizzle/migrations/      SQL de tabelas gerado por drizzle-kit
+drizzle/rollback/        reversão manual de cada migração (*.down.sql)
 drizzle/sql/             roles/, functions/, policies/, triggers/ (aplicados nessa ordem)
 scripts/db/              migrate, seed
+scripts/storage/         init (bucket e CORS) e check do armazenamento local
+src/shared/documentos/   upload direto (D8): token, conteúdo pelos bytes, armazenamento S3 e em memória
 scripts/ci-local.mjs     CI local, espelho do .github/workflows/ci.yml
 .githooks/               pre-push que recusa push direto em develop/main (core.hooksPath)
 scripts/github/          batch:integrate, batch:pr, github:sync
 tests/db/                testes de integração contra Postgres real
-e2e/                     Playwright
+e2e/                     Playwright; e2e/support/hibp-stub.mjs simula a API de senhas vazadas
 docker/postgres/init/    papéis e bancos criados quando o volume nasce
 ```
 
@@ -211,7 +221,8 @@ são apagadas e recriadas na mesma transação. O arquivo é a fonte da verdade.
 
 Funções auxiliares ficam no schema `app`, em `security definer` com `search_path = ''`:
 `app.usuario_atual_id()`, `app.tem_perfil_vigente(perfil)`, `app.coordena_curso(curso_id)`,
-`app.coordena_estudante_usuario(usuario_id)`. Nas políticas, envolver chamadas que não
+`app.coordena_estudante_usuario(usuario_id)`, `app.representa_concedente(concedente_id)`,
+`app.e_responsavel_vigente(estagio_id, papel)`, `app.convenio_vigente_em(convenio_id, concedente_id, data)`. Nas políticas, envolver chamadas que não
 dependem da linha em `(select ...)` para o Postgres avaliar uma vez por consulta.
 
 Perfil sozinho não basta. A permissão é a interseção de perfil e vínculo:
@@ -224,6 +235,15 @@ Perfil sozinho não basta. A permissão é a interseção de perfil e vínculo:
 | Coordenação | Estudantes e estágios do curso sob sua coordenação |
 | Concedente | Estágios da própria concedente |
 | Administrador | Parametrização e auditoria; sem acesso a conteúdo de relatório ou atestado |
+
+Política `SELECT` de tabela em que o app insere com `RETURNING` (todo `insert` do Drizzle)
+precisa decidir pelas colunas da própria linha (`estudante_id = ...`, `app.coordena_curso(curso_id)`),
+não por função que busca a linha pelo id: a função roda com o snapshot anterior ao `INSERT`,
+não a enxerga e o `RETURNING` falha com violação de RLS (modelo: `estagio_leitura`).
+
+Gatilho de regra levanta `P0001` com mensagem `CODIGO: texto`; `isTriggerRule` (`src/db/errors.ts`)
+converte em `DomainError` com o mesmo código. Colunas sensíveis entram mascaradas na auditoria:
+registrar em `app.coluna_sensivel` (`drizzle/sql/functions/02_auditoria.sql`), com teste.
 
 Colunas usadas nas junções das políticas precisam de índice, senão a política vira o
 gargalo. Toda política nova ganha teste que a viola isoladamente
@@ -238,8 +258,9 @@ identidade assim que o usuário é inativado. O limite de tentativas de login fi
 banco (`limite_requisicao`), não em memória.
 
 Senha: 15 a 128 caracteres (NIST SP 800-63B-4). Senha nova é recusada se aparecer em
-vazamentos (plugin `haveIBeenPwned`: só 5 caracteres do SHA-1 saem do servidor, com padding;
-se a consulta falhar, a troca é recusada) ou se for o nome do sistema, o e-mail, o nome do
+vazamentos (plugin próprio `senhasVazadas`, `src/lib/senhas-vazadas.ts`: só 5 caracteres do
+SHA-1 saem do servidor, com padding; se a consulta falhar, a troca é recusada; `HIBP_RANGE_URL`
+troca o endpoint, e o e2e usa o stub local, com a consulta real num passo que não bloqueia o CI) ou se for o nome do sistema, o e-mail, o nome do
 usuário ou derivações (`senha-contextual.ts`, comparação da senha inteira).
 `SENHAS_VAZADAS_VERIFICACAO=desligada` só vale fora de produção (os testes de banco usam).
 Rotas HTTP de conta que o domínio cobre ficam fechadas em `disabledPaths` (`/update-user`,
@@ -261,7 +282,9 @@ Better Auth (`src/lib/credenciais.ts`); `app_runtime` nunca toca em `conta` ou `
 
 Privilégio de `app_runtime` em `usuario` é por coluna. O Drizzle lista toda coluna no
 `INSERT` (com `DEFAULT`) e o Postgres exige privilégio em cada uma: inserir em tabela com
-grant por coluna exige SQL com a lista explícita (modelo: `insertUsuario`).
+grant por coluna exige SQL com a lista explícita (modelo: `insertUsuario`). Tabelas novas
+recebem `INSERT` na tabela inteira e `UPDATE` por coluna; o que o app não pode gravar fica
+num gatilho `BEFORE` que recusa (modelo: `validar_alteracao_concedente`).
 
 ## Máquina de estados do estágio
 
@@ -367,6 +390,17 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
   alertas por texto.
 - Primeira consulta após inatividade no plano gratuito do Neon leva
   ~0.5s a mais (cold start). Aquecer o banco antes de demonstração ao vivo.
+- Armazenamento local é SeaweedFS (`chrislusf/seaweedfs`, comando `mini`, porta 8333): o
+  MinIO deixou de publicar imagens da edição comunitária. Mesma API S3 do R2; o código só
+  muda por `R2_ENDPOINT` e `R2_FORCE_PATH_STYLE`.
+- URL de upload assinada: o SDK v3 assina por padrão um CRC32 do corpo ainda inexistente, e o
+  bucket recusa o PUT real. O cliente usa `requestChecksumCalculation: "WHEN_REQUIRED"`.
+- Cabeçalho extra no navegador (por exemplo `extraHTTPHeaders` do Playwright) vai também no PUT
+  direto ao bucket e quebra o preflight de CORS. Spec que envia arquivo pela tela não usa
+  `extraHTTPHeaders`.
+- Schemas Drizzle que se referenciam formam ciclo de import: enums compartilhados ficam em
+  `src/db/schema/enums.ts`, e FK circular usa `(): AnyPgColumn => ...`.
+- Scripts `tsx` rodam como CommonJS: sem `await` no topo, usar `main().catch(...)`.
 - Buckets do Cloudflare R2 são privados; download sempre passa por endpoint
   que verifica permissão e emite URL assinada de expiração curta, nunca URL
   pública direta.
@@ -382,8 +416,12 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
    `integration/fase-1-fundacao`); gestão de usuários e perfis, senha provisória, detalhe e
    edição de curso e estudante, consulta e exportação da auditoria (lote
    `integration/fase-1-fechamento`).
-2. Cadastros e formalização: cursos, estudantes, concedentes, convênios,
-   TCE, ativação de estágio.
+2. Cadastros e formalização (**concluída**, lote `integration/fase-2-cadastros`):
+   parâmetros institucionais e categorias, concedentes com histórico de situação, vínculo de
+   supervisor e concedente, convênios com vigência e renovação, upload direto de documentos,
+   TCE com fechamento e reabertura, plano de atividades, responsáveis, apólice, assinaturas,
+   ativação com todas as guardas, aditivos e substituição de responsáveis; mascaramento de
+   colunas sensíveis na auditoria; stub do HIBP no CI.
 3. Acompanhamento: frequência, carga horária, relatórios, avaliação.
 4. Atividades complementares e integralização.
 5. Ocorrências, conclusão e conformidade: afastamento, prorrogação,
@@ -398,7 +436,7 @@ Critérios de saída:
 | Fase | Critério |
 |---|---|
 | 1 | Um usuário de cada perfil autentica e enxerga apenas o que lhe cabe, comprovado por teste automatizado. Orientador, supervisor e concedente completam o critério quando `estagio` existir |
-| 2 | Um estágio percorre `RASCUNHO → ATIVO`, e cada guarda de ativação é comprovada por teste que a viola isoladamente |
+| 2 | Um estágio percorre `EM_FORMALIZACAO → ATIVO`, e cada guarda de ativação é comprovada por teste que a viola isoladamente (`tests/db/estagio-formalizacao.test.ts`, `e2e/estagio.spec.ts`) |
 | 4 | A vedação de dupla contagem (RN-36) tem teste que a força a falhar antes de passar |
 
 ## Documentação
