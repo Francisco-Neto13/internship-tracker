@@ -134,7 +134,7 @@ export const NAVEGACAO: NavItem[] = [
         modulo: "M01 Acesso e Usuários",
         rf: "RF001-RF003",
         perfis: ["ADMINISTRADOR"],
-        status: "em-construcao",
+        status: "ativo",
         icon: Users,
       },
       {

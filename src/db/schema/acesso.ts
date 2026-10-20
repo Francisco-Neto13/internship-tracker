@@ -40,10 +40,20 @@ export const usuario = pgTable(
     emailVerificado: boolean("email_verificado").notNull().default(false),
     imagem: text("imagem"),
     situacao: situacaoUsuario("situacao").notNull().default("ATIVO"),
+    // RF002: a password issued by the administrator is temporary. It must be replaced on
+    // the next sign-in and stops working after senhaProvisoriaExpiraEm (DISA STIG V-222547)
+    trocaSenhaObrigatoria: boolean("troca_senha_obrigatoria").notNull().default(false),
+    senhaProvisoriaExpiraEm: timestamp("senha_provisoria_expira_em", { withTimezone: true }),
     criadoEm: criadoEm(),
     atualizadoEm: atualizadoEm(),
   },
-  (t) => [check("usuario_email_minusculo", sql`${t.email} = lower(${t.email})`)],
+  (t) => [
+    check("usuario_email_minusculo", sql`${t.email} = lower(${t.email})`),
+    check(
+      "usuario_expiracao_so_com_troca_pendente",
+      sql`${t.trocaSenhaObrigatoria} or ${t.senhaProvisoriaExpiraEm} is null`,
+    ),
+  ],
 );
 
 // Auth infrastructure below: reachable only by the auth_runtime role, never audited

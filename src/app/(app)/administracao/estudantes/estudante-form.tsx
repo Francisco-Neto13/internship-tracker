@@ -56,7 +56,7 @@ export function EstudanteForm({ cursos }: { cursos: { id: string; nome: string }
         <Label htmlFor="estudante-usuario">Id do usuário</Label>
         <Input
           id="estudante-usuario"
-          placeholder="uuid de um usuário já cadastrado (RF001 ainda sem tela)"
+          placeholder="uuid do usuário (veja em Administração > Usuários)"
           aria-invalid={Boolean(errors.usuario_id)}
           {...register("usuario_id")}
         />

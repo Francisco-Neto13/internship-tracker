@@ -2,8 +2,19 @@ import { randomUUID } from "node:crypto";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "@/db/schema";
+import { getAuth } from "@/lib/auth";
 import type { Identity } from "@/lib/identity";
 import { hashPassword } from "@/lib/password";
+
+/** Signs in through the auth library and returns the session cookie as request headers. */
+export async function signIn(email: string, password: string): Promise<Headers> {
+  const { headers } = await getAuth().api.signInEmail({ body: { email, password }, returnHeaders: true });
+  const cookie = headers
+    .getSetCookie()
+    .map((value) => value.split(";")[0])
+    .join("; ");
+  return new Headers({ cookie });
+}
 
 // Fixtures are written as the migrator (table owner), which RLS does not filter.
 // Every fixture uses unique values, so tests never need to clean tables and the
