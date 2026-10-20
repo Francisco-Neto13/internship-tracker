@@ -26,6 +26,15 @@ export function isUniqueViolation(error: unknown, constraint: string): boolean {
   return pg?.code === "23505" && pg.constraint === constraint;
 }
 
+/**
+ * A rule raised by a trigger of drizzle/sql/functions: SQLSTATE P0001 (raise_exception)
+ * with the stable code as the message prefix, e.g. "TRANSICAO_SITUACAO_INVALIDA: ...".
+ */
+export function isTriggerRule(error: unknown, code: string): boolean {
+  const pg = findPgError(error);
+  return pg?.code === "P0001" && pg.message.startsWith(`${code}:`);
+}
+
 export function isForeignKeyViolation(error: unknown, constraint: string): boolean {
   const pg = findPgError(error);
   return pg?.code === "23503" && pg.constraint === constraint;
