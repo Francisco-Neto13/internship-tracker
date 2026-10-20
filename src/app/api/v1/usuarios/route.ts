@@ -1,4 +1,4 @@
-import { authenticatedRoute, dataResponse, searchParamsOf } from "@/lib/api";
+import { authenticatedRoute, dataResponse, SEM_CACHE, searchParamsOf } from "@/lib/api";
 import { createUsuarioBodySchema, listUsuariosQuerySchema, toVinculos } from "@/modules/acesso/schemas/usuario";
 import { createUsuario, listUsuarios } from "@/modules/acesso/services/usuario-service";
 import { usuarioJson } from "./json";
@@ -19,5 +19,5 @@ export const POST = authenticatedRoute(async ({ request, identity }) => {
     email: body.email,
     perfis: toVinculos(body.perfis),
   });
-  return dataResponse({ ...usuarioJson(usuario), senha_provisoria: senhaProvisoria }, { status: 201 });
+  return dataResponse({ ...usuarioJson(usuario), senha_provisoria: senhaProvisoria }, { status: 201, headers: SEM_CACHE });
 });

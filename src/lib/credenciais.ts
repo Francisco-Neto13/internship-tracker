@@ -1,4 +1,6 @@
+import { APIError } from "better-auth/api";
 import { getAuth } from "./auth";
+import { DomainError } from "./errors";
 
 // Credential and session writes for RF001/RF002. They run on the auth pool through the
 // library's internal adapter, because app_runtime holds no grant on conta or sessao
@@ -26,6 +28,30 @@ export async function definirSenha(usuarioId: string, senha: string): Promise<vo
     accountId: usuarioId,
     password: senhaHash,
   });
+}
+
+/**
+ * RF002: the signed-in user replaces their own password. The library checks the current
+ * password and the length bounds, ends every other session and reissues the session
+ * cookie for this one (set through the nextCookies plugin).
+ */
+export async function alterarSenhaPropria(requestHeaders: Headers, senhaAtual: string, novaSenha: string): Promise<void> {
+  try {
+    await getAuth().api.changePassword({
+      headers: requestHeaders,
+      body: { currentPassword: senhaAtual, newPassword: novaSenha, revokeOtherSessions: true },
+    });
+  } catch (error) {
+    if (error instanceof APIError && error.body?.code === "INVALID_PASSWORD") {
+      throw new DomainError({
+        code: "SENHA_ATUAL_INCORRETA",
+        kind: "UNPROCESSABLE",
+        message: "A senha atual não confere.",
+        requisito: "RF002",
+      });
+    }
+    throw error;
+  }
 }
 
 /** Ends every open session of the user (RF001 inactivation, RF002 password reset). */
