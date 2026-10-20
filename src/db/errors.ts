@@ -35,6 +35,12 @@ export function isTriggerRule(error: unknown, code: string): boolean {
   return pg?.code === "P0001" && pg.message.startsWith(`${code}:`);
 }
 
+/** An EXCLUDE constraint refused overlapping ranges (convênio periods, responsibles). */
+export function isExclusionViolation(error: unknown, constraint: string): boolean {
+  const pg = findPgError(error);
+  return pg?.code === "23P01" && pg.constraint === constraint;
+}
+
 export function isForeignKeyViolation(error: unknown, constraint: string): boolean {
   const pg = findPgError(error);
   return pg?.code === "23503" && pg.constraint === constraint;
