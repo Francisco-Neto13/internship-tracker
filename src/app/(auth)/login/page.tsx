@@ -110,7 +110,7 @@ export default async function LoginPage() {
           </div>
 
           <p className="mt-6 text-center text-[11px] text-navy-900/40">
-            Problemas para acessar? Procure a coordenação do seu curso.
+            Esqueceu a senha? O administrador do sistema emite uma senha provisória.
           </p>
         </div>
       </section>
