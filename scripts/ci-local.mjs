@@ -190,7 +190,11 @@ const steps = [
       if (await portInUse(3000)) {
         return fail("A porta 3000 esta ocupada (npm run dev aberto?). Pare o servidor: o e2e sobe o build de producao.");
       }
-      return run("npm", ["run", "test:e2e"], { env: { CI: "1" } });
+      // The production build refuses to start without a trusted client-address source
+      // (src/lib/auth-options.ts); the test server sits behind no proxy, as in ci.yml
+      return run("npm", ["run", "test:e2e"], {
+        env: { CI: "1", AUTH_IP_HEADERS: process.env.AUTH_IP_HEADERS ?? "x-forwarded-for" },
+      });
     },
   },
   {
