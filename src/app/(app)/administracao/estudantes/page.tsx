@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getIdentity } from "@/lib/session";
 import { listCursos } from "@/modules/academico/services/curso-service";
@@ -18,7 +19,15 @@ const SITUACAO_TONE: Record<string, StatusTone> = {
 type Estudante = Awaited<ReturnType<typeof listEstudantes>>["items"][number];
 
 const COLUNAS: DataTableColumn<Estudante>[] = [
-  { chave: "nome", cabecalho: "Nome", celula: (estudante) => <span className="text-navy-900">{estudante.nome ?? "-"}</span> },
+  {
+    chave: "nome",
+    cabecalho: "Nome",
+    celula: (estudante) => (
+      <Link href={`/administracao/estudantes/${estudante.id}`} className="text-navy-900 underline-offset-4 hover:underline">
+        {estudante.nome ?? estudante.matricula}
+      </Link>
+    ),
+  },
   {
     chave: "matricula",
     cabecalho: "Matrícula",

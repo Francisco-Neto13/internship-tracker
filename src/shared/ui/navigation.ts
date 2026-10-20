@@ -63,7 +63,7 @@ export const NAVEGACAO: NavItem[] = [
     modulo: "M04 Gestão de Estágios",
     rf: "RF015-RF022, RF031-RF035, RF044-RF047, RF059-RF064",
     perfis: ["ESTUDANTE", "PROFESSOR_ORIENTADOR", "SUPERVISOR", "COORDENACAO", "CONCEDENTE"],
-    status: "em-construcao",
+    status: "ativo",
     icon: Briefcase,
   },
   {
@@ -164,7 +164,7 @@ export const NAVEGACAO: NavItem[] = [
         modulo: "M03 Concedentes e Convênios",
         rf: "RF007-RF008, RF013-RF014",
         perfis: ["COORDENACAO", "ADMINISTRADOR"],
-        status: "em-construcao",
+        status: "ativo",
         icon: Building2,
       },
       {
@@ -174,7 +174,7 @@ export const NAVEGACAO: NavItem[] = [
         modulo: "M03 Concedentes e Convênios",
         rf: "RF009-RF012",
         perfis: ["COORDENACAO", "ADMINISTRADOR"],
-        status: "em-construcao",
+        status: "ativo",
         icon: FileSignature,
       },
       {
@@ -184,7 +184,7 @@ export const NAVEGACAO: NavItem[] = [
         modulo: "M02 Gestão Acadêmica",
         rf: "RF006",
         perfis: ["ADMINISTRADOR"],
-        status: "em-construcao",
+        status: "ativo",
         icon: Sliders,
       },
       {
