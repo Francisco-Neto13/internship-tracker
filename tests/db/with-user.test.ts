@@ -23,7 +23,7 @@ describe("withUser (RN-37)", () => {
     // Several queries so the pool hands back the connection the transaction used
     for (let attempt = 0; attempt < 5; attempt++) {
       const { rows } = await getAppDatabase().execute<{ valor: string | null }>(
-        sql`select nullif(current_setting('app.user_id', true), '') as valor`,
+        sql`select nullif(current_setting('app.usuario_id', true), '') as valor`,
       );
       expect(rows[0].valor).toBeNull();
     }

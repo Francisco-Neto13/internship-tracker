@@ -14,6 +14,11 @@ const ENV_BY_POOL: Record<PoolName, string> = {
   auth: "DATABASE_AUTH_URL",
 };
 
+const ROLE_BY_POOL: Record<PoolName, string> = {
+  app: "app_runtime",
+  auth: "auth_runtime",
+};
+
 // Survives hot reload in development, where modules are re-evaluated on every change
 const globalForDb = globalThis as unknown as { databases?: Partial<Record<PoolName, Database>> };
 const databases = (globalForDb.databases ??= {});
@@ -27,6 +32,14 @@ function getDatabase(name: PoolName): Database {
   // Without this check pg silently falls back to PG* variables and the OS user
   if (!connectionString) {
     throw new Error(`${variable} is not set (see .env.example)`);
+  }
+
+  // The table owner bypasses every RLS policy, and the Neon + Vercel integration injects
+  // DATABASE_URL with exactly that role. Refuse to start instead of serving unfiltered rows
+  // (RF003, RNF-01). Only the user name is reported, never the URL with its password.
+  const role = decodeURIComponent(new URL(connectionString).username);
+  if (role !== ROLE_BY_POOL[name]) {
+    throw new Error(`${variable} must connect as ${ROLE_BY_POOL[name]}, not "${role}": RLS would not apply`);
   }
 
   const database = drizzle({ client: new Pool({ connectionString, max: 10 }), schema });
