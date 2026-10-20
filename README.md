@@ -99,7 +99,7 @@ Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com 
 | Banco de dados | PostgreSQL 17 gerenciado (Neon), com Row Level Security |
 | Acesso a dados | Drizzle ORM, drizzle-kit e driver `pg` |
 | Autenticação | Better Auth (e-mail e senha com Argon2id, sessão em banco) |
-| Armazenamento de arquivos | Cloudflare R2 (compatível com S3); MinIO em desenvolvimento |
+| Armazenamento de arquivos | Cloudflare R2 (compatível com S3); SeaweedFS em desenvolvimento |
 | API | Route Handlers do Next.js, versionada em `/api/v1` |
 | Geração de PDF | React-PDF no servidor |
 | Testes | Vitest (unidade/integração) e Playwright (e2e) |
@@ -110,22 +110,25 @@ Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com 
 
 | Ambiente | Banco | Armazenamento | Aplicação |
 |---|---|---|---|
-| Desenvolvimento | PostgreSQL 17 em Docker | MinIO em Docker | `next dev` local |
-| Integração contínua | PostgreSQL 17 no mesmo `docker compose` | — | GitHub Actions |
+| Desenvolvimento | PostgreSQL 17 em Docker | SeaweedFS em Docker (API S3) | `next dev` local |
+| Integração contínua | PostgreSQL 17 no mesmo `docker compose` | SeaweedFS no mesmo `docker compose` | GitHub Actions |
 | Produção | Neon (branch principal) | Cloudflare R2 | Vercel |
 
 O CI usa o mesmo contêiner e o mesmo script de papéis do ambiente local, então um teste de RLS que passa na máquina passa no CI pelas mesmas razões.
+
+O MinIO, previsto antes, deixou de publicar imagens da edição comunitária em 2025; o SeaweedFS expõe a mesma API S3, então o código é o mesmo em desenvolvimento e com o R2. O arquivo nunca passa pela aplicação: o navegador envia direto ao bucket por URL assinada, e o servidor confere tamanho, tipo pelos bytes e SHA-256 antes de aceitar o documento (PDF, JPEG ou PNG até 10 MiB).
 
 ## Como rodar localmente
 
 Requisitos: Node.js 24 (`.nvmrc`) e Docker.
 
 ```bash
-docker compose up -d postgres --wait   # Postgres 17 com papéis e bancos
+docker compose up -d postgres storage --wait   # Postgres 17 com papéis e bancos; SeaweedFS (S3)
 cp .env.example .env                   # gere BETTER_AUTH_SECRET: openssl rand -base64 32
 npm install
 npm run db:migrate
 npm run db:seed
+npm run storage:init                   # bucket privado e CORS para o upload do navegador
 npm run dev                            # http://localhost:3000
 ```
 
@@ -137,6 +140,9 @@ O seed cria usuários com a senha `senha-dev-internship`:
 | `coordenacao.software@internship.local` | Coordenação de Engenharia de Software |
 | `ana.estudante@internship.local` | Estudante de Engenharia de Software |
 | `bruno.estudante@internship.local` | Estudante de Administração |
+| `rh@exemplo-software.local` | Concedente (Empresa Exemplo de Software, convênio `CV-2026-0001`) |
+| `supervisor@exemplo-software.local` | Supervisor da mesma concedente |
+| `orientador@internship.local` | Professor orientador |
 
 Se o volume do Postgres já existia antes dos papéis, recrie-o com `docker compose down -v`.
 
@@ -150,11 +156,14 @@ Outros comandos úteis:
 npm run lint
 npm run typecheck
 npm run test:unit          # Vitest sem banco
-npm run test:db            # RLS, auditoria, autenticação, usuários e senha contra Postgres real
+npm run test:db            # RLS, auditoria, autenticação, cadastros e formalização contra Postgres real
+npm run storage:check      # confere o bucket e o CORS do armazenamento local
 npm run test:e2e           # Playwright (banco migrado e com seed)
 npm run db:generate        # gera migração de tabela a partir de src/db/schema
 npm run ci                 # CI inteira na máquina, espelho do ci.yml (--fast pula Docker)
 ```
+
+O e2e usa um stub local da API de senhas vazadas (`HIBP_RANGE_URL`), para não depender da rede; a consulta real roda num passo separado, que não bloqueia o CI.
 
 O `npm install` ativa os hooks versionados em `.githooks` (se não ativar, `npm run hooks`). O `pre-push` recusa push direto para `develop` e `main`; push de `feature/*` e `integration/*` passa direto.
 
@@ -179,8 +188,10 @@ src/shared/            transversal: documentos, notificacoes, auditoria, ui
 src/db/                client.ts (uso restrito), with-user.ts, schema/
 src/lib/                auth, sessão, identidade, API e erros
 drizzle/migrations/     SQL de tabelas gerado pelo drizzle-kit
+drizzle/rollback/       reversão manual de cada migração (*.down.sql)
 drizzle/sql/            papéis, funções, políticas RLS e triggers versionados como SQL
 scripts/db/             migração e seed
+scripts/storage/        bucket e CORS do armazenamento local
 scripts/ci-local.mjs    CI local, espelho do workflow do GitHub
 .githooks/              pre-push que recusa push direto em develop e main
 scripts/github/         automação do fluxo de lotes e da proteção das branches
@@ -229,7 +240,7 @@ Commits seguem `type(scope): summary`, no imperativo, com notas em bullet explic
 |---|---|
 | 0 · Fechamento da documentação | Stack, arquitetura, endpoints, DAS, padrão de commits, repositório (**concluída**) |
 | 1 · Fundação técnica | RNFs, DER lógico, migrações, wrapper de identidade, papéis e políticas RLS, auditoria, autenticação, CI, usuários e perfis, senha provisória, consulta e exportação da auditoria (**concluída**) |
-| 2 · Cadastros e formalização | Cursos, estudantes, concedentes, convênios, TCE, ativação de estágio |
+| 2 · Cadastros e formalização | Cursos, estudantes, parâmetros, concedentes, convênios, documentos, TCE, plano de atividades, responsáveis, apólice, assinaturas, ativação de estágio e aditivos (**concluída**) |
 | 3 · Acompanhamento | Frequência, carga horária, relatórios, avaliação |
 | 4 · Atividades complementares e integralização | Cadastro, análise, limites por categoria, apuração |
 | 5 · Ocorrências, conclusão e conformidade | Afastamento, prorrogação, rescisão, guarda documental, relatórios gerenciais |
