@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { opcoesEnderecoIp, verificacaoSenhaVazadaAtiva } from "./auth-options";
+import { opcoesEnderecoIp, urlRangeSenhasVazadas, verificacaoSenhaVazadaAtiva } from "./auth-options";
 
 describe("opcoesEnderecoIp (sign-in rate limit, RF002)", () => {
   it("uses the headers and proxies configured for a self-hosted proxy", () => {
@@ -43,5 +43,24 @@ describe("verificacaoSenhaVazadaAtiva (NIST SP 800-63B-4)", () => {
 
   it("rejects unknown values", () => {
     expect(() => verificacaoSenhaVazadaAtiva({ SENHAS_VAZADAS_VERIFICACAO: "off" })).toThrow(/ativa/);
+  });
+});
+
+describe("urlRangeSenhasVazadas (HIBP endpoint)", () => {
+  it("defaults to the official range API", () => {
+    expect(urlRangeSenhasVazadas({})).toBe("https://api.pwnedpasswords.com/range/");
+  });
+
+  it("accepts a loopback stub even in production, for the e2e build", () => {
+    expect(urlRangeSenhasVazadas({ NODE_ENV: "production", HIBP_RANGE_URL: "http://127.0.0.1:3999/range" })).toBe(
+      "http://127.0.0.1:3999/range/",
+    );
+  });
+
+  it("refuses plain HTTP to another host in production", () => {
+    expect(() => urlRangeSenhasVazadas({ NODE_ENV: "production", HIBP_RANGE_URL: "http://hibp.example.com/range/" })).toThrow(
+      /HTTPS/,
+    );
+    expect(() => urlRangeSenhasVazadas({ HIBP_RANGE_URL: "não é url" })).toThrow(/inválida/);
   });
 });

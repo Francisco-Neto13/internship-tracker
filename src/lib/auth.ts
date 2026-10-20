@@ -2,13 +2,13 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
-import { haveIBeenPwned } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { getAuthDatabase } from "@/db/client";
 import { conta, limiteRequisicao, sessao, usuario, verificacao } from "@/db/schema";
 import { senhaProvisoriaExpirada } from "@/modules/acesso/domain/senha-provisoria";
-import { opcoesEnderecoIp, verificacaoSenhaVazadaAtiva } from "./auth-options";
+import { opcoesEnderecoIp, urlRangeSenhasVazadas, verificacaoSenhaVazadaAtiva } from "./auth-options";
 import { hashPassword, verifyPassword } from "./password";
+import { senhasVazadas } from "./senhas-vazadas";
 
 // QA: an idle session expires after 30 minutes. Each request older than a minute
 // pushes the expiry forward, so only inactivity ends the session.
@@ -18,6 +18,7 @@ const SESSION_REFRESH_SECONDS = 60;
 function createAuth() {
   // Fail at start-up, not at the first password change, on a misconfigured environment
   verificacaoSenhaVazadaAtiva(process.env);
+  urlRangeSenhasVazadas(process.env);
   const database = getAuthDatabase();
 
   return betterAuth({
@@ -147,16 +148,16 @@ function createAuth() {
       },
     },
     plugins: [
-      // NIST SP 800-63B-4 3.1.1.2: new passwords are compared against breach corpora. Only
-      // the first 5 hex characters of the SHA-1 leave the server (k-anonymity), padded
-      // responses hide which prefix matched, and a failed lookup refuses the change
-      // (fail closed) instead of accepting an unchecked password. The getter re-reads the
-      // environment on each password change.
-      haveIBeenPwned({
-        get enabled() {
+      // NIST SP 800-63B-4 3.1.1.2: new passwords are compared against breach corpora
+      // (src/lib/senhas-vazadas.ts). Getters re-read the environment on every check.
+      senhasVazadas({
+        get ativa() {
           return verificacaoSenhaVazadaAtiva(process.env);
         },
-        customPasswordCompromisedMessage: "Senha encontrada em vazamentos de dados",
+        get urlRange() {
+          return urlRangeSenhasVazadas(process.env);
+        },
+        mensagem: "Senha encontrada em vazamentos de dados",
       }),
       nextCookies(),
     ],
