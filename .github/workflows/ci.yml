@@ -127,6 +127,14 @@ jobs:
       DATABASE_MIGRATION_URL: postgres://migrator:migrator@localhost:5432/internship_tracker
       BETTER_AUTH_SECRET: ci-only-secret-for-ephemeral-e2e-database-000000
       BETTER_AUTH_URL: http://localhost:3000
+      # Production build without a proxy in front: trust the header the tests send
+      AUTH_IP_HEADERS: x-forwarded-for
+      # Local S3 (SeaweedFS of docker compose), same values as .env.example
+      R2_ENDPOINT: http://localhost:8333
+      R2_FORCE_PATH_STYLE: "true"
+      R2_ACCESS_KEY_ID: storage-local
+      R2_SECRET_ACCESS_KEY: storage-local-secret
+      R2_BUCKET: internship-tracker
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -148,6 +156,12 @@ jobs:
 
       - name: Seed development database
         run: npm run db:seed
+
+      - name: Prepare storage
+        run: |
+          docker compose up -d storage --wait
+          npm run storage:init
+          npm run storage:check
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
@@ -175,3 +189,23 @@ jobs:
             playwright-report
             test-results
           retention-days: 7
+
+  # Not a required check: the pipeline uses a local stub (e2e/support/hibp-stub.mjs). This
+  # job only reports whether the real Have I Been Pwned service answers as expected.
+  hibp-live:
+    name: HIBP live check
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: HIBP live check (non-blocking)
+        run: node scripts/check-hibp-live.mjs
+        env:
+          HIBP_LIVE_STRICT: "1"

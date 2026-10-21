@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "@/db/schema";
@@ -85,12 +86,59 @@ export async function createCurso() {
 export async function grantPerfil(
   usuarioId: string,
   perfil: Perfil,
-  options: { cursoId?: string; vigenciaInicio?: Date; vigenciaFim?: Date } = {},
+  options: { cursoId?: string; concedenteId?: string; vigenciaInicio?: Date; vigenciaFim?: Date } = {},
 ) {
   const [row] = await ownerDatabase()
     .insert(schema.vinculoPerfil)
     .values({ usuarioId, perfil, ...options })
     .returning();
+  return row;
+}
+
+/** Valid numeric CNPJ built from a random 12-digit base, so every fixture is unique. */
+export function cnpjAleatorio(): string {
+  const base = Array.from({ length: 12 }, () => Math.floor(Math.random() * 10)).join("");
+  const dv = (corpo: string, pesos: number[]) => {
+    const resto = [...corpo].reduce((total, c, i) => total + Number(c) * pesos[i], 0) % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  const primeiro = dv(base, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const segundo = dv(base + primeiro, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  return `${base}${primeiro}${segundo}`;
+}
+
+export async function createConcedente(options: { situacao?: "ATIVA" | "SUSPENSA" } = {}) {
+  const id = suffix();
+  const [row] = await ownerDatabase()
+    .insert(schema.concedente)
+    .values({
+      razaoSocial: `Concedente ${id}`,
+      cnpj: cnpjAleatorio(),
+      logradouro: "Rua Teste",
+      numeroEndereco: "100",
+      bairro: "Centro",
+      municipio: "Maceió",
+      uf: "AL",
+      cep: "57000000",
+      emailContato: `contato-${id}@concedente.local`,
+      representanteLegalNome: `Representante ${id}`,
+      areaAtuacao: "Tecnologia",
+    })
+    .returning();
+  if (options.situacao === "SUSPENSA") {
+    // Same transaction rule the trigger enforces: history first, then the situation
+    await ownerDatabase().transaction(async (tx) => {
+      const [autor] = await tx.insert(schema.usuario).values({ nome: `Autor ${id}`, email: `autor-${id}@teste.local` }).returning();
+      await tx.insert(schema.historicoSituacaoConcedente).values({
+        concedenteId: row.id,
+        situacaoNova: "SUSPENSA",
+        motivo: "fixture",
+        decididoPorUsuarioId: autor.id,
+      });
+      await tx.update(schema.concedente).set({ situacao: "SUSPENSA" }).where(eq(schema.concedente.id, row.id));
+    });
+    return { ...row, situacao: "SUSPENSA" as const };
+  }
   return row;
 }
 
@@ -126,4 +174,55 @@ export async function createAccessScenario() {
   const semPerfil = await createUsuario();
 
   return { cursoA, cursoB, alunoA, alunoB, estudanteA, estudanteB, coordenadorA, administrador, semPerfil };
+}
+
+/**
+ * Everything an internship needs, written as the owner: course with coordination, enrolled
+ * student, concedente with representative and supervisor, advisor, and an agreement valid
+ * from 2026 to 2030 with its document. Each call builds an independent world.
+ */
+export async function createMundoEstagio() {
+  const curso = await createCurso();
+  const coordenador = await createUsuario();
+  await grantPerfil(coordenador.id, "COORDENACAO", { cursoId: curso.id });
+
+  const aluno = await createUsuario();
+  await grantPerfil(aluno.id, "ESTUDANTE");
+  const estudante = await createEstudante(aluno.id, curso.id);
+
+  const concedente = await createConcedente();
+  const representante = await createUsuario();
+  await grantPerfil(representante.id, "CONCEDENTE", { concedenteId: concedente.id });
+  const supervisor = await createUsuario();
+  await grantPerfil(supervisor.id, "SUPERVISOR", { concedenteId: concedente.id });
+  const orientador = await createUsuario();
+  await grantPerfil(orientador.id, "PROFESSOR_ORIENTADOR");
+
+  const id = suffix();
+  const [documento] = await ownerDatabase()
+    .insert(schema.documento)
+    .values({
+      tipo: "CONVENIO",
+      chaveObjeto: `documentos/fixture-${id}.pdf`,
+      nomeOriginal: "convenio.pdf",
+      tipoMime: "application/pdf",
+      tamanhoBytes: 100,
+      sha256: "0".repeat(64),
+      concedenteId: concedente.id,
+      enviadoPorUsuarioId: coordenador.id,
+    })
+    .returning();
+  const [convenio] = await ownerDatabase()
+    .insert(schema.convenio)
+    .values({ concedenteId: concedente.id, numero: `CV-${id}` })
+    .returning();
+  await ownerDatabase().insert(schema.convenioVigencia).values({
+    convenioId: convenio.id,
+    vigenciaInicio: "2026-01-01",
+    vigenciaFim: "2030-12-31",
+    documentoId: documento.id,
+    registradoPorUsuarioId: coordenador.id,
+  });
+
+  return { curso, coordenador, aluno, estudante, concedente, representante, supervisor, orientador, convenio };
 }

@@ -9,7 +9,9 @@ type EntradaCatalogo = {
   rotulo: string;
   alcance: string;
   exigeCurso: boolean;
-  /** False while the profile depends on a table that does not exist yet (Fase 2). */
+  /** Supervisor and concedente links point to a concedente (RF031). */
+  exigeConcedente: boolean;
+  /** Kept in the contract of GET /api/v1/perfis; every profile is available since Fase 2. */
   disponivel: boolean;
 };
 
@@ -22,7 +24,7 @@ const ALCANCE: Record<Perfil, string> = {
   ADMINISTRADOR: "Parametrização, usuários e auditoria; sem acesso a conteúdo de relatório ou atestado",
 };
 
-const AGUARDAM_CONCEDENTE: readonly Perfil[] = ["SUPERVISOR", "CONCEDENTE"];
+const EXIGEM_CONCEDENTE: readonly Perfil[] = ["SUPERVISOR", "CONCEDENTE"];
 
 export function catalogoPerfis(): EntradaCatalogo[] {
   return (Object.keys(ROTULO_PERFIL) as Perfil[]).map((perfil) => ({
@@ -30,6 +32,7 @@ export function catalogoPerfis(): EntradaCatalogo[] {
     rotulo: ROTULO_PERFIL[perfil],
     alcance: ALCANCE[perfil],
     exigeCurso: perfil === "COORDENACAO",
-    disponivel: !AGUARDAM_CONCEDENTE.includes(perfil),
+    exigeConcedente: EXIGEM_CONCEDENTE.includes(perfil),
+    disponivel: true,
   }));
 }

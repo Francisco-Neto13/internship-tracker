@@ -23,7 +23,7 @@
 
 O Internship Tracker substitui o controle manual (planilhas e processos em papel) da gestão de estágios em um curso de graduação. Formaliza o vínculo entre estudante, instituição, concedente e supervisores por meio de termo de compromisso, plano de atividades e apólice de seguro; ao longo do estágio, controla frequência, carga horária, relatórios periódicos, avaliações de desempenho e ocorrências como afastamento, prorrogação e rescisão.
 
-A especificação cobre **6 atores**, **36 regras de negócio**, **70 requisitos funcionais** e **23 casos de uso**, organizados em **8 módulos** de domínio, com rastreabilidade fechada entre requisito e regra: nenhum requisito sem origem, nenhuma regra sem requisito que a implemente.
+A especificação cobre **6 atores**, **37 regras de negócio**, **73 requisitos funcionais** e **23 casos de uso**, organizados em **8 módulos** de domínio, com rastreabilidade fechada entre requisito e regra: nenhum requisito sem origem, nenhuma regra sem requisito que a implemente.
 
 A filosofia central do projeto prioriza, nessa ordem: **segurança** (seis perfis distintos enxergam fatias diferentes dos mesmos dados, incluindo dado sensível como atestado médico), **confiabilidade** (auditoria e guarda documental não podem falhar silenciosamente) e **manutenibilidade** (equipe pequena, prazo de semestre: a regra de negócio precisa ficar isolada para não virar retrabalho a cada tela nova).
 
@@ -38,7 +38,7 @@ A filosofia central do projeto prioriza, nessa ordem: **segurança** (seis perfi
 | M05 · Acompanhamento | Frequência, carga horária, relatórios e avaliação (RF023–RF030, RF036–RF043) | Estudante / Professor / Supervisor |
 | M06 · Atividades Complementares | Cadastro, comprovante e análise (RF048–RF055) | Estudante / Coordenação |
 | M07 · Integralização Curricular | Progresso de carga horária e emissão de comprovantes (RF056–RF058) | Estudante / Coordenação |
-| M08 · Administração e Controle | Auditoria, relatórios gerenciais e conformidade (RF065–RF070) | Coordenação / Administrador |
+| M08 · Administração e Controle | Auditoria, relatórios gerenciais, conformidade e acesso a dados sensíveis (RF065–RF073) | Coordenação / Administrador |
 
 ## Modelo de segurança
 
@@ -50,14 +50,15 @@ Toda operação relevante é registrada por **gatilho de banco**, não por códi
 
 ## Máquina de estados do estágio
 
+Conforme o documento de requisitos v1.2 (§8.6, Figura 2):
+
 ```
-RASCUNHO -> AGUARDANDO_ASSINATURAS -> PRONTO_PARA_ATIVACAO -> ATIVO -> CONCLUIDO
-ATIVO <-> AFASTADO
-ATIVO -> RESCINDIDO
-AFASTADO -> RESCINDIDO
+[cadastro] -> EM_FORMALIZACAO -> ATIVO -> CONCLUIDO
+                                 ATIVO -> RESCINDIDO
+                                 ATIVO -> ATIVO   (aditivo, prorrogação, afastamento)
 ```
 
-A transição para `ATIVO` verifica, na mesma transação: concedente não suspensa, convênio vigente, plano de atividades aprovado, orientador e supervisor vinculados, apólice registrada (quando exigida) e as três assinaturas do TCE. Se qualquer guarda falhar, a API responde com todos os impedimentos de uma vez, não um por requisição.
+Aditivo, prorrogação e afastamento não mudam o estado: o estágio segue `ATIVO`, com prazos e cargas recalculados. A ativação verifica, na mesma transação: concedente não suspensa, convênio vigente, plano de atividades aprovado, orientador e supervisor vinculados, apólice registrada (quando exigida), as três assinaturas sobre o TCE fechado, estudante matriculado e nenhum outro estágio ativo. Se qualquer guarda falhar, a API responde com todos os impedimentos de uma vez, não um por requisição.
 
 ## Decisões de negócio já fechadas
 
@@ -73,14 +74,15 @@ Pontos que antes admitiam mais de uma interpretação, definidos com o professor
 | Recurso contra recusa de atividade complementar | Não existe. O estudante cadastra uma nova atividade |
 | Divergência relevante de carga horária | Percentual parametrizável, padrão de 10% |
 | Hospedagem em território nacional | Sem exigência |
+| Situação acadêmica (RF005) | Transições restritas: matriculado pode trancar, formar ou ser desligado; trancado volta a matriculado ou é desligado; formado e desligado são finais. Pendente de validação com o orientador |
 | Recuperação de senha (RF002) | O administrador emite senha provisória de 72 h, entregue fora do sistema, com troca obrigatória no primeiro acesso. Sem e-mail |
 
 ## Requisitos de qualidade
 
-Metas de qualidade validadas pela equipe (não são garantia contratual: o projeto roda em planos gratuitos de terceiros, sem redundância paga):
+Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com as metas mais apertadas da equipe (`DAS.docx` §10) como alvo, não como garantia: o projeto roda em planos gratuitos de terceiros, sem redundância paga.
 
-- **Segurança:** RLS sem exceção em qualquer tabela; leitura de dado sensível (atestado médico) registrada em auditoria; sessão expira em 30 minutos de inatividade.
-- **Desempenho:** leitura sob carga normal com p95 < 800ms; geração de PDF em até 5s.
+- **Segurança:** RLS sem exceção em qualquer tabela (RNF-01); senha com hash Argon2id, mínimo de 15 caracteres e recusa de senha vazada ou previsível (RNF-02); dado de saúde com acesso por vínculo, criptografia em repouso e cada leitura registrada (RNF-05, RN-38); sessão expira em 30 minutos de inatividade.
+- **Desempenho:** consultas com p95 de até 2 s (RNF-11); alvo da equipe p95 < 800 ms e PDF em até 5 s.
 - **Disponibilidade:** uptime mensal ≥ 99% em horário comercial, dentro do SLA gratuito de Vercel/Neon; cold start do Neon é restrição aceita, não bug.
 - **Manutenibilidade:** toda regra de negócio nova exige teste automatizado; acesso ao banco fora do wrapper de identidade é bloqueado por lint.
 - **Confiabilidade:** cálculo de carga horária é determinístico; escrita de auditoria nunca é perdida.
@@ -97,7 +99,7 @@ Metas de qualidade validadas pela equipe (não são garantia contratual: o proje
 | Banco de dados | PostgreSQL 17 gerenciado (Neon), com Row Level Security |
 | Acesso a dados | Drizzle ORM, drizzle-kit e driver `pg` |
 | Autenticação | Better Auth (e-mail e senha com Argon2id, sessão em banco) |
-| Armazenamento de arquivos | Cloudflare R2 (compatível com S3); MinIO em desenvolvimento |
+| Armazenamento de arquivos | Cloudflare R2 (compatível com S3); SeaweedFS em desenvolvimento |
 | API | Route Handlers do Next.js, versionada em `/api/v1` |
 | Geração de PDF | React-PDF no servidor |
 | Testes | Vitest (unidade/integração) e Playwright (e2e) |
@@ -108,22 +110,25 @@ Metas de qualidade validadas pela equipe (não são garantia contratual: o proje
 
 | Ambiente | Banco | Armazenamento | Aplicação |
 |---|---|---|---|
-| Desenvolvimento | PostgreSQL 17 em Docker | MinIO em Docker | `next dev` local |
-| Integração contínua | PostgreSQL 17 no mesmo `docker compose` | — | GitHub Actions |
+| Desenvolvimento | PostgreSQL 17 em Docker | SeaweedFS em Docker (API S3) | `next dev` local |
+| Integração contínua | PostgreSQL 17 no mesmo `docker compose` | SeaweedFS no mesmo `docker compose` | GitHub Actions |
 | Produção | Neon (branch principal) | Cloudflare R2 | Vercel |
 
 O CI usa o mesmo contêiner e o mesmo script de papéis do ambiente local, então um teste de RLS que passa na máquina passa no CI pelas mesmas razões.
+
+O MinIO, previsto antes, deixou de publicar imagens da edição comunitária em 2025; o SeaweedFS expõe a mesma API S3, então o código é o mesmo em desenvolvimento e com o R2. O arquivo nunca passa pela aplicação: o navegador envia direto ao bucket por URL assinada, e o servidor confere tamanho, tipo pelos bytes e SHA-256 antes de aceitar o documento (PDF, JPEG ou PNG até 10 MiB).
 
 ## Como rodar localmente
 
 Requisitos: Node.js 24 (`.nvmrc`) e Docker.
 
 ```bash
-docker compose up -d postgres --wait   # Postgres 17 com papéis e bancos
+docker compose up -d postgres storage --wait   # Postgres 17 com papéis e bancos; SeaweedFS (S3)
 cp .env.example .env                   # gere BETTER_AUTH_SECRET: openssl rand -base64 32
 npm install
 npm run db:migrate
 npm run db:seed
+npm run storage:init                   # bucket privado e CORS para o upload do navegador
 npm run dev                            # http://localhost:3000
 ```
 
@@ -135,6 +140,9 @@ O seed cria usuários com a senha `senha-dev-internship`:
 | `coordenacao.software@internship.local` | Coordenação de Engenharia de Software |
 | `ana.estudante@internship.local` | Estudante de Engenharia de Software |
 | `bruno.estudante@internship.local` | Estudante de Administração |
+| `rh@exemplo-software.local` | Concedente (Empresa Exemplo de Software, convênio `CV-2026-0001`) |
+| `supervisor@exemplo-software.local` | Supervisor da mesma concedente |
+| `orientador@internship.local` | Professor orientador |
 
 Se o volume do Postgres já existia antes dos papéis, recrie-o com `docker compose down -v`.
 
@@ -148,11 +156,14 @@ Outros comandos úteis:
 npm run lint
 npm run typecheck
 npm run test:unit          # Vitest sem banco
-npm run test:db            # RLS, auditoria, autenticação, usuários e senha contra Postgres real
+npm run test:db            # RLS, auditoria, autenticação, cadastros e formalização contra Postgres real
+npm run storage:check      # confere o bucket e o CORS do armazenamento local
 npm run test:e2e           # Playwright (banco migrado e com seed)
 npm run db:generate        # gera migração de tabela a partir de src/db/schema
 npm run ci                 # CI inteira na máquina, espelho do ci.yml (--fast pula Docker)
 ```
+
+O e2e usa um stub local da API de senhas vazadas (`HIBP_RANGE_URL`), para não depender da rede; a consulta real roda num passo separado, que não bloqueia o CI.
 
 O `npm install` ativa os hooks versionados em `.githooks` (se não ativar, `npm run hooks`). O `pre-push` recusa push direto para `develop` e `main`; push de `feature/*` e `integration/*` passa direto.
 
@@ -177,8 +188,10 @@ src/shared/            transversal: documentos, notificacoes, auditoria, ui
 src/db/                client.ts (uso restrito), with-user.ts, schema/
 src/lib/                auth, sessão, identidade, API e erros
 drizzle/migrations/     SQL de tabelas gerado pelo drizzle-kit
+drizzle/rollback/       reversão manual de cada migração (*.down.sql)
 drizzle/sql/            papéis, funções, políticas RLS e triggers versionados como SQL
 scripts/db/             migração e seed
+scripts/storage/        bucket e CORS do armazenamento local
 scripts/ci-local.mjs    CI local, espelho do workflow do GitHub
 .githooks/              pre-push que recusa push direto em develop e main
 scripts/github/         automação do fluxo de lotes e da proteção das branches
@@ -227,7 +240,7 @@ Commits seguem `type(scope): summary`, no imperativo, com notas em bullet explic
 |---|---|
 | 0 · Fechamento da documentação | Stack, arquitetura, endpoints, DAS, padrão de commits, repositório (**concluída**) |
 | 1 · Fundação técnica | RNFs, DER lógico, migrações, wrapper de identidade, papéis e políticas RLS, auditoria, autenticação, CI, usuários e perfis, senha provisória, consulta e exportação da auditoria (**concluída**) |
-| 2 · Cadastros e formalização | Cursos, estudantes, concedentes, convênios, TCE, ativação de estágio |
+| 2 · Cadastros e formalização | Cursos, estudantes, parâmetros, concedentes, convênios, documentos, TCE, plano de atividades, responsáveis, apólice, assinaturas, ativação de estágio e aditivos (**concluída**) |
 | 3 · Acompanhamento | Frequência, carga horária, relatórios, avaliação |
 | 4 · Atividades complementares e integralização | Cadastro, análise, limites por categoria, apuração |
 | 5 · Ocorrências, conclusão e conformidade | Afastamento, prorrogação, rescisão, guarda documental, relatórios gerenciais |

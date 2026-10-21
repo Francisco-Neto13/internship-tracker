@@ -13,20 +13,15 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { curso } from "./academico";
+import { perfil } from "./enums";
+import { concedente } from "./concedentes";
 
 const criadoEm = () => timestamp("criado_em", { withTimezone: true }).notNull().defaultNow();
 const atualizadoEm = () => timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow();
 
 export const situacaoUsuario = pgEnum("situacao_usuario", ["ATIVO", "INATIVO"]);
 
-export const perfil = pgEnum("perfil", [
-  "ESTUDANTE",
-  "PROFESSOR_ORIENTADOR",
-  "SUPERVISOR",
-  "COORDENACAO",
-  "CONCEDENTE",
-  "ADMINISTRADOR",
-]);
+export { perfil } from "./enums";
 
 // Identity shared with the auth library (RF001, RF002). Inactivation flips situacao
 // and revokes sessions; the row is never deleted (RN-28).
@@ -133,6 +128,8 @@ export const vinculoPerfil = pgTable(
       .references(() => usuario.id),
     perfil: perfil("perfil").notNull(),
     cursoId: uuid("curso_id").references(() => curso.id),
+    // RF031, RN-37: a supervisor belongs to a concedente, and a concedente user sees only its own
+    concedenteId: uuid("concedente_id").references(() => concedente.id),
     vigenciaInicio: timestamp("vigencia_inicio", { withTimezone: true }).notNull().defaultNow(),
     vigenciaFim: timestamp("vigencia_fim", { withTimezone: true }),
     criadoEm: criadoEm(),
@@ -140,7 +137,12 @@ export const vinculoPerfil = pgTable(
   (t) => [
     index("vinculo_perfil_usuario_perfil_idx").on(t.usuarioId, t.perfil),
     index("vinculo_perfil_curso_id_idx").on(t.cursoId),
+    index("vinculo_perfil_concedente_id_idx").on(t.concedenteId).where(sql`${t.concedenteId} is not null`),
     check("vinculo_perfil_coordenacao_exige_curso", sql`${t.perfil} <> 'COORDENACAO' or ${t.cursoId} is not null`),
+    check(
+      "vinculo_perfil_concedente_exige_concedente",
+      sql`(${t.perfil} in ('CONCEDENTE', 'SUPERVISOR')) = (${t.concedenteId} is not null)`,
+    ),
     check("vinculo_perfil_vigencia_valida", sql`${t.vigenciaFim} is null or ${t.vigenciaFim} > ${t.vigenciaInicio}`),
   ],
 );

@@ -15,6 +15,34 @@
       "when": 1792465257032,
       "tag": "0001_usuario_senha_provisoria",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792496831406,
+      "tag": "0002_parametros_categorias",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792497245097,
+      "tag": "0003_concedentes",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792497740922,
+      "tag": "0004_documentos_convenios",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792498844152,
+      "tag": "0005_estagios",
+      "breakpoints": true
     }
   ]
 }

@@ -50,6 +50,15 @@ test("a user created by the administrator must replace the temporary password fi
   await novo.goto("/dashboard");
   await expect(novo).toHaveURL(/\/trocar-senha$/);
 
+  // The local HIBP stub (e2e/support/hibp-stub.mjs) reports this one as breached
+  const vazada = "senha vazada no stub do e2e";
+  await novo.getByLabel("Senha provisória", { exact: true }).fill(data.senha_provisoria);
+  await novo.getByLabel("Nova senha", { exact: true }).fill(vazada);
+  await novo.getByLabel("Confirme a nova senha").fill(vazada);
+  await novo.getByRole("button", { name: "Salvar nova senha" }).click();
+  await expect(novo.getByRole("alert").filter({ hasText: "vazamentos" })).toBeVisible();
+  await expect(novo).toHaveURL(/\/trocar-senha$/);
+
   const novaSenha = "minha frase de acesso e2e";
   await novo.getByLabel("Senha provisória", { exact: true }).fill(data.senha_provisoria);
   await novo.getByLabel("Nova senha", { exact: true }).fill(novaSenha);
