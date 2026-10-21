@@ -1,26 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { expect, test, type APIRequestContext, type Browser } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { dados, SENHA, sessoes } from "./support/api";
 
 // Fase 2 end to end through the HTTP API: each person acts with their own session, as in real
 // life (administrator, coordination, student, advisor, concedente), until the internship is ATIVO.
 // A new student is created on every run, so a previous run never blocks this one.
 
-const SENHA = "senha-dev-internship";
-const BASE = "http://localhost:3000";
-let ipSeguinte = 50;
-
-/** Signs in through the API from an address of its own (keeps clear of the sign-in rate limit). */
-async function sessao(browser: Browser, email: string, senha: string): Promise<APIRequestContext> {
-  const contexto = await browser.newContext({ extraHTTPHeaders: { "x-forwarded-for": `203.0.113.${ipSeguinte++}` } });
-  const resposta = await contexto.request.post("/api/auth/sign-in/email", { data: { email, password: senha }, headers: { origin: BASE } });
-  expect(resposta.ok(), `login de ${email}`).toBe(true);
-  return contexto.request;
-}
-
-async function dados<T>(resposta: Awaited<ReturnType<APIRequestContext["get"]>>, status = 200): Promise<T> {
-  expect(resposta.status(), await resposta.text()).toBe(status);
-  return ((await resposta.json()) as { data: T }).data;
-}
+const sessao = sessoes(50);
 
 test("an internship goes from EM_FORMALIZACAO to ATIVO through the API (Fase 2)", async ({ browser }) => {
   const admin = await sessao(browser, "admin@internship.local", SENHA);
