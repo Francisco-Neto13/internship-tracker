@@ -73,7 +73,7 @@ export const NAVEGACAO: NavItem[] = [
     modulo: "M05 Acompanhamento",
     rf: "RF023-RF030",
     perfis: ["ESTUDANTE", "PROFESSOR_ORIENTADOR", "SUPERVISOR", "COORDENACAO"],
-    status: "em-construcao",
+    status: "ativo",
     icon: Clock,
   },
   {
@@ -83,7 +83,7 @@ export const NAVEGACAO: NavItem[] = [
     modulo: "M05 Acompanhamento",
     rf: "RF036-RF043",
     perfis: ["ESTUDANTE", "PROFESSOR_ORIENTADOR", "COORDENACAO"],
-    status: "em-construcao",
+    status: "ativo",
     icon: FileText,
   },
   {
