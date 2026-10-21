@@ -432,8 +432,9 @@ as $$
 $$;
 
 -- RF071 (RN-38), extended for estágio documents. Sensitive ones (DISPENSA_DURACAO, and the
--- medical certificates of Fase 5) only for the student and coordination, never the
--- administrator. Replaces the version of functions/06.
+-- medical certificates of Fase 5) only for the student, the advisor in force and the
+-- coordination; never supervisor, concedente or administrator. Every read of a sensitive one
+-- goes through app.registrar_leitura_documento (RF072). Replaces the version of functions/06.
 create or replace function app.pode_baixar_documento(p_documento_id uuid)
 returns boolean
 language sql
@@ -457,7 +458,8 @@ as $$
           or app.coordena_curso_do_estagio(d.estagio_id)
         ))
         or (d.estagio_id is not null and d.sensivel
-            and (app.coordena_curso_do_estagio(d.estagio_id) or app.e_estudante_do_estagio(d.estagio_id)))
+            and (app.coordena_curso_do_estagio(d.estagio_id) or app.e_estudante_do_estagio(d.estagio_id)
+                 or app.e_responsavel_vigente(d.estagio_id, 'ORIENTADOR')))
         or (d.enviado_por_usuario_id = app.usuario_atual_id() and not d.sensivel and d.tipo <> 'RELATORIO')
       )
   )
