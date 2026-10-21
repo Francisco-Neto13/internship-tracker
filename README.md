@@ -144,6 +144,9 @@ O seed cria usuários com a senha `senha-dev-internship`:
 | `supervisor@exemplo-software.local` | Supervisor da mesma concedente |
 | `orientador@internship.local` | Professor orientador |
 
+A Ana tem um estágio `ATIVO` desde 2026-08-03 na Exemplo Software, com lançamentos de agosto (as
+duas primeiras semanas homologadas) e os relatórios gerados na ativação, para testar a Fase 3.
+
 Se o volume do Postgres já existia antes dos papéis, recrie-o com `docker compose down -v`.
 
 Para ver o primeiro acesso: entre como `admin@internship.local`, crie um usuário em
@@ -158,6 +161,7 @@ npm run typecheck
 npm run test:unit          # Vitest sem banco
 npm run test:db            # RLS, auditoria, autenticação, cadastros e formalização contra Postgres real
 npm run storage:check      # confere o bucket e o CORS do armazenamento local
+npm run db:desempenho      # carga de 600 estágios e p95 das leituras de acompanhamento (banco *_test)
 npm run test:e2e           # Playwright (banco migrado e com seed)
 npm run db:generate        # gera migração de tabela a partir de src/db/schema
 npm run ci                 # CI inteira na máquina, espelho do ci.yml (--fast pula Docker)
@@ -241,7 +245,7 @@ Commits seguem `type(scope): summary`, no imperativo, com notas em bullet explic
 | 0 · Fechamento da documentação | Stack, arquitetura, endpoints, DAS, padrão de commits, repositório (**concluída**) |
 | 1 · Fundação técnica | RNFs, DER lógico, migrações, wrapper de identidade, papéis e políticas RLS, auditoria, autenticação, CI, usuários e perfis, senha provisória, consulta e exportação da auditoria (**concluída**) |
 | 2 · Cadastros e formalização | Cursos, estudantes, parâmetros, concedentes, convênios, documentos, TCE, plano de atividades, responsáveis, apólice, assinaturas, ativação de estágio e aditivos (**concluída**) |
-| 3 · Acompanhamento | Frequência, carga horária, relatórios, avaliação |
+| 3 · Acompanhamento | Frequência, homologação, carga horária, divergências, relatórios, avaliação e acompanhamento do orientador; guardas de conclusão e registro de leitura de dado de saúde (**concluída**) |
 | 4 · Atividades complementares e integralização | Cadastro, análise, limites por categoria, apuração |
 | 5 · Ocorrências, conclusão e conformidade | Afastamento, prorrogação, rescisão, guarda documental, relatórios gerenciais |
 
