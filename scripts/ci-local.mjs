@@ -16,7 +16,7 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -124,7 +124,17 @@ const steps = [
     },
   },
   { name: "Lint", run: () => run("npm", ["run", "lint"]) },
-  { name: "Typecheck", run: () => run("npm", ["run", "typecheck"]) },
+  {
+    name: "Typecheck",
+    run: () => {
+      // tsconfig includes the route types next build generates. Left over from a build on
+      // another branch, they point at routes this checkout lacks; a clean clone has none.
+      for (const gerado of [".next/types", ".next/dev/types"]) {
+        rmSync(path.join(ROOT, gerado), { recursive: true, force: true });
+      }
+      return run("npm", ["run", "typecheck"]);
+    },
+  },
   { name: "Unit tests", run: () => run("npx", ["vitest", "run", "--project", "unit"], { env: { TZ: "UTC" } }) },
   { name: "Build", run: () => run("npm", ["run", "build"]) },
   {
