@@ -13,6 +13,7 @@ cp .env.example .env                   # preencher BETTER_AUTH_SECRET
 npm install               # também ativa os hooks de .githooks (prepare)
 npm run db:migrate        # tabelas (drizzle/migrations) + segurança (drizzle/sql)
 npm run db:seed           # usuários de desenvolvimento, senha "senha-dev-internship"
+npm run db:desempenho     # carga (600 estágios, ~98 mil lançamentos) e p95 das leituras de M05, só em *_test
 npm run storage:init      # bucket privado e CORS do upload direto (idempotente)
 npm run storage:check     # confere bucket e CORS
 npm run dev               # http://localhost:3000
@@ -222,7 +223,10 @@ são apagadas e recriadas na mesma transação. O arquivo é a fonte da verdade.
 Funções auxiliares ficam no schema `app`, em `security definer` com `search_path = ''`:
 `app.usuario_atual_id()`, `app.tem_perfil_vigente(perfil)`, `app.coordena_curso(curso_id)`,
 `app.coordena_estudante_usuario(usuario_id)`, `app.representa_concedente(concedente_id)`,
-`app.e_responsavel_vigente(estagio_id, papel)`, `app.convenio_vigente_em(convenio_id, concedente_id, data)`. Nas políticas, envolver chamadas que não
+`app.e_responsavel_vigente(estagio_id, papel)`, `app.convenio_vigente_em(convenio_id, concedente_id, data)`,
+`app.estagios_legiveis(academico)`, `app.pode_ler_relatorios(estagio_id)`, `app.hoje()` (data em
+America/Sao_Paulo), `app.parametros_em(data)`, `app.travar_estagio(estagio_id)`,
+`app.impedimentos_conclusao(estagio_id)` e `app.registrar_leitura_documento(documento_id)`. Nas políticas, envolver chamadas que não
 dependem da linha em `(select ...)` para o Postgres avaliar uma vez por consulta.
 
 Perfil sozinho não basta. A permissão é a interseção de perfil e vínculo:
@@ -241,9 +245,17 @@ precisa decidir pelas colunas da própria linha (`estudante_id = ...`, `app.coor
 não por função que busca a linha pelo id: a função roda com o snapshot anterior ao `INSERT`,
 não a enxerga e o `RETURNING` falha com violação de RLS (modelo: `estagio_leitura`).
 
+Tabela filha volumosa (frequência, homologação, avaliação, relatório) filtra pelo conjunto
+`estagio_id in (select app.estagios_legiveis())`, planejado uma vez por consulta, e não por
+`app.pode_ler_estagio(estagio_id)`, que custa quatro consultas por linha: a listagem de
+divergências caiu de 62 s para 12 ms com 98 mil lançamentos (`npm run db:desempenho`). Leitura
+nova sobre essas tabelas entra na medição antes do merge.
+
 Gatilho de regra levanta `P0001` com mensagem `CODIGO: texto`; `isTriggerRule` (`src/db/errors.ts`)
 converte em `DomainError` com o mesmo código. Colunas sensíveis entram mascaradas na auditoria:
-registrar em `app.coluna_sensivel` (`drizzle/sql/functions/02_auditoria.sql`), com teste.
+registrar em `app.coluna_sensivel` (`drizzle/sql/functions/02_auditoria.sql`), com teste. Leitura
+de documento sensível não aparece para o banco: o download chama `app.registrar_leitura_documento`,
+que concede e grava `LEITURA` na mesma transação (RF072); não há outro caminho para a URL.
 
 Colunas usadas nas junções das políticas precisam de índice, senão a política vira o
 gargalo. Toda política nova ganha teste que a viola isoladamente
@@ -313,10 +325,15 @@ falhar, a resposta é 409 com todos os impedimentos de uma vez.
 
 Guardas de `ATIVO -> CONCLUIDO`: avaliação de desempenho registrada (RF043) e, se
 obrigatório, carga mínima homologada e relatório final aprovado (RF045); nenhum lançamento
-de frequência pendente de homologação.
+de frequência pendente de homologação. Implementadas no banco (`app.impedimentos_conclusao`): o
+gatilho do estágio recusa a transição com `CONCLUSAO_BLOQUEADA` e a lista nos `details`; a
+conclusão da Fase 5 só faz o `UPDATE`.
 
 Relatório periódico: `PENDENTE -> EM_ANALISE -> APROVADO | DEVOLVIDO`, `DEVOLVIDO ->
-EM_ANALISE`; "em atraso" é derivado do prazo. Atividade complementar: `EM_ANALISE ->
+EM_ANALISE`; "em atraso" é derivado do prazo. Gerado na ativação (gatilho em `estagio`); a
+situação só muda por gatilho de `versao_relatorio` e `parecer_relatorio`; o final só existe no
+estágio obrigatório. Frequência: `REGISTRADO | SINALIZADO -> HOMOLOGADO | SUBSTITUIDO | CANCELADO`,
+`HOMOLOGADO -> SUBSTITUIDO` (só a coordenação); o gatilho decide a situação e os limites aplicados. Atividade complementar: `EM_ANALISE ->
 APROVADA | RECUSADA | DEVOLVIDA`, `DEVOLVIDA -> EM_ANALISE`; `RECUSADA` é final.
 
 Situação acadêmica (implementada, serviço e gatilho): `MATRICULADO -> TRANCADO | FORMADO |
@@ -401,6 +418,15 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
 - Schemas Drizzle que se referenciam formam ciclo de import: enums compartilhados ficam em
   `src/db/schema/enums.ts`, e FK circular usa `(): AnyPgColumn => ...`.
 - Scripts `tsx` rodam como CommonJS: sem `await` no topo, usar `main().catch(...)`.
+- Constraint trigger (verificação adiada para o commit) não aceita `create or replace`: em
+  `drizzle/sql/triggers`, `drop trigger if exists` e `create constraint trigger` de novo.
+- Avaliação exige nota em todos os critérios ativos, que são globais: teste que avalia busca os
+  critérios ativos na hora, e teste que cria critério o desativa ao final.
+- O banco de teste é compartilhado e cresce: teste de listagem filtra pelo próprio cenário
+  (curso, e-mail), porque a página padrão de 100 itens já não cobre tudo.
+- Spec de tela que faz login pelo navegador sem `x-forwarded-for` divide com os outros o limite
+  de 3 logins em 10 s; use um endereço próprio (`test.use({ extraHTTPHeaders })`), exceto em spec
+  que envia arquivo ao bucket (CORS). Specs de API usam `sessoes(faixa)` de `e2e/support/api.ts`.
 - Buckets do Cloudflare R2 são privados; download sempre passa por endpoint
   que verifica permissão e emite URL assinada de expiração curta, nunca URL
   pública direta.
@@ -422,7 +448,11 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
    TCE com fechamento e reabertura, plano de atividades, responsáveis, apólice, assinaturas,
    ativação com todas as guardas, aditivos e substituição de responsáveis; mascaramento de
    colunas sensíveis na auditoria; stub do HIBP no CI.
-3. Acompanhamento: frequência, carga horária, relatórios, avaliação.
+3. Acompanhamento (**concluída**, lote `integration/fase-3-acompanhamento`): frequência com
+   limites no serviço e no banco, homologação, carga horária, divergências com caso para o
+   orientador, relatórios gerados na ativação, avaliação com média da concedente (RF014),
+   acompanhamento do orientador, guardas de conclusão no banco, registro de leitura de
+   documento sensível (RF071–RF073) e medição de desempenho com volume.
 4. Atividades complementares e integralização.
 5. Ocorrências, conclusão e conformidade: afastamento, prorrogação,
    rescisão, guarda documental, relatórios gerenciais.
@@ -437,6 +467,7 @@ Critérios de saída:
 |---|---|
 | 1 | Um usuário de cada perfil autentica e enxerga apenas o que lhe cabe, comprovado por teste automatizado. Orientador, supervisor e concedente completam o critério quando `estagio` existir |
 | 2 | Um estágio percorre `EM_FORMALIZACAO → ATIVO`, e cada guarda de ativação é comprovada por teste que a viola isoladamente (`tests/db/estagio-formalizacao.test.ts`, `e2e/estagio.spec.ts`) |
+| 3 | Um estágio ativo percorre frequência, homologação, relatório, avaliação e acompanhamento, cada perfil no seu papel, e cada guarda de conclusão é comprovada isoladamente (`tests/db/frequencia.test.ts`, `tests/db/conclusao.test.ts`, `e2e/acompanhamento.spec.ts`) |
 | 4 | A vedação de dupla contagem (RN-36) tem teste que a força a falhar antes de passar |
 
 ## Documentação

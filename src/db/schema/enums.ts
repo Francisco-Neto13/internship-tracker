@@ -12,3 +12,6 @@ export const perfil = pgEnum("perfil", [
   "CONCEDENTE",
   "ADMINISTRADOR",
 ]);
+
+// M04, also used by M02 (periodicidade_relatorio): kept here for the same reason
+export const tipoEstagio = pgEnum("tipo_estagio", ["OBRIGATORIO", "NAO_OBRIGATORIO"]);

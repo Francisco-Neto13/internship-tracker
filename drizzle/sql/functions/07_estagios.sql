@@ -84,6 +84,50 @@ as $$
       or app.representa_concedente_do_estagio(p_estagio_id)
 $$;
 
+-- The same audience as app.pode_ler_estagio, as a set: the internships the caller follows.
+-- For policies of high-volume child tables (frequency, homologation, evaluation):
+-- `estagio_id in (select app.estagios_legiveis())` is planned as a hashed subplan run once
+-- per query, where app.pode_ler_estagio(estagio_id) costs four lookups per row (measured in
+-- scripts/db/desempenho.ts). p_academico = true keeps only student, advisor and coordination,
+-- the audience of reports and divergences (DER §4.5). Not for estagio itself: its INSERT ...
+-- RETURNING must see the new row, which this set, read in an earlier snapshot, does not.
+create or replace function app.estagios_legiveis(p_academico boolean default false)
+returns setof uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select g.id
+  from public.estagio g
+  join public.estudante e on e.id = g.estudante_id
+  join public.usuario u on u.id = e.usuario_id
+  where e.usuario_id = app.usuario_atual_id() and u.situacao = 'ATIVO'
+  union
+  select r.estagio_id
+  from public.responsavel_estagio r
+  join public.usuario u on u.id = r.usuario_id
+  where r.usuario_id = app.usuario_atual_id()
+    and u.situacao = 'ATIVO'
+    and (r.vigencia_fim is null or (r.vigencia_fim > current_date and r.vigencia_fim > r.vigencia_inicio))
+    and (not p_academico or r.papel = 'ORIENTADOR')
+  union
+  select g.id
+  from public.estagio g
+  join public.vinculo_perfil v on v.curso_id = g.curso_id
+  join public.usuario u on u.id = v.usuario_id
+  where v.usuario_id = app.usuario_atual_id() and v.perfil = 'COORDENACAO' and u.situacao = 'ATIVO'
+    and v.vigencia_inicio <= now() and (v.vigencia_fim is null or v.vigencia_fim > now())
+  union
+  select g.id
+  from public.estagio g
+  join public.vinculo_perfil v on v.concedente_id = g.concedente_id
+  join public.usuario u on u.id = v.usuario_id
+  where not p_academico
+    and v.usuario_id = app.usuario_atual_id() and v.perfil = 'CONCEDENTE' and u.situacao = 'ATIVO'
+    and v.vigencia_inicio <= now() and (v.vigencia_fim is null or v.vigencia_fim > now())
+$$;
+
 -- RF019: who may sign for each party
 create or replace function app.pode_assinar(p_estagio_id uuid, p_parte public.parte_assinatura)
 returns boolean
@@ -172,6 +216,19 @@ begin
     or (old.situacao = 'ATIVO' and new.situacao in ('CONCLUIDO', 'RESCINDIDO'))
   ) then
     raise exception 'TRANSICAO_ESTAGIO_INVALIDA: % para %', old.situacao, new.situacao using errcode = 'P0001';
+  end if;
+
+  -- DER §5.2 (RF043, RF045, D3): the conclusion waits for every guard of
+  -- app.impedimentos_conclusao (functions/11_conclusao.sql), listed together in the message
+  if old.situacao = 'ATIVO' and new.situacao = 'CONCLUIDO' then
+    declare
+      -- null when the caller cannot see the internship: refuse rather than let it pass
+      v_impedimentos text[] := coalesce(app.impedimentos_conclusao(new.id), array['ESTAGIO_NAO_ENCONTRADO']);
+    begin
+      if cardinality(v_impedimentos) > 0 then
+        raise exception 'CONCLUSAO_BLOQUEADA: %', array_to_string(v_impedimentos, ',') using errcode = 'P0001';
+      end if;
+    end;
   end if;
 
   -- TCE in edition: everything editable except the identity columns above
@@ -412,13 +469,16 @@ as $$
     when p_tipo = 'PLANO_ATIVIDADES' then
       app.coordena_curso_do_estagio(p_estagio_id) or app.e_estudante_do_estagio(p_estagio_id)
       or app.e_responsavel_vigente(p_estagio_id, 'ORIENTADOR')
+    -- RF037: attachments of a report are sent by the student
+    when p_tipo = 'RELATORIO' then app.e_estudante_do_estagio(p_estagio_id)
     else false
   end
 $$;
 
 -- RF071 (RN-38), extended for estágio documents. Sensitive ones (DISPENSA_DURACAO, and the
--- medical certificates of Fase 5) only for the student and coordination, never the
--- administrator. Replaces the version of functions/06.
+-- medical certificates of Fase 5) only for the student, the advisor in force and the
+-- coordination; never supervisor, concedente or administrator. Every read of a sensitive one
+-- goes through app.registrar_leitura_documento (RF072). Replaces the version of functions/06.
 create or replace function app.pode_baixar_documento(p_documento_id uuid)
 returns boolean
 language sql
@@ -435,10 +495,16 @@ as $$
         (d.tipo = 'CONVENIO' and (
           app.tem_perfil_vigente('ADMINISTRADOR') or app.tem_perfil_vigente('COORDENACAO') or app.representa_concedente(d.concedente_id)
         ))
-        or (d.estagio_id is not null and not d.sensivel and app.pode_ler_estagio(d.estagio_id))
+        or (d.estagio_id is not null and not d.sensivel and d.tipo <> 'RELATORIO' and app.pode_ler_estagio(d.estagio_id))
+        -- Report attachments follow the report readers: student, advisor and coordination (DER §4.5)
+        or (d.estagio_id is not null and d.tipo = 'RELATORIO' and (
+          app.e_estudante_do_estagio(d.estagio_id) or app.e_responsavel_vigente(d.estagio_id, 'ORIENTADOR')
+          or app.coordena_curso_do_estagio(d.estagio_id)
+        ))
         or (d.estagio_id is not null and d.sensivel
-            and (app.coordena_curso_do_estagio(d.estagio_id) or app.e_estudante_do_estagio(d.estagio_id)))
-        or (d.enviado_por_usuario_id = app.usuario_atual_id() and not d.sensivel)
+            and (app.coordena_curso_do_estagio(d.estagio_id) or app.e_estudante_do_estagio(d.estagio_id)
+                 or app.e_responsavel_vigente(d.estagio_id, 'ORIENTADOR')))
+        or (d.enviado_por_usuario_id = app.usuario_atual_id() and not d.sensivel and d.tipo <> 'RELATORIO')
       )
   )
 $$;
@@ -449,6 +515,7 @@ revoke all on function app.e_responsavel_vigente(uuid, public.papel_responsavel)
 revoke all on function app.coordena_curso_do_estagio(uuid) from public;
 revoke all on function app.representa_concedente_do_estagio(uuid) from public;
 revoke all on function app.pode_ler_estagio(uuid) from public;
+revoke all on function app.estagios_legiveis(boolean) from public;
 revoke all on function app.pode_assinar(uuid, public.parte_assinatura) from public;
 revoke all on function app.dias_usados_no_par(uuid, uuid, uuid) from public;
 revoke all on function app.tem_outro_estagio_ativo(uuid, uuid) from public;
@@ -466,6 +533,7 @@ grant execute on function app.e_responsavel_vigente(uuid, public.papel_responsav
 grant execute on function app.coordena_curso_do_estagio(uuid) to app_runtime;
 grant execute on function app.representa_concedente_do_estagio(uuid) to app_runtime;
 grant execute on function app.pode_ler_estagio(uuid) to app_runtime;
+grant execute on function app.estagios_legiveis(boolean) to app_runtime;
 grant execute on function app.pode_assinar(uuid, public.parte_assinatura) to app_runtime;
 grant execute on function app.dias_usados_no_par(uuid, uuid, uuid) to app_runtime;
 grant execute on function app.tem_outro_estagio_ativo(uuid, uuid) to app_runtime;

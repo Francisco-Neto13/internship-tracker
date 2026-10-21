@@ -1,4 +1,4 @@
-import { createEstagio, fecharTce, type DadosTceEntrada } from "@/modules/estagios/services/estagio-service";
+import { ativarEstagio, createEstagio, fecharTce, type DadosTceEntrada } from "@/modules/estagios/services/estagio-service";
 import {
   assinarTce,
   decidirPlano,
@@ -37,8 +37,9 @@ export function tce(mundo: Mundo, ajustes: Partial<DadosTceEntrada> = {}): Dados
 export const como = (usuario: { id: string }) => identityOf(usuario.id);
 
 /** Runs the whole formalization by the people who do it in real life, skipping `pular`. */
-export async function prepararEstagio(mundo: Mundo, pular: Etapa[] = []) {
-  const criado = await createEstagio(como(mundo.coordenador), tce(mundo));
+export async function prepararEstagio(mundo: Mundo, pular: Etapa[] = [], ajustes: Partial<DadosTceEntrada> = {}) {
+  const dados = tce(mundo, ajustes);
+  const criado = await createEstagio(como(mundo.coordenador), dados);
   const id = criado.id;
 
   await vincularResponsavel(como(mundo.coordenador), id, "ORIENTADOR", mundo.orientador.id);
@@ -56,8 +57,8 @@ export async function prepararEstagio(mundo: Mundo, pular: Etapa[] = []) {
       seguradora: "Seguradora Exemplo",
       numeroApolice: "AP-1",
       contratante: "CONCEDENTE",
-      vigenciaInicio: "2026-11-01",
-      vigenciaFim: "2027-12-31",
+      vigenciaInicio: dados.dataInicio,
+      vigenciaFim: "2029-12-31",
       substituiApoliceId: null,
       documentoId: null,
     });
@@ -72,3 +73,13 @@ export async function prepararEstagio(mundo: Mundo, pular: Etapa[] = []) {
   return id;
 }
 
+
+/**
+ * An ATIVO internship that started in the past (Monday 2026-08-03), so frequency, reports and
+ * evaluations have days to refer to. Fase 3 tests start here.
+ */
+export async function estagioAtivo(mundo: Mundo, ajustes: Partial<DadosTceEntrada> = {}) {
+  const id = await prepararEstagio(mundo, [], { dataInicio: "2026-08-03", dataFimPactuada: "2027-07-30", ...ajustes });
+  await ativarEstagio(como(mundo.coordenador), id);
+  return id;
+}

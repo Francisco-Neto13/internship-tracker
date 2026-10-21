@@ -45,3 +45,10 @@ export function isForeignKeyViolation(error: unknown, constraint: string): boole
   const pg = findPgError(error);
   return pg?.code === "23503" && pg.constraint === constraint;
 }
+
+/** The detail after "CODE: " of a trigger rule, e.g. the impediments of CONCLUSAO_BLOQUEADA. */
+export function triggerRuleDetail(error: unknown, code: string): string | undefined {
+  const pg = findPgError(error);
+  if (pg?.code !== "P0001" || !pg.message.startsWith(`${code}:`)) return undefined;
+  return pg.message.slice(code.length + 1).trim();
+}

@@ -15,6 +15,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { usuario } from "./acesso";
+import { tipoEstagio } from "./enums";
 
 export const situacaoAcademica = pgEnum("situacao_academica", ["MATRICULADO", "TRANCADO", "FORMADO", "DESLIGADO"]);
 
@@ -140,5 +141,31 @@ export const exigenciaCategoria = pgTable(
       .on(t.cursoId)
       .where(sql`${t.admiteEstagioNaoObrigatorio}`),
     check("exigencia_categoria_limite_positivo", sql`${t.limiteMinutos} > 0`),
+  ],
+);
+
+// RF036, RN-13: periodicity and deadlines of the reports, by course and internship type. In M02
+// because it is course configuration. Changing it never touches reports already generated:
+// relatorio.prazo_entrega keeps the deadline calculated when it was generated.
+export const periodicidadeRelatorio = pgTable(
+  "periodicidade_relatorio",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    cursoId: uuid("curso_id")
+      .notNull()
+      .references(() => curso.id),
+    tipoEstagio: tipoEstagio("tipo_estagio").notNull(),
+    intervaloMeses: smallint("intervalo_meses").notNull(),
+    prazoEntregaDias: smallint("prazo_entrega_dias").notNull(),
+    prazoRelatorioFinalDias: smallint("prazo_relatorio_final_dias").notNull(),
+    criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+    atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("periodicidade_curso_tipo_unique").on(t.cursoId, t.tipoEstagio),
+    // Lei 11.788/2008, art. 7º, IV: a report at intervals of at most 6 months
+    check("periodicidade_intervalo_valido", sql`${t.intervaloMeses} between 1 and 6`),
+    check("periodicidade_prazo_entrega_valido", sql`${t.prazoEntregaDias} between 0 and 90`),
+    check("periodicidade_prazo_final_valido", sql`${t.prazoRelatorioFinalDias} between 0 and 90`),
   ],
 );

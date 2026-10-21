@@ -1,0 +1,2 @@
+ALTER TABLE "auditoria" DROP CONSTRAINT "auditoria_operacao_valida";--> statement-breakpoint
+ALTER TABLE "auditoria" ADD CONSTRAINT "auditoria_operacao_valida" CHECK ("auditoria"."operacao" in ('INSERT', 'UPDATE', 'DELETE', 'LEITURA'));

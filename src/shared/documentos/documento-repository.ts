@@ -31,7 +31,26 @@ export async function podeEnviarDocumento(
   return rows[0]?.pode === true;
 }
 
-export async function podeBaixarDocumento(tx: Transaction, id: string): Promise<boolean> {
-  const { rows } = await tx.execute<{ pode: boolean }>(sql`select app.pode_baixar_documento(${id}::uuid) as pode`);
+/**
+ * RF071, RF072: the permission to download and, for a sensitive document, the LEITURA row in
+ * the audit trail, decided and written in one step by app.registrar_leitura_documento.
+ */
+export async function registrarLeituraDocumento(tx: Transaction, id: string): Promise<boolean> {
+  const { rows } = await tx.execute<{ pode: boolean }>(sql`select app.registrar_leitura_documento(${id}::uuid) as pode`);
   return rows[0]?.pode === true;
+}
+
+export async function podeConsultarAcessosDocumento(tx: Transaction, id: string): Promise<boolean> {
+  const { rows } = await tx.execute<{ pode: boolean }>(sql`select app.pode_consultar_acessos_documento(${id}::uuid) as pode`);
+  return rows[0]?.pode === true;
+}
+
+export type AcessoDocumento = { ocorridoEm: Date; usuarioId: string | null; usuarioNome: string | null; perfil: string | null };
+
+/** RF073: who read a sensitive document, when and under which profile. */
+export async function findAcessosDocumento(tx: Transaction, id: string): Promise<AcessoDocumento[]> {
+  const { rows } = await tx.execute<{ ocorrido_em: string | Date; usuario_id: string | null; usuario_nome: string | null; perfil: string | null }>(
+    sql`select ocorrido_em, usuario_id, usuario_nome, perfil from app.acessos_documento(${id}::uuid)`,
+  );
+  return rows.map((row) => ({ ocorridoEm: new Date(row.ocorrido_em), usuarioId: row.usuario_id, usuarioNome: row.usuario_nome, perfil: row.perfil }));
 }
