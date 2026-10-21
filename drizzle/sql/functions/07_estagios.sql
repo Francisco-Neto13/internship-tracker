@@ -84,6 +84,50 @@ as $$
       or app.representa_concedente_do_estagio(p_estagio_id)
 $$;
 
+-- The same audience as app.pode_ler_estagio, as a set: the internships the caller follows.
+-- For policies of high-volume child tables (frequency, homologation, evaluation):
+-- `estagio_id in (select app.estagios_legiveis())` is planned as a hashed subplan run once
+-- per query, where app.pode_ler_estagio(estagio_id) costs four lookups per row (measured in
+-- scripts/db/desempenho.ts). p_academico = true keeps only student, advisor and coordination,
+-- the audience of reports and divergences (DER §4.5). Not for estagio itself: its INSERT ...
+-- RETURNING must see the new row, which this set, read in an earlier snapshot, does not.
+create or replace function app.estagios_legiveis(p_academico boolean default false)
+returns setof uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select g.id
+  from public.estagio g
+  join public.estudante e on e.id = g.estudante_id
+  join public.usuario u on u.id = e.usuario_id
+  where e.usuario_id = app.usuario_atual_id() and u.situacao = 'ATIVO'
+  union
+  select r.estagio_id
+  from public.responsavel_estagio r
+  join public.usuario u on u.id = r.usuario_id
+  where r.usuario_id = app.usuario_atual_id()
+    and u.situacao = 'ATIVO'
+    and (r.vigencia_fim is null or (r.vigencia_fim > current_date and r.vigencia_fim > r.vigencia_inicio))
+    and (not p_academico or r.papel = 'ORIENTADOR')
+  union
+  select g.id
+  from public.estagio g
+  join public.vinculo_perfil v on v.curso_id = g.curso_id
+  join public.usuario u on u.id = v.usuario_id
+  where v.usuario_id = app.usuario_atual_id() and v.perfil = 'COORDENACAO' and u.situacao = 'ATIVO'
+    and v.vigencia_inicio <= now() and (v.vigencia_fim is null or v.vigencia_fim > now())
+  union
+  select g.id
+  from public.estagio g
+  join public.vinculo_perfil v on v.concedente_id = g.concedente_id
+  join public.usuario u on u.id = v.usuario_id
+  where not p_academico
+    and v.usuario_id = app.usuario_atual_id() and v.perfil = 'CONCEDENTE' and u.situacao = 'ATIVO'
+    and v.vigencia_inicio <= now() and (v.vigencia_fim is null or v.vigencia_fim > now())
+$$;
+
 -- RF019: who may sign for each party
 create or replace function app.pode_assinar(p_estagio_id uuid, p_parte public.parte_assinatura)
 returns boolean
@@ -471,6 +515,7 @@ revoke all on function app.e_responsavel_vigente(uuid, public.papel_responsavel)
 revoke all on function app.coordena_curso_do_estagio(uuid) from public;
 revoke all on function app.representa_concedente_do_estagio(uuid) from public;
 revoke all on function app.pode_ler_estagio(uuid) from public;
+revoke all on function app.estagios_legiveis(boolean) from public;
 revoke all on function app.pode_assinar(uuid, public.parte_assinatura) from public;
 revoke all on function app.dias_usados_no_par(uuid, uuid, uuid) from public;
 revoke all on function app.tem_outro_estagio_ativo(uuid, uuid) from public;
@@ -488,6 +533,7 @@ grant execute on function app.e_responsavel_vigente(uuid, public.papel_responsav
 grant execute on function app.coordena_curso_do_estagio(uuid) to app_runtime;
 grant execute on function app.representa_concedente_do_estagio(uuid) to app_runtime;
 grant execute on function app.pode_ler_estagio(uuid) to app_runtime;
+grant execute on function app.estagios_legiveis(boolean) to app_runtime;
 grant execute on function app.pode_assinar(uuid, public.parte_assinatura) to app_runtime;
 grant execute on function app.dias_usados_no_par(uuid, uuid, uuid) to app_runtime;
 grant execute on function app.tem_outro_estagio_ativo(uuid, uuid) to app_runtime;
