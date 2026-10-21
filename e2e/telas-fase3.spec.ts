@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 // Fase 3 screens render for coordination with the seeded ATIVO internship of Ana (August
-// entries, first two weeks homologated, reports generated on activation).
+// entries, first two weeks homologated, reports generated on activation). Signs in from an
+// address of its own, off the shared sign-in budget; it uploads nothing, so the extra header
+// never reaches the bucket (AGENTS.md, pitfalls).
+
+test.use({ extraHTTPHeaders: { "x-forwarded-for": "203.0.113.120" } });
 
 test("coordination follows hours and reports of an active internship", async ({ page }) => {
   await page.goto("/login");
