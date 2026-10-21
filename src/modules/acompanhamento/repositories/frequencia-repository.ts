@@ -216,30 +216,56 @@ export async function totaisFrequencia(tx: Transaction, estagioId: string, dataR
 
 /**
  * RF028: active internships the caller follows as advisor or coordination, with the minutes in
- * force up to the reference date, in a single aggregate (the RLS of estagio picks the rows).
+ * force up to the reference date. The set of internships comes first (app.estagios_legiveis,
+ * once per query) and each sum is a LATERAL lookup on the index (estagio_id, data, situacao):
+ * aggregating the whole table and joining afterwards took ~18 s with 600 internships and 98k
+ * entries (scripts/db/desempenho.ts).
  */
 export async function findEstagiosAtivosComCumpridos(tx: Transaction, dataReferencia: string) {
-  const cumpridos = tx
-    .select({
-      estagioId: registroFrequencia.estagioId,
-      minutos: sql<string>`sum(${registroFrequencia.duracaoMinutos})`.as("minutos"),
-    })
-    .from(registroFrequencia)
-    .where(and(vigente, lte(registroFrequencia.data, dataReferencia)))
-    .groupBy(registroFrequencia.estagioId)
-    .as("cumpridos");
-  const linhas = await tx
-    .select({ estagio: colunasEstagio, minutosCumpridos: cumpridos.minutos })
-    .from(estagio)
-    .leftJoin(cumpridos, eq(cumpridos.estagioId, estagio.id))
-    .where(
-      and(
-        eq(estagio.situacao, "ATIVO"),
-        sql`(app.e_responsavel_vigente(${estagio.id}, 'ORIENTADOR') or app.coordena_curso(${estagio.cursoId}))`,
-      ),
-    )
-    .orderBy(asc(estagio.dataInicio));
-  return linhas.map((linha) => ({ estagio: linha.estagio, minutosCumpridos: Number(linha.minutosCumpridos ?? 0) }));
+  const { rows } = await tx.execute<{
+    id: string;
+    situacao: EstagioAcompanhado["situacao"];
+    tipo: EstagioAcompanhado["tipo"];
+    curso_id: string;
+    estudante_id: string;
+    concedente_id: string;
+    data_inicio: string;
+    data_fim_prevista: string;
+    carga_semanal_minutos: number;
+    carga_total_minutos: number;
+    minutos: string | null;
+  }>(sql`
+    select g.id, g.situacao, g.tipo, g.curso_id, g.estudante_id, g.concedente_id,
+           g.data_inicio::text as data_inicio, g.data_fim_prevista::text as data_fim_prevista,
+           g.carga_semanal_minutos, g.carga_total_minutos, c.minutos
+    from public.estagio g
+    left join lateral (
+      select sum(r.duracao_minutos) as minutos
+      from public.registro_frequencia r
+      where r.estagio_id = g.id
+        and r.situacao in ('REGISTRADO', 'SINALIZADO', 'HOMOLOGADO')
+        and r.data <= ${dataReferencia}::date
+    ) c on true
+    where g.situacao = 'ATIVO'
+      and g.id in (select app.estagios_legiveis(true))
+      and (app.e_responsavel_vigente(g.id, 'ORIENTADOR') or app.coordena_curso(g.curso_id))
+    order by g.data_inicio, g.id
+  `);
+  return rows.map((row) => ({
+    estagio: {
+      id: row.id,
+      situacao: row.situacao,
+      tipo: row.tipo,
+      cursoId: row.curso_id,
+      estudanteId: row.estudante_id,
+      concedenteId: row.concedente_id,
+      dataInicio: row.data_inicio,
+      dataFimPrevista: row.data_fim_prevista,
+      cargaSemanalMinutos: row.carga_semanal_minutos,
+      cargaTotalMinutos: row.carga_total_minutos,
+    },
+    minutosCumpridos: Number(row.minutos ?? 0),
+  }));
 }
 
 // ---------------------------------------------------------------- divergência
