@@ -4,8 +4,9 @@ import { describe, expect, it } from "vitest";
 import { owner } from "./fixtures";
 
 // AGENTS.md: the administrator reads the audit trail but never report or medical-leave
-// content (RN-38, RF071). app.coluna_sensivel lists those columns before their tables
-// exist (Fase 3 and 5), so the masking holds from the first row they receive.
+// content (RN-38, RF071). app.coluna_sensivel lists those columns, some before their tables
+// exist (afastamento, Fase 5), so the masking holds from the first row they receive. The
+// real Fase 3 tables are checked in their own tests (relatorios, frequencia, avaliacao).
 
 type Registro = { dados_anteriores: Record<string, unknown> | null; dados_novos: Record<string, unknown> | null; campos_alterados: string[] | null };
 
@@ -39,23 +40,24 @@ describe("sensitive columns masked in the audit trail (RN-38, RF071)", () => {
 
   it("records the change but never the content, on insert and update", async () => {
     const registros = await emTransacaoRevertida(async (client) => {
-      // Stands in for a Fase 3 table: created, audited and registered the same way
+      // A stand-in table, created, audited and registered the same way a real one is
       await client.query(`
-        create table public.versao_relatorio (id uuid primary key default gen_random_uuid(), titulo text, conteudo text);
-        alter table public.versao_relatorio enable row level security;
-        create trigger registrar_auditoria after insert or update or delete on public.versao_relatorio
+        create table public.teste_mascaramento (id uuid primary key default gen_random_uuid(), titulo text, conteudo text);
+        alter table public.teste_mascaramento enable row level security;
+        create trigger registrar_auditoria after insert or update or delete on public.teste_mascaramento
           for each row execute function app.registrar_auditoria();
+        insert into app.coluna_sensivel (tabela, coluna, motivo) values ('teste_mascaramento', 'conteudo', 'teste');
       `);
       const {
         rows: [{ id }],
       } = await client.query<{ id: string }>(
-        `insert into public.versao_relatorio (titulo, conteudo) values ('Relatório 1', 'diagnóstico sigiloso') returning id`,
+        `insert into public.teste_mascaramento (titulo, conteudo) values ('Relatório 1', 'diagnóstico sigiloso') returning id`,
       );
-      await client.query(`update public.versao_relatorio set conteudo = 'outro texto sigiloso' where id = $1`, [id]);
-      await client.query(`update public.versao_relatorio set titulo = 'Relatório 1b' where id = $1`, [id]);
+      await client.query(`update public.teste_mascaramento set conteudo = 'outro texto sigiloso' where id = $1`, [id]);
+      await client.query(`update public.teste_mascaramento set titulo = 'Relatório 1b' where id = $1`, [id]);
 
       const { rows } = await client.query<Registro>(
-        `select dados_anteriores, dados_novos, campos_alterados from public.auditoria where tabela = 'versao_relatorio' and registro_id = $1 order by id`,
+        `select dados_anteriores, dados_novos, campos_alterados from public.auditoria where tabela = 'teste_mascaramento' and registro_id = $1 order by id`,
         [id],
       );
       return rows;

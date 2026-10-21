@@ -119,13 +119,14 @@ create policy responsavel_encerramento on public.responsavel_estagio for update 
   with check (app.coordena_curso_do_estagio(estagio_id));
 
 -- documento of an internship (D8, RF071): readers of the internship see non-sensitive
--- metadata; sensitive ones only the student and coordination, plus the administrator's
+-- metadata; sensitive ones only the student, the advisor and coordination, plus the administrator's
 -- metadata view for retention (RF069). Download is app.pode_baixar_documento.
 create policy documento_leitura_estagio on public.documento for select to app_runtime using (
   estagio_id is not null and (
     (not sensivel and tipo <> 'RELATORIO' and app.pode_ler_estagio(estagio_id))
     or (tipo = 'RELATORIO' and app.pode_ler_relatorios(estagio_id))
-    or (sensivel and (app.coordena_curso_do_estagio(estagio_id) or app.e_estudante_do_estagio(estagio_id)))
+    or (sensivel and (app.coordena_curso_do_estagio(estagio_id) or app.e_estudante_do_estagio(estagio_id)
+                      or app.e_responsavel_vigente(estagio_id, 'ORIENTADOR')))
     or (select app.tem_perfil_vigente('ADMINISTRADOR'))
   )
 );
