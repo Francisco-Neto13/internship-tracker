@@ -7,6 +7,7 @@ import { BotaoAcao } from "@/shared/ui/botao-acao";
 import { FormularioApi } from "@/shared/ui/formulario-api";
 import { PageHeader } from "@/shared/ui/page-header";
 import { StatusBadge } from "@/shared/ui/status-badge";
+import { AcompanhamentoEstagio } from "./acompanhamento";
 
 // One internship: TCE, formalization steps (D9) and the actions of each step. Every button
 // calls the API, which decides by profile and link (RLS) and by life cycle; refused actions
@@ -166,6 +167,8 @@ export default async function EstagioPage({ params }: { params: Promise<{ id: st
           </ul>
         </Bloco>
       )}
+
+      {!emFormalizacao && <AcompanhamentoEstagio identity={identity} estagioId={id} />}
 
       {estagio.situacao === "ATIVO" && (
         <Bloco titulo="Aditivos">
