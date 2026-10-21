@@ -16,7 +16,7 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -136,7 +136,20 @@ const steps = [
     },
   },
   { name: "Unit tests", run: () => run("npx", ["vitest", "run", "--project", "unit"], { env: { TZ: "UTC" } }) },
-  { name: "Build", run: () => run("npm", ["run", "build"]) },
+  {
+    name: "Build",
+    run: () => {
+      // next build points next-env.d.ts at .next/types; the committed file points at
+      // .next/dev/types (next dev). Put it back, or the tree stays dirty and batch:pr refuses.
+      const nextEnv = path.join(ROOT, "next-env.d.ts");
+      const original = existsSync(nextEnv) ? readFileSync(nextEnv, "utf8") : null;
+      try {
+        return run("npm", ["run", "build"]);
+      } finally {
+        if (original !== null && readFileSync(nextEnv, "utf8") !== original) writeFileSync(nextEnv, original);
+      }
+    },
+  },
   {
     name: "Database tests",
     docker: true,
