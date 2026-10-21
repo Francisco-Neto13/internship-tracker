@@ -7,10 +7,12 @@ import type { Identity } from "@/lib/identity";
 import { getArmazenamento } from "./armazenamento";
 import { extensaoDoTipo, sha256Hex, tipoPeloConteudo } from "./conteudo";
 import {
+  findAcessosDocumento,
   findDocumentoById,
   insertDocumento,
-  podeBaixarDocumento,
+  podeConsultarAcessosDocumento,
   podeEnviarDocumento,
+  registrarLeituraDocumento,
   type DocumentoRow,
   type TipoDocumento,
 } from "./documento-repository";
@@ -133,11 +135,16 @@ export async function confirmarUpload(identity: Identity, uploadId: string): Pro
 }
 
 /** Metadata plus a signed download URL valid for one minute (RNF-06, RF071). */
+/**
+ * RNF-06, RF071, RF072: metadata as RLS allows and a short signed URL when the caller may
+ * download. For a sensitive document the read is recorded in the same transaction that
+ * grants it, before the URL exists: no download without its trail.
+ */
 export async function obterDocumento(identity: Identity, id: string) {
-  const { documento, podeBaixar } = await withUser(identity, async (tx) => ({
-    documento: await findDocumentoById(tx, id),
-    podeBaixar: await podeBaixarDocumento(tx, id),
-  }));
+  const { documento, podeBaixar } = await withUser(identity, async (tx) => {
+    const documento = await findDocumentoById(tx, id);
+    return { documento, podeBaixar: documento ? await registrarLeituraDocumento(tx, id) : false };
+  });
   if (!documento) {
     throw new DomainError({ code: "DOCUMENTO_NAO_ENCONTRADO", kind: "NOT_FOUND", message: "Documento não encontrado.", requisito: "RF050" });
   }
@@ -168,4 +175,22 @@ export async function exigirDocumento(
     });
   }
   return documento;
+}
+
+/** RF073: who read a sensitive document (holder, coordination of the course, administrator). */
+export async function listarAcessosDocumento(identity: Identity, id: string) {
+  return withUser(identity, async (tx) => {
+    if (!(await findDocumentoById(tx, id))) {
+      throw new DomainError({ code: "DOCUMENTO_NAO_ENCONTRADO", kind: "NOT_FOUND", message: "Documento não encontrado.", requisito: "RF050" });
+    }
+    if (!(await podeConsultarAcessosDocumento(tx, id))) {
+      throw new DomainError({
+        code: "ACESSO_NEGADO",
+        kind: "FORBIDDEN",
+        message: "Só o titular, a coordenação do curso e o administrador consultam os acessos a documento sensível.",
+        requisito: "RF073",
+      });
+    }
+    return findAcessosDocumento(tx, id);
+  });
 }
