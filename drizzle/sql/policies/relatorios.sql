@@ -25,7 +25,7 @@ alter table public.relatorio enable row level security;
 grant select on public.relatorio to app_runtime;
 
 create policy relatorio_leitura on public.relatorio for select to app_runtime
-  using (app.pode_ler_relatorios(estagio_id));
+  using (estagio_id in (select app.estagios_legiveis(true)));
 
 -- versao_relatorio (RF037, RF039): the student sends
 alter table public.versao_relatorio enable row level security;

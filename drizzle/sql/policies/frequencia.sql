@@ -10,8 +10,10 @@ alter table public.registro_frequencia enable row level security;
 grant select, insert on public.registro_frequencia to app_runtime;
 grant update (situacao, homologacao_id, justificativa_cancelamento) on public.registro_frequencia to app_runtime;
 
+-- Set evaluated once per query (hashed subplan), not four lookups per row: see
+-- app.estagios_legiveis and the measurement in scripts/db/desempenho.ts
 create policy frequencia_leitura on public.registro_frequencia for select to app_runtime
-  using (app.pode_ler_estagio(estagio_id));
+  using (estagio_id in (select app.estagios_legiveis()));
 
 create policy frequencia_insercao on public.registro_frequencia for insert to app_runtime with check (
   registrado_por_usuario_id = (select app.usuario_atual_id())
@@ -39,7 +41,7 @@ alter table public.homologacao_frequencia enable row level security;
 grant select, insert on public.homologacao_frequencia to app_runtime;
 
 create policy homologacao_leitura on public.homologacao_frequencia for select to app_runtime
-  using (app.pode_ler_estagio(estagio_id));
+  using (estagio_id in (select app.estagios_legiveis()));
 
 create policy homologacao_insercao on public.homologacao_frequencia for insert to app_runtime with check (
   homologado_por_usuario_id = (select app.usuario_atual_id())
@@ -54,11 +56,8 @@ alter table public.divergencia_carga_horaria enable row level security;
 grant select, insert on public.divergencia_carga_horaria to app_runtime;
 grant update (situacao, parecer, analisada_por_usuario_id, analisada_em) on public.divergencia_carga_horaria to app_runtime;
 
-create policy divergencia_leitura on public.divergencia_carga_horaria for select to app_runtime using (
-  app.e_estudante_do_estagio(estagio_id)
-  or app.e_responsavel_vigente(estagio_id, 'ORIENTADOR')
-  or app.coordena_curso_do_estagio(estagio_id)
-);
+create policy divergencia_leitura on public.divergencia_carga_horaria for select to app_runtime
+  using (estagio_id in (select app.estagios_legiveis(true)));
 
 create policy divergencia_insercao on public.divergencia_carga_horaria for insert to app_runtime with check (
   situacao = 'ABERTA'

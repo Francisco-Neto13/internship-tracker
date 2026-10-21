@@ -23,7 +23,7 @@ alter table public.avaliacao_desempenho enable row level security;
 grant select, insert on public.avaliacao_desempenho to app_runtime;
 
 create policy avaliacao_leitura on public.avaliacao_desempenho for select to app_runtime
-  using (app.pode_ler_estagio(estagio_id));
+  using (estagio_id in (select app.estagios_legiveis()));
 
 create policy avaliacao_insercao on public.avaliacao_desempenho for insert to app_runtime with check (
   avaliador_usuario_id = (select app.usuario_atual_id())
