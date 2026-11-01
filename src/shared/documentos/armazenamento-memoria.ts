@@ -24,6 +24,9 @@ export function armazenamentoMemoria() {
     async remover(chave) {
       objetos.delete(chave);
     },
+    async gravar(chave, conteudo) {
+      objetos.set(chave, conteudo);
+    },
   };
   return armazenamento;
 }

@@ -481,10 +481,18 @@ as $$
     when p_tipo = 'COMPROVANTE_ATIVIDADE' then
       p_estudante_id is not null and p_estagio_id is null and p_concedente_id is null
       and p_estudante_id = app.estudante_atual_id()
+    -- RF058: the PDF of an activities declaration, issued by the student or its coordination
+    when p_tipo = 'DECLARACAO' and p_estudante_id is not null and p_estagio_id is null then
+      p_concedente_id is null and exists (
+        select 1 from public.estudante e
+        where e.id = p_estudante_id and (e.usuario_id = app.usuario_atual_id() or app.coordena_curso(e.curso_id))
+      )
     when p_estagio_id is null or p_concedente_id is not null or p_estudante_id is not null then false
     when p_tipo in ('TCE', 'ADITIVO', 'ASSINATURA', 'DISPENSA_DURACAO', 'RESCISAO') then app.coordena_curso_do_estagio(p_estagio_id)
     -- RF059: the certificate of a leave, sent by the student or the coordination (sensitive, RN-38)
     when p_tipo = 'ATESTADO_AFASTAMENTO' then app.coordena_curso_do_estagio(p_estagio_id) or app.e_estudante_do_estagio(p_estagio_id)
+    -- RF058: the PDF of an internship conclusion declaration
+    when p_tipo = 'DECLARACAO' then app.coordena_curso_do_estagio(p_estagio_id) or app.e_estudante_do_estagio(p_estagio_id)
     when p_tipo = 'APOLICE' then app.coordena_curso_do_estagio(p_estagio_id) or app.representa_concedente_do_estagio(p_estagio_id)
     when p_tipo = 'PLANO_ATIVIDADES' then
       app.coordena_curso_do_estagio(p_estagio_id) or app.e_estudante_do_estagio(p_estagio_id)
