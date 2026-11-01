@@ -226,7 +226,9 @@ Funções auxiliares ficam no schema `app`, em `security definer` com `search_pa
 `app.e_responsavel_vigente(estagio_id, papel)`, `app.convenio_vigente_em(convenio_id, concedente_id, data)`,
 `app.estagios_legiveis(academico)`, `app.pode_ler_relatorios(estagio_id)`, `app.hoje()` (data em
 America/Sao_Paulo), `app.parametros_em(data)`, `app.travar_estagio(estagio_id)`,
-`app.impedimentos_conclusao(estagio_id)` e `app.registrar_leitura_documento(documento_id)`. Nas políticas, envolver chamadas que não
+`app.impedimentos_conclusao(estagio_id)`, `app.registrar_leitura_documento(documento_id)`,
+`app.estudantes_legiveis()`, `app.calcular_integralizacao(estudante_id)` e
+`app.apurar_integralizacao(estudante_id, gatilho)`. Nas políticas, envolver chamadas que não
 dependem da linha em `(select ...)` para o Postgres avaliar uma vez por consulta.
 
 Perfil sozinho não basta. A permissão é a interseção de perfil e vínculo:
@@ -246,7 +248,8 @@ não por função que busca a linha pelo id: a função roda com o snapshot ante
 não a enxerga e o `RETURNING` falha com violação de RLS (modelo: `estagio_leitura`).
 
 Tabela filha volumosa (frequência, homologação, avaliação, relatório) filtra pelo conjunto
-`estagio_id in (select app.estagios_legiveis())`, planejado uma vez por consulta, e não por
+`estagio_id in (select app.estagios_legiveis())` (atividades e integralização, por
+`estudante_id in (select app.estudantes_legiveis())`), planejado uma vez por consulta, e não por
 `app.pode_ler_estagio(estagio_id)`, que custa quatro consultas por linha: a listagem de
 divergências caiu de 62 s para 12 ms com 98 mil lançamentos (`npm run db:desempenho`). Leitura
 nova sobre essas tabelas entra na medição antes do merge.
@@ -334,7 +337,10 @@ EM_ANALISE`; "em atraso" é derivado do prazo. Gerado na ativação (gatilho em 
 situação só muda por gatilho de `versao_relatorio` e `parecer_relatorio`; o final só existe no
 estágio obrigatório. Frequência: `REGISTRADO | SINALIZADO -> HOMOLOGADO | SUBSTITUIDO | CANCELADO`,
 `HOMOLOGADO -> SUBSTITUIDO` (só a coordenação); o gatilho decide a situação e os limites aplicados. Atividade complementar: `EM_ANALISE ->
-APROVADA | RECUSADA | DEVOLVIDA`, `DEVOLVIDA -> EM_ANALISE`; `RECUSADA` é final.
+APROVADA | RECUSADA | DEVOLVIDA`, `DEVOLVIDA -> EM_ANALISE`; `RECUSADA` é final. A decisão só chega por
+`analise_atividade` (gatilho), e as horas aproveitadas são calculadas pelo banco na aprovação
+(limite da categoria e total do curso, estudante travado). A integralização é gravada só por
+`app.apurar_integralizacao`, disparada por gatilho a cada evento que muda o resultado.
 
 Situação acadêmica (implementada, serviço e gatilho): `MATRICULADO -> TRANCADO | FORMADO |
 DESLIGADO`, `TRANCADO -> MATRICULADO | DESLIGADO`; `FORMADO` e `DESLIGADO` finais.
@@ -418,6 +424,10 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
 - Schemas Drizzle que se referenciam formam ciclo de import: enums compartilhados ficam em
   `src/db/schema/enums.ts`, e FK circular usa `(): AnyPgColumn => ...`.
 - Scripts `tsx` rodam como CommonJS: sem `await` no topo, usar `main().catch(...)`.
+- Toda aprovação de atividade, conclusão de estágio, mudança de exigência ou de carga do curso
+  grava uma apuração (gatilho). Teste que precisa de estudante sem apuração não mexe no curso.
+- Com `CI=1`, o Playwright sobe o build de produção já existente: rota nova dá 404 até
+  `npm run build` (o `npm run ci` compila antes do e2e).
 - Constraint trigger (verificação adiada para o commit) não aceita `create or replace`: em
   `drizzle/sql/triggers`, `drop trigger if exists` e `create constraint trigger` de novo.
 - Avaliação exige nota em todos os critérios ativos, que são globais: teste que avalia busca os
@@ -453,7 +463,11 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
    orientador, relatórios gerados na ativação, avaliação com média da concedente (RF014),
    acompanhamento do orientador, guardas de conclusão no banco, registro de leitura de
    documento sensível (RF071–RF073) e medição de desempenho com volume.
-4. Atividades complementares e integralização.
+4. Atividades complementares e integralização (**concluída**, lote
+   `integration/fase-4-atividades-integralizacao`): cadastro com comprovante e detecção de
+   duplicata, análise pela coordenação, limites por categoria e total do curso calculados pelo
+   banco, aproveitamento de estágio não obrigatório, vedação de dupla contagem em quatro
+   barreiras e apuração de integralização por gatilho.
 5. Ocorrências, conclusão e conformidade: afastamento, prorrogação,
    rescisão, guarda documental, relatórios gerenciais.
 
@@ -468,7 +482,7 @@ Critérios de saída:
 | 1 | Um usuário de cada perfil autentica e enxerga apenas o que lhe cabe, comprovado por teste automatizado. Orientador, supervisor e concedente completam o critério quando `estagio` existir |
 | 2 | Um estágio percorre `EM_FORMALIZACAO → ATIVO`, e cada guarda de ativação é comprovada por teste que a viola isoladamente (`tests/db/estagio-formalizacao.test.ts`, `e2e/estagio.spec.ts`) |
 | 3 | Um estágio ativo percorre frequência, homologação, relatório, avaliação e acompanhamento, cada perfil no seu papel, e cada guarda de conclusão é comprovada isoladamente (`tests/db/frequencia.test.ts`, `tests/db/conclusao.test.ts`, `e2e/acompanhamento.spec.ts`) |
-| 4 | A vedação de dupla contagem (RN-36) tem teste que a força a falhar antes de passar |
+| 4 | A vedação de dupla contagem (RN-36) tem teste que a força a falhar antes de passar (`tests/db/dupla-contagem.test.ts`: falha no commit `4e5c4d0`, passa com a barreira em `df3500d`) |
 
 ## Documentação
 
