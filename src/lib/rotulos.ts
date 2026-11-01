@@ -94,3 +94,8 @@ export const OPERACAO_AUDITORIA: Record<string, string> = { INSERT: "criado", UP
 export function descreverOperacao(tabela: string, operacao: string): string {
   return `${TABELA_AUDITORIA[tabela] ?? tabela} ${OPERACAO_AUDITORIA[operacao] ?? operacao.toLowerCase()}`;
 }
+
+/** "11.222.333/0001-81" (também o CNPJ alfanumérico de 2026, mesmo formato). */
+export function formatarCnpj(cnpj: string): string {
+  return cnpj.length === 14 ? cnpj.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, "$1.$2.$3/$4-$5") : cnpj;
+}

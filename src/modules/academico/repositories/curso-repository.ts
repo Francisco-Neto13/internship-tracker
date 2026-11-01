@@ -1,4 +1,5 @@
-import { asc, count, eq } from "drizzle-orm";
+import { asc, count, eq, ilike, or, sql } from "drizzle-orm";
+import { padraoContendo } from "@/db/like";
 import { curso } from "@/db/schema";
 import type { Transaction } from "@/db/with-user";
 
@@ -23,12 +24,28 @@ const colunas = {
   cargaAtividadesComplementaresMinutos: curso.cargaAtividadesComplementaresMinutos,
 };
 
+export type CursoResumo = CursoRow & { estudantesMatriculados: number | null; estagiosAtivos: number | null };
+
 export async function findCursos(
   tx: Transaction,
-  filter: { limit: number; offset: number },
-): Promise<{ items: CursoRow[]; total: number }> {
-  const items = await tx.select(colunas).from(curso).orderBy(asc(curso.nome)).limit(filter.limit).offset(filter.offset);
-  const [{ total }] = await tx.select({ total: count() }).from(curso);
+  filter: { busca?: string; comContagens?: boolean; limit: number; offset: number },
+): Promise<{ items: CursoResumo[]; total: number }> {
+  const where = filter.busca ? or(ilike(curso.nome, padraoContendo(filter.busca)), ilike(curso.codigo, padraoContendo(filter.busca))) : undefined;
+  // Counts run under the caller's RLS: a course outside the coordination's reach counts zero
+  const items = await tx
+    .select({
+      ...colunas,
+      estudantesMatriculados: filter.comContagens
+        ? sql<number>`(select count(*) from public.estudante e where e.curso_id = "curso"."id" and e.situacao_academica = 'MATRICULADO')::int`
+        : sql<null>`null::int`,
+      estagiosAtivos: filter.comContagens ? sql<number>`(select count(*) from public.estagio g where g.curso_id = "curso"."id" and g.situacao = 'ATIVO')::int` : sql<null>`null::int`,
+    })
+    .from(curso)
+    .where(where)
+    .orderBy(asc(curso.nome))
+    .limit(filter.limit)
+    .offset(filter.offset);
+  const [{ total }] = await tx.select({ total: count() }).from(curso).where(where);
 
   return { items, total };
 }
