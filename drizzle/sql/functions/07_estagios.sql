@@ -219,6 +219,12 @@ begin
     raise exception 'TRANSICAO_ESTAGIO_INVALIDA: % para %', old.situacao, new.situacao using errcode = 'P0001';
   end if;
 
+  -- RF063 (DER §5.12): the early end only through a rescisao row, inserted in this transaction
+  if new.situacao = 'RESCINDIDO' and old.situacao <> 'RESCINDIDO'
+     and not exists (select 1 from public.rescisao r where r.estagio_id = new.id) then
+    raise exception 'RESCISAO_SEM_REGISTRO: a rescisão é registrada com motivo, data e solicitante' using errcode = 'P0001';
+  end if;
+
   -- DER §5.2 (RF043, RF045, D3): the conclusion waits for every guard of
   -- app.impedimentos_conclusao (functions/11_conclusao.sql), listed together in the message
   if old.situacao = 'ATIVO' and new.situacao = 'CONCLUIDO' then
@@ -476,7 +482,7 @@ as $$
       p_estudante_id is not null and p_estagio_id is null and p_concedente_id is null
       and p_estudante_id = app.estudante_atual_id()
     when p_estagio_id is null or p_concedente_id is not null or p_estudante_id is not null then false
-    when p_tipo in ('TCE', 'ADITIVO', 'ASSINATURA', 'DISPENSA_DURACAO') then app.coordena_curso_do_estagio(p_estagio_id)
+    when p_tipo in ('TCE', 'ADITIVO', 'ASSINATURA', 'DISPENSA_DURACAO', 'RESCISAO') then app.coordena_curso_do_estagio(p_estagio_id)
     -- RF059: the certificate of a leave, sent by the student or the coordination (sensitive, RN-38)
     when p_tipo = 'ATESTADO_AFASTAMENTO' then app.coordena_curso_do_estagio(p_estagio_id) or app.e_estudante_do_estagio(p_estagio_id)
     when p_tipo = 'APOLICE' then app.coordena_curso_do_estagio(p_estagio_id) or app.representa_concedente_do_estagio(p_estagio_id)
