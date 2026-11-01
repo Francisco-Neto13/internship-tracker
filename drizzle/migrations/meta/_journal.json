@@ -99,6 +99,13 @@
       "when": 1793536062859,
       "tag": "0013_afastamento",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793536856868,
+      "tag": "0014_rescisao",
+      "breakpoints": true
     }
   ]
 }
