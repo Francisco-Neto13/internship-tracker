@@ -135,7 +135,7 @@ describe("user listing under RLS (RF001, RF003)", () => {
   });
 
   it("lets the administrator filter by profile with the links in force", async () => {
-    const { items } = await listUsuarios(identityOf(s.administrador.id), { page: 1, limit: 100, perfil: "COORDENACAO" });
+    const { items } = await listUsuarios(identityOf(s.administrador.id), { page: 1, limit: 100, perfil: "COORDENACAO", busca: s.coordenadorA.email });
 
     const coordenador = items.find((item) => item.id === s.coordenadorA.id);
     expect(coordenador?.perfis).toEqual([expect.objectContaining({ perfil: "COORDENACAO", cursoId: s.cursoA.id })]);

@@ -8,7 +8,7 @@ const filtros = z
     tabela: z.string().trim().min(1).max(63).optional(),
     registro_id: z.string().trim().min(1).max(100).optional(),
     usuario_id: z.uuid().optional(),
-    operacao: z.enum(["INSERT", "UPDATE", "DELETE"]).optional(),
+    operacao: z.enum(["INSERT", "UPDATE", "DELETE", "LEITURA"]).optional(),
     de: z.iso.date().optional(),
     ate: z.iso.date().optional(),
   })

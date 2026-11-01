@@ -17,18 +17,25 @@ services:
       timeout: 3s
       retries: 30
 
-  minio:
-    image: minio/minio
-    command: server /data --console-address ":9001"
+  # Local S3 API for the private bucket (D8, RNF-06); production uses Cloudflare R2.
+  # SeaweedFS replaced MinIO, whose community edition stopped publishing images (2025).
+  # Tag pinned: change it on purpose, after running npm run storage:check.
+  storage:
+    image: chrislusf/seaweedfs:4.06
+    command: mini
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      AWS_ACCESS_KEY_ID: storage-local
+      AWS_SECRET_ACCESS_KEY: storage-local-secret
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "8333:8333"
     volumes:
-      - minio_data:/data
+      - storage_data:/data
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "8333"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
 
 volumes:
   postgres_data:
-  minio_data:
+  storage_data:

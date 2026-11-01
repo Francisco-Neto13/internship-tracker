@@ -6,7 +6,9 @@ import { eq } from "drizzle-orm";
 import { getAuthDatabase } from "@/db/client";
 import { conta, limiteRequisicao, sessao, usuario, verificacao } from "@/db/schema";
 import { senhaProvisoriaExpirada } from "@/modules/acesso/domain/senha-provisoria";
+import { opcoesEnderecoIp, urlRangeSenhasVazadas, verificacaoSenhaVazadaAtiva } from "./auth-options";
 import { hashPassword, verifyPassword } from "./password";
+import { senhasVazadas } from "./senhas-vazadas";
 
 // QA: an idle session expires after 30 minutes. Each request older than a minute
 // pushes the expiry forward, so only inactivity ends the session.
@@ -14,6 +16,9 @@ const SESSION_IDLE_SECONDS = 30 * 60;
 const SESSION_REFRESH_SECONDS = 60;
 
 function createAuth() {
+  // Fail at start-up, not at the first password change, on a misconfigured environment
+  verificacaoSenhaVazadaAtiva(process.env);
+  urlRangeSenhasVazadas(process.env);
   const database = getAuthDatabase();
 
   return betterAuth({
@@ -24,7 +29,26 @@ function createAuth() {
     }),
     advanced: {
       database: { generateId: "uuid" },
+      // RF002: the sign-in rate limit is keyed by a client address only a trusted proxy sets
+      ipAddress: opcoesEnderecoIp(process.env),
     },
+    // Account routes the domain already covers, or the project does not use, stay closed over
+    // HTTP: name and e-mail change through RF001 (audited, administrator only), the password
+    // through POST /api/v1/auth/senha, recovery through the temporary password. Server-side
+    // calls (auth.api.*) are not affected.
+    disabledPaths: [
+      "/update-user",
+      "/change-email",
+      "/change-password",
+      "/delete-user",
+      "/request-password-reset",
+      "/reset-password",
+      "/verify-password",
+      "/send-verification-email",
+      "/verify-email",
+      "/link-social",
+      "/unlink-account",
+    ],
     // Tables and columns keep the Portuguese domain names (AGENTS.md conventions)
     user: {
       modelName: "usuario",
@@ -123,7 +147,20 @@ function createAuth() {
         },
       },
     },
-    plugins: [nextCookies()],
+    plugins: [
+      // NIST SP 800-63B-4 3.1.1.2: new passwords are compared against breach corpora
+      // (src/lib/senhas-vazadas.ts). Getters re-read the environment on every check.
+      senhasVazadas({
+        get ativa() {
+          return verificacaoSenhaVazadaAtiva(process.env);
+        },
+        get urlRange() {
+          return urlRangeSenhasVazadas(process.env);
+        },
+        mensagem: "Senha encontrada em vazamentos de dados",
+      }),
+      nextCookies(),
+    ],
   });
 }
 

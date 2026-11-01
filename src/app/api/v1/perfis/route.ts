@@ -9,6 +9,7 @@ export const GET = authenticatedRoute(async () =>
       rotulo: entrada.rotulo,
       alcance: entrada.alcance,
       exige_curso: entrada.exigeCurso,
+      exige_concedente: entrada.exigeConcedente,
       disponivel: entrada.disponivel,
     })),
   ),

@@ -10,7 +10,15 @@ import { mensagemDeErro, PerfisCampo, type OpcaoPerfil, type VinculoEscolhido } 
 // RF001: the temporary password is shown once, right after creation, to be handed over
 // out of band (RF002). It is not stored anywhere readable and cannot be shown again.
 
-export function UsuarioForm({ catalogo, cursos }: { catalogo: OpcaoPerfil[]; cursos: { id: string; nome: string }[] }) {
+export function UsuarioForm({
+  catalogo,
+  cursos,
+  concedentes,
+}: {
+  catalogo: OpcaoPerfil[];
+  cursos: { id: string; nome: string }[];
+  concedentes: { id: string; nome: string }[];
+}) {
   const router = useRouter();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -65,7 +73,7 @@ export function UsuarioForm({ catalogo, cursos }: { catalogo: OpcaoPerfil[]; cur
           <Input id="usuario-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         </div>
         <div className="sm:col-span-2">
-          <PerfisCampo catalogo={catalogo} cursos={cursos} value={perfis} onChange={setPerfis} />
+          <PerfisCampo catalogo={catalogo} cursos={cursos} concedentes={concedentes} value={perfis} onChange={setPerfis} />
         </div>
         {erro && (
           <p role="alert" className="text-sm text-status-danger-text sm:col-span-2">

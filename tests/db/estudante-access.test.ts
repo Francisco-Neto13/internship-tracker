@@ -8,8 +8,9 @@ import { createAccessScenario, createUsuario, grantPerfil, identityOf } from "./
 
 type Scenario = Awaited<ReturnType<typeof createAccessScenario>>;
 
-async function visibleIds(userId: string) {
-  const { items } = await listEstudantes(identityOf(userId), { page: 1, limit: 100 });
+// Filtered by course when given: the shared test database grows past one page of students
+async function visibleIds(userId: string, cursoId?: string) {
+  const { items } = await listEstudantes(identityOf(userId), { page: 1, limit: 100, cursoId });
   return items.map((item) => item.id);
 }
 
@@ -37,9 +38,8 @@ describe("estudante visibility by profile and link (RF003, RF005, RN-37)", () =>
   });
 
   it("lets the administrator see students of every course", async () => {
-    const ids = await visibleIds(s.administrador.id);
-
-    expect(ids).toEqual(expect.arrayContaining([s.estudanteA.id, s.estudanteB.id]));
+    expect(await visibleIds(s.administrador.id, s.cursoA.id)).toEqual([s.estudanteA.id]);
+    expect(await visibleIds(s.administrador.id, s.cursoB.id)).toEqual([s.estudanteB.id]);
   });
 
   it("shows nothing to a user without a profile", async () => {

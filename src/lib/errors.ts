@@ -1,7 +1,8 @@
 // Business errors carry a stable code the interface can branch on without parsing text.
 // The kind stays HTTP-agnostic; src/lib/api.ts maps it to a status code.
 
-export type DomainErrorKind = "CONFLICT" | "FORBIDDEN" | "NOT_FOUND" | "UNPROCESSABLE";
+/** UNAVAILABLE: a dependency the rule needs is down, and the safe answer is to refuse for now. */
+export type DomainErrorKind = "CONFLICT" | "FORBIDDEN" | "NOT_FOUND" | "UNPROCESSABLE" | "UNAVAILABLE";
 
 export type DomainErrorDetail = {
   code?: string;

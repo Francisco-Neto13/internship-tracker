@@ -4,16 +4,15 @@ import type { Perfil } from "../schemas/perfil";
 // Profile links of a user (RF001, RF003, RN-37). Pure rules: the service loads and
 // persists, the database enforces the same constraints again (vinculo_perfil checks).
 
-export type VinculoDesejado = { perfil: Perfil; cursoId: string | null };
+export type VinculoDesejado = { perfil: Perfil; cursoId: string | null; concedenteId?: string | null };
 export type VinculoAtual = VinculoDesejado & { id: string };
 
 // Supervisor and concedente are scoped by the concedente they belong to (RF031,
-// DER-LOGICO §4.1). That column arrives with the concedente table in Fase 2; a link
-// created now would violate the check constraint that migration adds.
+// DER-LOGICO §4.1); the database checks the same rule (vinculo_perfil_concedente_exige_concedente)
 const PERFIS_QUE_EXIGEM_CONCEDENTE: readonly Perfil[] = ["SUPERVISOR", "CONCEDENTE"];
 
 function chave(vinculo: VinculoDesejado) {
-  return `${vinculo.perfil}:${vinculo.cursoId ?? ""}`;
+  return `${vinculo.perfil}:${vinculo.cursoId ?? ""}:${vinculo.concedenteId ?? ""}`;
 }
 
 /** Rejects an invalid set of links, reporting every problem at once. */
@@ -24,12 +23,21 @@ export function validarVinculos(vinculos: VinculoDesejado[]): void {
   vinculos.forEach((vinculo, indice) => {
     const field = `perfis.${indice}`;
 
-    if (PERFIS_QUE_EXIGEM_CONCEDENTE.includes(vinculo.perfil)) {
+    const exigeConcedente = PERFIS_QUE_EXIGEM_CONCEDENTE.includes(vinculo.perfil);
+    if (exigeConcedente && !vinculo.concedenteId) {
       detalhes.push({
         code: "PERFIL_EXIGE_CONCEDENTE",
-        field,
-        issue: `O perfil ${vinculo.perfil} depende do cadastro de concedentes, previsto para a Fase 2`,
+        field: `${field}.concedente_id`,
+        issue: `O perfil ${vinculo.perfil} é sempre de uma concedente`,
         requisito: "RF031",
+      });
+    }
+    if (!exigeConcedente && vinculo.concedenteId) {
+      detalhes.push({
+        code: "CONCEDENTE_SO_PARA_SUPERVISOR_E_CONCEDENTE",
+        field: `${field}.concedente_id`,
+        issue: "Só os perfis de supervisor e de concedente são vinculados a uma concedente",
+        requisito: "RN-37",
       });
     }
     if (vinculo.perfil === "COORDENACAO" && !vinculo.cursoId) {

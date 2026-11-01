@@ -2,6 +2,7 @@ import { withUser } from "@/db/with-user";
 import { alterarSenhaPropria } from "@/lib/credenciais";
 import { DomainError } from "@/lib/errors";
 import type { Identity } from "@/lib/identity";
+import { validarSenhaContextual } from "../domain/senha-contextual";
 import { senhaProvisoriaExpirada } from "../domain/senha-provisoria";
 import { concluirTrocaSenha } from "../repositories/usuario-repository";
 
@@ -16,10 +17,13 @@ import { concluirTrocaSenha } from "../repositories/usuario-repository";
  */
 export async function trocarSenha(
   identity: Identity,
-  usuario: { trocaSenhaObrigatoria: boolean; senhaProvisoriaExpiraEm: Date | null },
+  usuario: { email: string; nome: string; trocaSenhaObrigatoria: boolean; senhaProvisoriaExpiraEm: Date | null },
   requestHeaders: Headers,
   input: { senhaAtual: string; novaSenha: string },
 ): Promise<void> {
+  // Context-specific words first (no network); breach corpora next, inside the library
+  validarSenhaContextual(input.novaSenha, usuario);
+
   if (senhaProvisoriaExpirada(usuario)) {
     throw new DomainError({
       code: "SENHA_PROVISORIA_EXPIRADA",

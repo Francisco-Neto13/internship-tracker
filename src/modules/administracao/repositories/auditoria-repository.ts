@@ -30,7 +30,7 @@ export type FiltroAuditoria = {
   tabela?: string;
   registroId?: string;
   usuarioId?: string;
-  operacao?: "INSERT" | "UPDATE" | "DELETE";
+  operacao?: "INSERT" | "UPDATE" | "DELETE" | "LEITURA";
   /** YYYY-MM-DD, inclusive */
   de?: string;
   /** YYYY-MM-DD, inclusive */

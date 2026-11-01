@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getIdentity } from "@/lib/session";
 import { listCursos } from "@/modules/academico/services/curso-service";
@@ -10,7 +11,15 @@ type Curso = Awaited<ReturnType<typeof listCursos>>["items"][number];
 
 const COLUNAS: DataTableColumn<Curso>[] = [
   { chave: "codigo", cabecalho: "Código", celula: (curso) => <span className="font-mono text-navy-900">{curso.codigo}</span> },
-  { chave: "nome", cabecalho: "Nome", celula: (curso) => <span className="text-navy-900">{curso.nome}</span> },
+  {
+    chave: "nome",
+    cabecalho: "Nome",
+    celula: (curso) => (
+      <Link href={`/administracao/cursos/${curso.id}`} className="text-navy-900 underline-offset-4 hover:underline">
+        {curso.nome}
+      </Link>
+    ),
+  },
   {
     chave: "estagio",
     cabecalho: "Estágio mínimo",

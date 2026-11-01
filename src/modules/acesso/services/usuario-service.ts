@@ -58,6 +58,14 @@ function translateWriteError(error: unknown, acao: string): unknown {
       requisito: "RF001",
     });
   }
+  if (isForeignKeyViolation(error, "vinculo_perfil_concedente_id_concedente_id_fk")) {
+    return new DomainError({
+      code: "CONCEDENTE_INEXISTENTE",
+      kind: "UNPROCESSABLE",
+      message: "A concedente informada para o vínculo não existe.",
+      requisito: "RF031",
+    });
+  }
   if (isForeignKeyViolation(error, "vinculo_perfil_curso_id_curso_id_fk")) {
     return new DomainError({
       code: "CURSO_INEXISTENTE",

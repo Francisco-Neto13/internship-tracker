@@ -71,7 +71,12 @@ export function TrocarSenhaForm({ obrigatoria }: { obrigatoria: boolean }) {
           value={nova}
           onChange={(event) => setNova(event.target.value)}
         />
-        <p className="text-xs text-navy-900/60">Ao menos {MINIMO} caracteres. Uma frase longa é mais fácil de lembrar.</p>
+        {/* NIST SP 800-63B-4 3.1.1.2: the verifier SHALL offer guidance to choose a strong password */}
+        <p className="text-xs text-navy-900/60">
+          Ao menos {MINIMO} caracteres; espaços e acentos valem. Prefira uma frase só sua, fácil de lembrar. Não use o seu
+          nome, o seu e-mail, o nome do sistema nem uma senha que você já usa em outro lugar: senhas que aparecem em
+          vazamentos de dados são recusadas.
+        </p>
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="senha-confirmacao">Confirme a nova senha</Label>

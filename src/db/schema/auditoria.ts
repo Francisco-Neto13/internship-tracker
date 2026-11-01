@@ -2,7 +2,9 @@ import { sql } from "drizzle-orm";
 import { bigint, check, index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 // Append-only trail written by the app.registrar_auditoria() trigger, never by
-// application code (RF065, RN-28). usuario_id has no FK so the trail stands alone.
+// application code (RF065, RN-28). usuario_id has no FK so the trail stands alone. LEITURA
+// rows record each read of a sensitive document (RF072, RN-38), written only by
+// app.registrar_leitura_documento.
 export const auditoria = pgTable(
   "auditoria",
   {
@@ -22,6 +24,6 @@ export const auditoria = pgTable(
     index("auditoria_tabela_registro_idx").on(t.tabela, t.registroId),
     index("auditoria_usuario_id_idx").on(t.usuarioId),
     index("auditoria_ocorrido_em_idx").on(t.ocorridoEm),
-    check("auditoria_operacao_valida", sql`${t.operacao} in ('INSERT', 'UPDATE', 'DELETE')`),
+    check("auditoria_operacao_valida", sql`${t.operacao} in ('INSERT', 'UPDATE', 'DELETE', 'LEITURA')`),
   ],
 );

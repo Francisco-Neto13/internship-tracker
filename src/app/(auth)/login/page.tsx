@@ -61,7 +61,7 @@ export default async function LoginPage() {
           </ul>
 
           <p className="text-xs text-white/30">
-            Project Lab · 6 perfis · 36 regras de negócio · 70 requisitos funcionais
+            Project Lab · 6 perfis · 37 regras de negócio · 73 requisitos funcionais
           </p>
         </div>
       </aside>

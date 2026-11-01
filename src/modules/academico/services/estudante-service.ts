@@ -1,7 +1,8 @@
-import { isForeignKeyViolation, isRlsViolation, isUniqueViolation } from "@/db/errors";
+import { isForeignKeyViolation, isRlsViolation, isTriggerRule, isUniqueViolation } from "@/db/errors";
 import { withUser } from "@/db/with-user";
 import { DomainError } from "@/lib/errors";
 import type { Identity } from "@/lib/identity";
+import { validarTransicaoSituacaoAcademica } from "../domain/situacao-academica";
 import {
   findEstudanteById,
   findEstudantes,
@@ -66,11 +67,13 @@ export async function updateEstudanteDados(
 ): Promise<EstudanteRow> {
   try {
     return await withUser(identity, async (tx) => {
+      const atual = await findEstudanteById(tx, id);
+      if (!atual) throw naoEncontrado();
+      if (input.situacaoAcademica) validarTransicaoSituacaoAcademica(atual.situacaoAcademica, input.situacaoAcademica);
+
       const atualizado = await updateEstudante(tx, id, input);
-      const row = await findEstudanteById(tx, id);
-      if (!row) throw naoEncontrado();
       if (!atualizado) throw acessoNegado("editar este estudante");
-      return row;
+      return (await findEstudanteById(tx, id))!;
     });
   } catch (error) {
     throw translateWriteError(error, "mover o estudante para este curso");
@@ -88,6 +91,15 @@ function acessoNegado(acao: string) {
 
 function translateWriteError(error: unknown, acao: string): unknown {
   if (isRlsViolation(error)) return acessoNegado(acao);
+  // Second barrier: the domain check above runs first, so this only fires on a race
+  if (isTriggerRule(error, "TRANSICAO_SITUACAO_INVALIDA")) {
+    return new DomainError({
+      code: "TRANSICAO_SITUACAO_INVALIDA",
+      kind: "CONFLICT",
+      message: "A situação acadêmica não pode passar para o valor informado.",
+      requisito: "RF005",
+    });
+  }
   if (isUniqueViolation(error, "estudante_matricula_unique")) {
     return new DomainError({
       code: "MATRICULA_DUPLICADA",

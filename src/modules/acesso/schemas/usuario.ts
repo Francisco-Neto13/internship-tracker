@@ -12,6 +12,7 @@ const email = z.email().trim().toLowerCase().max(254);
 export const vinculoBodySchema = z.object({
   perfil: z.enum(perfil.enumValues),
   curso_id: z.uuid().nullish(),
+  concedente_id: z.uuid().nullish(),
 });
 
 const perfis = z.array(vinculoBodySchema).min(1).max(20);
@@ -37,5 +38,9 @@ export const replacePerfisBodySchema = z.object({ perfis });
 export const idParamSchema = z.object({ id: z.uuid() });
 
 export function toVinculos(body: z.infer<typeof perfis>) {
-  return body.map((vinculo) => ({ perfil: vinculo.perfil, cursoId: vinculo.curso_id ?? null }));
+  return body.map((vinculo) => ({
+    perfil: vinculo.perfil,
+    cursoId: vinculo.curso_id ?? null,
+    concedenteId: vinculo.concedente_id ?? null,
+  }));
 }

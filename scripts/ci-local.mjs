@@ -16,7 +16,7 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -124,9 +124,32 @@ const steps = [
     },
   },
   { name: "Lint", run: () => run("npm", ["run", "lint"]) },
-  { name: "Typecheck", run: () => run("npm", ["run", "typecheck"]) },
+  {
+    name: "Typecheck",
+    run: () => {
+      // tsconfig includes the route types next build generates. Left over from a build on
+      // another branch, they point at routes this checkout lacks; a clean clone has none.
+      for (const gerado of [".next/types", ".next/dev/types"]) {
+        rmSync(path.join(ROOT, gerado), { recursive: true, force: true });
+      }
+      return run("npm", ["run", "typecheck"]);
+    },
+  },
   { name: "Unit tests", run: () => run("npx", ["vitest", "run", "--project", "unit"], { env: { TZ: "UTC" } }) },
-  { name: "Build", run: () => run("npm", ["run", "build"]) },
+  {
+    name: "Build",
+    run: () => {
+      // next build points next-env.d.ts at .next/types; the committed file points at
+      // .next/dev/types (next dev). Put it back, or the tree stays dirty and batch:pr refuses.
+      const nextEnv = path.join(ROOT, "next-env.d.ts");
+      const original = existsSync(nextEnv) ? readFileSync(nextEnv, "utf8") : null;
+      try {
+        return run("npm", ["run", "build"]);
+      } finally {
+        if (original !== null && readFileSync(nextEnv, "utf8") !== original) writeFileSync(nextEnv, original);
+      }
+    },
+  },
   {
     name: "Database tests",
     docker: true,
@@ -183,6 +206,18 @@ const steps = [
   },
   { name: "Seed development database", docker: true, run: () => run("npm", ["run", "db:seed"]) },
   {
+    name: "Prepare storage",
+    docker: true,
+    // D8: the private bucket the upload flow and the e2e use (SeaweedFS locally, R2 in production)
+    run: () => {
+      const subir = run("docker", ["compose", "up", "-d", "storage", "--wait"]);
+      if (subir.status !== 0) return subir;
+      const preparar = run("npm", ["run", "storage:init"]);
+      if (preparar.status !== 0) return preparar;
+      return run("npm", ["run", "storage:check"]);
+    },
+  },
+  {
     name: "End-to-end tests",
     docker: true,
     // CI=1 makes Playwright serve the production build from the Build step
@@ -190,8 +225,18 @@ const steps = [
       if (await portInUse(3000)) {
         return fail("A porta 3000 esta ocupada (npm run dev aberto?). Pare o servidor: o e2e sobe o build de producao.");
       }
-      return run("npm", ["run", "test:e2e"], { env: { CI: "1" } });
+      // The production build refuses to start without a trusted client-address source
+      // (src/lib/auth-options.ts); the test server sits behind no proxy, as in ci.yml
+      return run("npm", ["run", "test:e2e"], {
+        env: { CI: "1", AUTH_IP_HEADERS: process.env.AUTH_IP_HEADERS ?? "x-forwarded-for" },
+      });
     },
+  },
+  {
+    name: "HIBP live check (non-blocking)",
+    // Reports only: the e2e uses a local stub, and an outage of the real service must not
+    // fail the run (scripts/check-hibp-live.mjs exits 0 unless HIBP_LIVE_STRICT=1)
+    run: () => run("node", ["scripts/check-hibp-live.mjs"]),
   },
   {
     name: "Mirror of ci.yml",

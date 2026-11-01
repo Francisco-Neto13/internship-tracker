@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getIdentity } from "@/lib/session";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { catalogoPerfis } from "@/modules/acesso/domain/catalogo-perfis";
+import { listConcedentes } from "@/modules/concedentes/services/concedente-service";
 import { ROTULO_PERFIL } from "@/modules/acesso/schemas/perfil";
 import { listUsuarios, type UsuarioComPerfis } from "@/modules/acesso/services/usuario-service";
 import { DataTable, type DataTableColumn } from "@/shared/ui/data-table";
@@ -44,9 +45,10 @@ export default async function UsuariosPage() {
   const identity = await getIdentity();
   if (!identity) redirect("/login");
 
-  const [{ items }, { items: cursos }] = await Promise.all([
+  const [{ items }, { items: cursos }, { items: concedentes }] = await Promise.all([
     listUsuarios(identity, { page: 1, limit: 100 }),
     listCursos(identity, { page: 1, limit: 100 }),
+    listConcedentes(identity, { page: 1, limit: 100, situacao: "ATIVA" }),
   ]);
 
   return (
@@ -65,7 +67,11 @@ export default async function UsuariosPage() {
 
       <div>
         <h2 className="mb-3 text-sm font-medium text-navy-900/60">Novo usuário</h2>
-        <UsuarioForm catalogo={catalogoPerfis()} cursos={cursos.map((curso) => ({ id: curso.id, nome: curso.nome }))} />
+        <UsuarioForm
+          catalogo={catalogoPerfis()}
+          cursos={cursos.map((curso) => ({ id: curso.id, nome: curso.nome }))}
+          concedentes={concedentes.map((concedente) => ({ id: concedente.id, nome: concedente.razaoSocial }))}
+        />
       </div>
     </section>
   );

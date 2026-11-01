@@ -48,7 +48,7 @@ describe("validarVinculos (RF001, RN-37)", () => {
     ]);
   });
 
-  it("holds supervisor and concedente until the concedente table exists (Fase 2)", () => {
+  it("requires a concedente for supervisor and concedente links (RF031)", () => {
     expect(
       codigosDe(() =>
         validarVinculos([
@@ -57,6 +57,28 @@ describe("validarVinculos (RF001, RN-37)", () => {
         ]),
       ),
     ).toEqual(["PERFIL_EXIGE_CONCEDENTE", "PERFIL_EXIGE_CONCEDENTE"]);
+    expect(() =>
+      validarVinculos([
+        { perfil: "SUPERVISOR", cursoId: null, concedenteId: CURSO },
+        { perfil: "CONCEDENTE", cursoId: null, concedenteId: CURSO },
+      ]),
+    ).not.toThrow();
+  });
+
+  it("rejects a concedente on any other profile", () => {
+    expect(codigosDe(() => validarVinculos([{ perfil: "ESTUDANTE", cursoId: null, concedenteId: CURSO }]))).toEqual([
+      "CONCEDENTE_SO_PARA_SUPERVISOR_E_CONCEDENTE",
+    ]);
+  });
+
+  it("treats the same profile at two concedentes as two links", () => {
+    const outra = "00000000-0000-4000-8000-000000000009";
+    expect(() =>
+      validarVinculos([
+        { perfil: "SUPERVISOR", cursoId: null, concedenteId: CURSO },
+        { perfil: "SUPERVISOR", cursoId: null, concedenteId: outra },
+      ]),
+    ).not.toThrow();
   });
 
   it("rejects the same link twice and reports every problem at once", () => {
