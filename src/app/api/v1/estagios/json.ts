@@ -1,6 +1,7 @@
 import { minutosParaHoras } from "@/lib/horas";
 import type { AditivoRow } from "@/modules/estagios/repositories/aditivo-repository";
 import type { AfastamentoRow } from "@/modules/estagios/repositories/afastamento-repository";
+import type { RescisaoRow } from "@/modules/estagios/repositories/rescisao-repository";
 import type { EstagioRow } from "@/modules/estagios/repositories/estagio-repository";
 import type { ApoliceRow, AssinaturaRow, PlanoRow, ResponsavelRow } from "@/modules/estagios/repositories/formalizacao-repository";
 
@@ -139,6 +140,21 @@ export function afastamentoJson(row: AfastamentoRow) {
     substitui_afastamento_id: row.substituiAfastamentoId,
     justificativa_substituicao: row.justificativaSubstituicao,
     registrado_por_usuario_id: row.registradoPorUsuarioId,
+    criado_em: instante(row.criadoEm),
+  };
+}
+
+export function rescisaoJson(row: RescisaoRow) {
+  return {
+    id: row.id,
+    estagio_id: row.estagioId,
+    data_rescisao: row.dataRescisao,
+    solicitante: row.solicitante,
+    motivo: row.motivo,
+    horas_cumpridas_consolidadas: minutosParaHoras(row.minutosCumpridosConsolidados),
+    horas_homologadas_consolidadas: minutosParaHoras(row.minutosHomologadosConsolidados),
+    documento_id: row.documentoId,
+    decidido_por_usuario_id: row.decididoPorUsuarioId,
     criado_em: instante(row.criadoEm),
   };
 }

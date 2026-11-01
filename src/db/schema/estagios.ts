@@ -364,3 +364,37 @@ export const afastamento = pgTable(
     check("afastamento_substituicao_justificada", sql`${t.substituiAfastamentoId} is null or ${t.justificativaSubstituicao} is not null`),
   ],
 );
+
+export const parteRescisao = pgEnum("parte_rescisao", ["ESTUDANTE", "CONCEDENTE", "INSTITUICAO"]);
+
+// RF063, RF064, RN-27 (DER §4.4, §5.12): the early end of an active internship, recorded by the
+// coordination at the request of one of the parties. The hours up to the date are consolidated
+// in the row; entries after it are cancelled in the same transaction. Immutable.
+export const rescisao = pgTable(
+  "rescisao",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    estagioId: uuid("estagio_id")
+      .notNull()
+      .unique()
+      .references(() => estagio.id),
+    dataRescisao: date("data_rescisao").notNull(),
+    solicitante: parteRescisao("solicitante").notNull(),
+    motivo: text("motivo").notNull(),
+    // Set by the trigger (app.validar_rescisao)
+    minutosCumpridosConsolidados: integer("minutos_cumpridos_consolidados").notNull(),
+    minutosHomologadosConsolidados: integer("minutos_homologados_consolidados").notNull(),
+    documentoId: uuid("documento_id").references((): AnyPgColumn => documento.id),
+    decididoPorUsuarioId: uuid("decidido_por_usuario_id")
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: criadoEm(),
+  },
+  (t) => [
+    index("rescisao_decidido_por_idx").on(t.decididoPorUsuarioId),
+    index("rescisao_documento_idx").on(t.documentoId),
+    check("rescisao_cumpridos_validos", sql`${t.minutosCumpridosConsolidados} >= 0`),
+    check("rescisao_homologados_validos", sql`${t.minutosHomologadosConsolidados} between 0 and ${t.minutosCumpridosConsolidados}`),
+    check("rescisao_motivo_informado", sql`length(trim(${t.motivo})) > 0`),
+  ],
+);

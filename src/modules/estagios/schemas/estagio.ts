@@ -164,4 +164,12 @@ export function toNovoAfastamento(body: z.infer<typeof afastamentoBodySchema>) {
   return { tipo: body.tipo, descricao: body.descricao, dataInicio: body.data_inicio, dataFim: body.data_fim, documentoId: body.documento_id };
 }
 
+// RF063, RN-27: rescission requested by one of the parties, recorded by the coordination
+export const rescisaoBodySchema = z.object({
+  data_rescisao: z.iso.date(),
+  solicitante: z.enum(["ESTUDANTE", "CONCEDENTE", "INSTITUICAO"]),
+  motivo: z.string().trim().min(1).max(2000),
+  documento_id: z.uuid().nullable().default(null),
+});
+
 export const idParamSchema = z.object({ id: z.uuid() });

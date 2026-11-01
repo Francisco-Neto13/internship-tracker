@@ -23,6 +23,10 @@ const REGRAS_DE_GATILHO: { codigo: string; kind: DomainErrorKind; mensagem: stri
   { codigo: "AFASTAMENTO_FORA_DO_PERIODO", kind: "UNPROCESSABLE", mensagem: "O afastamento fica dentro do período do estágio.", requisito: "RF059" },
   { codigo: "AFASTAMENTO_COM_LANCAMENTOS", kind: "CONFLICT", mensagem: "Há lançamentos de frequência no período: corrija-os ou cancele-os antes.", requisito: "RF030" },
   { codigo: "SUBSTITUICAO_AFASTAMENTO_INVALIDA", kind: "CONFLICT", mensagem: "Só um afastamento válido do mesmo estágio é corrigido.", requisito: "RN-28" },
+  { codigo: "RESCISAO_RESTRITA", kind: "FORBIDDEN", mensagem: "Só a coordenação do curso registra a rescisão.", requisito: "RF063" },
+  { codigo: "RESCISAO_DATA_INVALIDA", kind: "UNPROCESSABLE", mensagem: "A data da rescisão fica entre o início do estágio e hoje.", requisito: "RN-27" },
+  { codigo: "RESCISAO_COM_HOMOLOGADOS_POSTERIORES", kind: "CONFLICT", mensagem: "Há horas homologadas depois da data da rescisão: a coordenação as substitui antes.", requisito: "RF064" },
+  { codigo: "RESCISAO_SEM_REGISTRO", kind: "CONFLICT", mensagem: "A rescisão é registrada com motivo, data e solicitante.", requisito: "RF063" },
   { codigo: "DOCUMENTO_INVALIDO", kind: "UNPROCESSABLE", mensagem: "Informe o atestado de afastamento enviado para este estágio.", requisito: "RF059" },
 ];
 
@@ -33,6 +37,7 @@ const UNICOS: Record<string, { codigo: string; mensagem: string; requisito: stri
   plano_uma_versao_em_elaboracao: { codigo: "PLANO_EM_ELABORACAO", mensagem: "Já existe uma versão do plano em elaboração.", requisito: "RF016" },
   aditivo_um_pendente: { codigo: "ADITIVO_PENDENTE", mensagem: "Já existe um aditivo aguardando assinaturas.", requisito: "RF020" },
   apolice_seguro_substitui_apolice_id_unique: { codigo: "APOLICE_JA_SUBSTITUIDA", mensagem: "Esta apólice já foi substituída.", requisito: "RF018" },
+  rescisao_estagio_id_unique: { codigo: "ESTAGIO_JA_RESCINDIDO", mensagem: "O estágio já foi rescindido.", requisito: "RF063" },
   afastamento_substitui_afastamento_id_unique: { codigo: "AFASTAMENTO_JA_SUBSTITUIDO", mensagem: "Este afastamento já foi substituído.", requisito: "RN-28" },
 };
 
