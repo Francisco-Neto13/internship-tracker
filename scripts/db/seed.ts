@@ -132,6 +132,27 @@ const CRITERIOS = [
   ["INICIATIVA", "Iniciativa e autonomia"],
 ] as const;
 
+// RF048, RN-19: categories of complementary activities and their limits in Engenharia de
+// Software (200 h in total); Extensão accepts a non-mandatory internship (RN-18, RF046)
+const CATEGORIAS: [nome: string, limiteHoras: number, admiteEstagio: boolean][] = [
+  ["Ensino", 60, false],
+  ["Pesquisa", 60, false],
+  ["Extensão", 80, true],
+  ["Representação estudantil", 20, false],
+  ["Cursos livres", 40, false],
+];
+
+async function upsertCategorias(cursoId: string) {
+  for (const [nome, limiteHoras, admiteEstagio] of CATEGORIAS) {
+    await db.insert(schema.categoriaAtividade).values({ nome }).onConflictDoNothing();
+    const [categoria] = await db.select().from(schema.categoriaAtividade).where(eq(schema.categoriaAtividade.nome, nome));
+    await db
+      .insert(schema.exigenciaCategoria)
+      .values({ cursoId, categoriaId: categoria.id, limiteMinutos: limiteHoras * 60, admiteEstagioNaoObrigatorio: admiteEstagio })
+      .onConflictDoNothing({ target: [schema.exigenciaCategoria.cursoId, schema.exigenciaCategoria.categoriaId] });
+  }
+}
+
 async function upsertCriterios() {
   for (const [ordem, [codigo, descricao]] of CRITERIOS.entries()) {
     await db
@@ -267,6 +288,7 @@ async function main() {
   await ensurePerfil(orientador.id, "PROFESSOR_ORIENTADOR");
 
   await upsertCriterios();
+  await upsertCategorias(software.id);
   const [estudanteAna] = await db.select().from(schema.estudante).where(eq(schema.estudante.usuarioId, ana.id));
   await upsertEstagioAtivo({
     estudanteId: estudanteAna.id,
@@ -288,6 +310,7 @@ async function main() {
   console.log("  rh@exemplo-software.local              CONCEDENTE (Exemplo Software, convênio CV-2026-0001)");
   console.log("  supervisor@exemplo-software.local      SUPERVISOR (Exemplo Software)");
   console.log("Ana has an ATIVO internship since 2026-08-03 with August entries (first two weeks homologated).");
+  console.log("Engenharia de Software has the RN-19 activity categories with their limits (200 h in total).");
 }
 
 main()
