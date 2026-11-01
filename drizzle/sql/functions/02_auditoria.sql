@@ -27,7 +27,8 @@ insert into app.coluna_sensivel (tabela, coluna, motivo) values
   ('divergencia_carga_horaria', 'parecer', 'Análise do orientador sobre a divergência (RF028)'),
   ('avaliacao_desempenho', 'observacoes', 'Apreciação da concedente sobre o estudante (RF042)'),
   ('resposta_avaliacao', 'comentario', 'Comentário por critério da avaliação (RF042)'),
-  ('acompanhamento', 'observacoes', 'Registro do orientador sobre visita, contato ou reunião (RF033)');
+  ('acompanhamento', 'observacoes', 'Registro do orientador sobre visita, contato ou reunião (RF033)'),
+  ('analise_atividade', 'motivo', 'Motivo da recusa ou orientação de complementação (RF054); o administrador não lê M06');
 
 create or replace function app.registrar_auditoria()
 returns trigger
