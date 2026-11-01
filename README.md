@@ -144,6 +144,9 @@ O seed cria usuários com a senha `senha-dev-internship`:
 | `supervisor@exemplo-software.local` | Supervisor da mesma concedente |
 | `orientador@internship.local` | Professor orientador |
 
+O curso de Engenharia de Software tem as categorias de atividade complementar da RN-19 com seus
+limites (200 h no total; Extensão aceita estágio não obrigatório).
+
 A Ana tem um estágio `ATIVO` desde 2026-08-03 na Exemplo Software, com lançamentos de agosto (as
 duas primeiras semanas homologadas) e os relatórios gerados na ativação, para testar a Fase 3.
 
@@ -246,7 +249,7 @@ Commits seguem `type(scope): summary`, no imperativo, com notas em bullet explic
 | 1 · Fundação técnica | RNFs, DER lógico, migrações, wrapper de identidade, papéis e políticas RLS, auditoria, autenticação, CI, usuários e perfis, senha provisória, consulta e exportação da auditoria (**concluída**) |
 | 2 · Cadastros e formalização | Cursos, estudantes, parâmetros, concedentes, convênios, documentos, TCE, plano de atividades, responsáveis, apólice, assinaturas, ativação de estágio e aditivos (**concluída**) |
 | 3 · Acompanhamento | Frequência, homologação, carga horária, divergências, relatórios, avaliação e acompanhamento do orientador; guardas de conclusão e registro de leitura de dado de saúde (**concluída**) |
-| 4 · Atividades complementares e integralização | Cadastro, análise, limites por categoria, apuração |
+| 4 · Atividades complementares e integralização | Cadastro com comprovante, análise, limites por categoria, vedação de dupla contagem, apuração (**concluída**) |
 | 5 · Ocorrências, conclusão e conformidade | Afastamento, prorrogação, rescisão, guarda documental, relatórios gerenciais |
 
 A ordem segue a dependência de dados, não a numeração dos requisitos. Critérios de saída de cada fase em `AGENTS.md`.
