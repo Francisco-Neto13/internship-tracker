@@ -66,7 +66,7 @@ export function DadosConta({ usuario }: { usuario: { id: string; nome: string; e
   const alterado = nome !== usuario.nome || email !== usuario.email;
   return (
     <form
-      className="grid gap-4 sm:grid-cols-2"
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2"
       noValidate
       onSubmit={(event) => {
         event.preventDefault();

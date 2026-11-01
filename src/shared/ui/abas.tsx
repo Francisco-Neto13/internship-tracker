@@ -18,7 +18,7 @@ export function Abas({
   consulta?: Record<string, string | undefined>;
 }) {
   return (
-    <nav aria-label="Seções" className="-mx-1 overflow-x-auto border-b border-navy-900/10">
+    <nav aria-label="Seções" className="relative -mx-1 overflow-x-auto border-b border-navy-900/10">
       <ul className="flex min-w-max gap-1 px-1">
         {abas.map((aba, indice) => {
           const parametros = new URLSearchParams(

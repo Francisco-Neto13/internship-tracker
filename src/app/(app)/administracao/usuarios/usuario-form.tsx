@@ -66,7 +66,7 @@ export function UsuarioForm({
           </a>
         </div>
       )}
-      <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2" noValidate>
+      <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2" noValidate>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="usuario-nome">Nome</Label>
           <Input id="usuario-nome" value={nome} onChange={(event) => setNome(event.target.value)} required />

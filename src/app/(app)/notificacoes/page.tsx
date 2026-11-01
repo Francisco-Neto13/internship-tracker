@@ -84,7 +84,7 @@ export default async function NotificacoesPage({ searchParams }: { searchParams:
         <div className="flex flex-col gap-5" data-testid="notificacoes">
           {[...grupos.entries()].map(([data, doDia]) => (
             <section key={data} aria-labelledby={`dia-${data}`} className="flex flex-col gap-2">
-              <h2 id={`dia-${data}`} className="text-xs font-medium text-navy-900/55">
+              <h2 id={`dia-${data}`} className="text-xs font-medium text-navy-900/60">
                 {rotuloDoDia(data, hoje)}
               </h2>
               <ul className="surface-card divide-y divide-navy-900/[0.07]">
@@ -93,14 +93,14 @@ export default async function NotificacoesPage({ searchParams }: { searchParams:
                   const destino = item.entidade && item.entidadeId ? LINK[item.entidade]?.(item.entidadeId) : undefined;
                   return (
                     <li key={item.id} className={cn("flex gap-3 px-5 py-4", !item.lidaEm && "bg-azul-500/[0.04]")}>
-                      <span className={cn("mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full", item.lidaEm ? "bg-nevoa-100 text-navy-900/50" : "bg-azul-500/10 text-azul-500")}>
+                      <span className={cn("mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full", item.lidaEm ? "bg-nevoa-100 text-navy-900/60" : "bg-azul-500/10 text-azul-500")}>
                         <Icone className="size-4" aria-hidden />
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="flex flex-wrap items-center gap-2 text-sm">
                           <span className={cn("text-navy-900", !item.lidaEm && "font-semibold")}>{item.titulo}</span>
                           {!item.lidaEm && <span className="sr-only">não lida</span>}
-                          <span className="text-xs text-navy-900/50">{haQuantoTempo(item.criadoEm)}</span>
+                          <span className="text-xs text-navy-900/60">{haQuantoTempo(item.criadoEm)}</span>
                         </p>
                         <p className="mt-0.5 text-sm text-navy-900/70">{humanizarCodigos(item.mensagem)}</p>
                         <div className="mt-2 flex flex-wrap items-center gap-3">

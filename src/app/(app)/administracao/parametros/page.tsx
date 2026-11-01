@@ -62,13 +62,13 @@ export default async function ParametrosPage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2" data-testid="parametros-vigentes">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2" data-testid="parametros-vigentes">
         {grupos.map((grupo) => (
           <Painel key={grupo.titulo} titulo={grupo.titulo} descricao={grupo.efeito}>
-            <dl className="grid gap-3 sm:grid-cols-2">
+            <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {grupo.itens.map(([rotulo, valor]) => (
                 <div key={rotulo}>
-                  <dt className="text-xs text-navy-900/55">{rotulo}</dt>
+                  <dt className="text-xs text-navy-900/60">{rotulo}</dt>
                   <dd className="text-lg font-semibold text-navy-900 tabular-nums">{valor}</dd>
                 </div>
               ))}
@@ -77,7 +77,7 @@ export default async function ParametrosPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
         <Painel titulo="Nova versão" descricao="Começa hoje ou depois. Lançamentos, relatórios e prazos já calculados não mudam.">
           <FormularioApi
             url="/api/v1/parametros"

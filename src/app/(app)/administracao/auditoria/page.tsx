@@ -34,14 +34,14 @@ function valor(dados: unknown, campo: string) {
 
 function Alteracao({ registro }: { registro: Registro }) {
   const campos = registro.camposAlterados ?? (registro.operacao === "INSERT" ? Object.keys((registro.dadosNovos as object) ?? {}) : []);
-  if (campos.length === 0) return <span className="text-xs text-navy-900/50">—</span>;
+  if (campos.length === 0) return <span className="text-xs text-navy-900/60">—</span>;
   return (
     <details className="relative z-10 text-xs">
       <summary className="cursor-pointer text-azul-500 hover:text-navy-700">
         {registro.operacao === "INSERT" ? `${campos.length} campos` : campos.slice(0, 3).join(", ") + (campos.length > 3 ? ` +${campos.length - 3}` : "")}
       </summary>
       <table className="mt-2 w-full max-w-xl text-left">
-        <thead className="text-navy-900/55">
+        <thead className="text-navy-900/60">
           <tr>
             <th className="py-1 pr-3 font-medium">Campo</th>
             {registro.operacao !== "INSERT" && <th className="py-1 pr-3 font-medium">Antes</th>}
@@ -73,11 +73,11 @@ const COLUNAS: DataTableColumn<Registro>[] = [
           <Avatar nome={registro.autorNome} semente={registro.usuarioId} tamanho="sm" />
           <span className="min-w-0">
             <span className="block truncate text-navy-900">{registro.autorNome ?? "—"}</span>
-            <span className="block truncate text-xs text-navy-900/55">{registro.autorEmail}</span>
+            <span className="block truncate text-xs text-navy-900/60">{registro.autorEmail}</span>
           </span>
         </span>
       ) : (
-        <span className="text-navy-900/55">Sistema</span>
+        <span className="text-navy-900/60">Sistema</span>
       ),
   },
   {
@@ -88,7 +88,7 @@ const COLUNAS: DataTableColumn<Registro>[] = [
         <span className="text-navy-900">{descreverOperacao(registro.tabela, registro.operacao)}</span>
         <span className="flex items-center gap-2">
           <StatusBadge tone={TOM[registro.operacao] ?? "neutral"}>{registro.operacao}</StatusBadge>
-          <span className="font-mono text-xs text-navy-900/45">{registro.registroId.slice(0, 8)}</span>
+          <span className="font-mono text-xs text-navy-900/60">{registro.registroId.slice(0, 8)}</span>
         </span>
       </span>
     ),

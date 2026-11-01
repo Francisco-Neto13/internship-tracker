@@ -27,7 +27,7 @@ const TIPOS = ["OBRIGATORIO", "NAO_OBRIGATORIO"] as const;
 
 /** Quanto do período já passou, para ler de relance quem está no começo ou perto do fim. */
 function Andamento({ estagio, hoje }: { estagio: Estagio; hoje: string }) {
-  if (estagio.situacao !== "ATIVO") return <span className="text-xs text-navy-900/50">—</span>;
+  if (estagio.situacao !== "ATIVO") return <span className="text-xs text-navy-900/60">—</span>;
   const paraComecar = diasEntre(hoje, estagio.dataInicio);
   if (paraComecar > 0) return <span className="text-xs text-navy-900/60">{paraComecar === 1 ? "Começa amanhã" : `Começa em ${paraComecar} dias`}</span>;
   const total = Math.max(1, diasEntre(estagio.dataInicio, estagio.dataFimPrevista));
@@ -78,7 +78,7 @@ export default async function EstagiosPage({ searchParams }: { searchParams: Pro
           <Avatar nome={estagio.estudanteNome} semente={estagio.estudanteId} tamanho="sm" />
           <span className="min-w-0">
             <span className="block truncate font-medium text-navy-900">{estagio.estudanteNome ?? "Estudante"}</span>
-            <span className="block truncate font-mono text-xs text-navy-900/55">{estagio.matricula ?? "—"}</span>
+            <span className="block truncate font-mono text-xs text-navy-900/60">{estagio.matricula ?? "—"}</span>
           </span>
         </span>
       ),
@@ -91,7 +91,7 @@ export default async function EstagiosPage({ searchParams }: { searchParams: Pro
       celula: (estagio) => (
         <span className="block min-w-0">
           <span className="block max-w-64 truncate text-navy-900">{estagio.concedenteRazaoSocial ?? "—"}</span>
-          <span className="block text-xs text-navy-900/55">{TIPO_ESTAGIO[estagio.tipo]}</span>
+          <span className="block text-xs text-navy-900/60">{TIPO_ESTAGIO[estagio.tipo]}</span>
         </span>
       ),
     },

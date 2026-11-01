@@ -56,7 +56,7 @@ export default async function EstudantesPage({ searchParams }: { searchParams: P
           <Avatar nome={estudante.nome} semente={estudante.id} tamanho="sm" />
           <span className="min-w-0">
             <span className="block truncate font-medium text-navy-900">{estudante.nome ?? "Nome não disponível"}</span>
-            <span className="block truncate text-xs text-navy-900/55">{estudante.email ?? "—"}</span>
+            <span className="block truncate text-xs text-navy-900/60">{estudante.email ?? "—"}</span>
           </span>
         </span>
       ),

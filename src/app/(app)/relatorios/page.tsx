@@ -76,7 +76,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
                   <Avatar nome={relatorio.estudanteNome} semente={relatorio.estagioId} tamanho="sm" />
                   <span className="min-w-0">
                     <span className="block truncate font-medium text-navy-900">{relatorio.estudanteNome ?? "Estudante"}</span>
-                    <span className="block text-xs text-navy-900/55">{relatorio.tipo === "FINAL" ? "Relatório final" : `Relatório parcial nº ${relatorio.sequencia}`}</span>
+                    <span className="block text-xs text-navy-900/60">{relatorio.tipo === "FINAL" ? "Relatório final" : `Relatório parcial nº ${relatorio.sequencia}`}</span>
                   </span>
                 </span>
               ),
@@ -87,7 +87,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
               celula: (relatorio) => (
                 <span className="flex flex-col">
                   <span className="text-navy-900">{formatarData(relatorio.prazoEntrega)}</span>
-                  <span className={cn("text-xs", relatorio.emAtraso ? "text-status-danger-text" : "text-navy-900/55")}>{prazoEmPalavras(relatorio.prazoEntrega, hoje)}</span>
+                  <span className={cn("text-xs", relatorio.emAtraso ? "text-status-danger-text" : "text-navy-900/60")}>{prazoEmPalavras(relatorio.prazoEntrega, hoje)}</span>
                 </span>
               ),
             },

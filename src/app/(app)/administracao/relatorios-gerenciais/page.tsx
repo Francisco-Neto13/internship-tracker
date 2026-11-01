@@ -131,14 +131,14 @@ export default async function RelatoriosGerenciaisPage({ searchParams }: { searc
             Filtros inválidos foram ignorados: o período precisa ter a data final igual ou posterior à inicial.
           </p>
         )}
-        <p className="text-xs text-navy-900/55 sm:col-span-full">Sem período, o relatório é de hoje. {tipo === "pendencias-integralizacao" && "A concedente não se aplica a este relatório."}</p>
+        <p className="text-xs text-navy-900/60 sm:col-span-full">Sem período, o relatório é de hoje. {tipo === "pendencias-integralizacao" && "A concedente não se aplica a este relatório."}</p>
       </form>
 
       {linhas.length === 0 ? (
         <EstadoVazio variante="sem-resultados" titulo="Nenhum registro" descricao="Nada para os filtros informados nos cursos sob seu alcance." />
       ) : (
         <div className="surface-card overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full text-left text-sm" data-testid="relatorio-gerencial">
               <thead className="border-b border-navy-900/10 bg-nevoa-50">
                 <tr>

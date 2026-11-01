@@ -85,7 +85,7 @@ export default async function LoginPage() {
 
           <div className="surface-elevated p-8">
             <div className="mb-7 space-y-2">
-              <p className="text-[11px] font-medium tracking-[0.18em] text-navy-900/45 uppercase">
+              <p className="text-[11px] font-medium tracking-[0.18em] text-navy-900/60 uppercase">
                 Acesso restrito
               </p>
               <h1 className="font-display text-3xl font-semibold text-navy-900">
@@ -103,7 +103,7 @@ export default async function LoginPage() {
 
             <div className="divider-rule my-6" />
 
-            <p className="text-center text-xs text-navy-900/50">
+            <p className="text-center text-xs text-navy-900/60">
               Estudante, orientador, supervisor, coordenação, concedente ou administrador — o
               sistema reconhece o seu perfil ao entrar.
             </p>

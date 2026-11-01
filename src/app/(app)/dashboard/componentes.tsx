@@ -8,7 +8,7 @@ import { cn } from "@/shared/ui/cn";
 // distribuição dos estágios por situação. Só apresentação; os números vêm de dados.ts.
 
 export function ListaCompacta({ children, vazio }: { children: ReactNode[]; vazio: string }) {
-  if (children.length === 0) return <p className="px-5 py-8 text-center text-sm text-navy-900/55">{vazio}</p>;
+  if (children.length === 0) return <p className="px-5 py-8 text-center text-sm text-navy-900/60">{vazio}</p>;
   return <ul className="divide-y divide-navy-900/[0.07]">{children}</ul>;
 }
 

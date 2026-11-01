@@ -107,7 +107,7 @@ export function BarraFiltros({
             Limpar filtros
           </button>
         )}
-        {pendente && <span className="text-xs text-navy-900/50">Atualizando…</span>}
+        {pendente && <span className="text-xs text-navy-900/60">Atualizando…</span>}
       </div>
       {children && <div className="flex flex-wrap items-center gap-2">{children}</div>}
     </div>

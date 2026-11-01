@@ -50,7 +50,7 @@ function DropdownMenuItem({
 function DropdownMenuLabel({ className, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Label>) {
   return (
     <DropdownMenuPrimitive.Label
-      className={cn("px-2 py-1.5 text-xs font-medium text-navy-900/50", className)}
+      className={cn("px-2 py-1.5 text-xs font-medium text-navy-900/60", className)}
       {...props}
     />
   );

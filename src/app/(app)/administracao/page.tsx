@@ -98,11 +98,11 @@ function Cartao({ item, alcance, consequencia }: { item: NavItem; alcance: strin
       </div>
       <dl className="mt-auto grid gap-2 border-t border-navy-900/[0.07] pt-3 text-xs">
         <div>
-          <dt className="font-medium text-navy-900/55">Alcance</dt>
+          <dt className="font-medium text-navy-900/60">Alcance</dt>
           <dd className="text-navy-900/80">{alcance}</dd>
         </div>
         <div>
-          <dt className="font-medium text-navy-900/55">Ao alterar</dt>
+          <dt className="font-medium text-navy-900/60">Ao alterar</dt>
           <dd className="text-navy-900/80">{consequencia}</dd>
         </div>
       </dl>
@@ -133,7 +133,7 @@ export default async function AdministracaoPage() {
             </h2>
             <p className="text-sm text-navy-900/60">{area.descricao}</p>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {area.itens.map(({ item, alcance, consequencia }) => (
               <Cartao key={item.href} item={item} alcance={alcance} consequencia={consequencia} />
             ))}

@@ -64,7 +64,7 @@ export default async function FrequenciaPage({ searchParams }: { searchParams: P
                   <Avatar nome={estagio.estudanteNome} semente={estagio.estudanteId} tamanho="sm" />
                   <span className="min-w-0">
                     <span className="block truncate font-medium text-navy-900">{estagio.estudanteNome ?? estagio.matricula}</span>
-                    <span className="block truncate text-xs text-navy-900/55">{estagio.concedenteRazaoSocial}</span>
+                    <span className="block truncate text-xs text-navy-900/60">{estagio.concedenteRazaoSocial}</span>
                   </span>
                 </span>
               ),
@@ -76,7 +76,7 @@ export default async function FrequenciaPage({ searchParams }: { searchParams: P
               cabecalho: "Carga até ontem",
               celula: (estagio) => {
                 const item = divergencia.get(estagio.id);
-                if (!item) return <span className="text-xs text-navy-900/50">Dentro do previsto</span>;
+                if (!item) return <span className="text-xs text-navy-900/60">Dentro do previsto</span>;
                 const { minutosCumpridos, minutosPrevistos, percentual, divergente } = item.divergencia;
                 return divergente ? (
                   <StatusBadge tone="danger">

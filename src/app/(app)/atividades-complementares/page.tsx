@@ -48,7 +48,7 @@ export default async function AtividadesComplementaresPage() {
       />
 
       {integralizacao && (
-        <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
           <div className="flex flex-col gap-4">
             <Painel titulo="Minhas atividades" flush>
               {minhas.length === 0 ? (
@@ -68,7 +68,7 @@ export default async function AtividadesComplementaresPage() {
                       celula: (atividade) => (
                         <span className="block min-w-0">
                           <span className="block truncate font-medium text-navy-900">{atividade.descricao}</span>
-                          <span className="block truncate text-xs text-navy-900/55">{atividade.categoriaNome}</span>
+                          <span className="block truncate text-xs text-navy-900/60">{atividade.categoriaNome}</span>
                         </span>
                       ),
                     },
@@ -92,7 +92,7 @@ export default async function AtividadesComplementaresPage() {
             </Painel>
             {integralizacao.categorias.length > 0 && (
               <Painel titulo="Quanto ainda cabe por categoria" descricao="Horas acima do limite não contam; a categoria marcada como cheia não aceita mais.">
-                <ul className="grid gap-4 sm:grid-cols-2">
+                <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {integralizacao.categorias.map((categoria) => (
                     <li key={categoria.categoriaId}>
                       <Progresso
@@ -132,7 +132,7 @@ export default async function AtividadesComplementaresPage() {
                     <p className="text-sm text-navy-900/65">
                       {atividade.estudanteNome ?? "Estudante"} · {atividade.matricula} · {atividade.categoriaNome}
                     </p>
-                    <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-navy-900/55">
+                    <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-navy-900/60">
                       <span className="inline-flex items-center gap-1">
                         <Building className="size-3.5" aria-hidden />
                         {atividade.instituicaoPromotora}

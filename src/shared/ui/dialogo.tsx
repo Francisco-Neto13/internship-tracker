@@ -52,7 +52,7 @@ export function Dialogo({
                 <Dialog.Description className="sr-only">{titulo}</Dialog.Description>
               )}
             </div>
-            <Dialog.Close className="rounded-md p-1 text-navy-900/50 hover:bg-nevoa-100 hover:text-navy-900 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none" aria-label="Fechar">
+            <Dialog.Close className="rounded-md p-1 text-navy-900/60 hover:bg-nevoa-100 hover:text-navy-900 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none" aria-label="Fechar">
               <X className="size-5" aria-hidden />
             </Dialog.Close>
           </div>

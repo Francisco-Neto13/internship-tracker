@@ -54,7 +54,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
   return (
     <div className="flex flex-col gap-4">
       <Painel titulo="Carga horária" descricao="Só a carga homologada pelo supervisor conta (RF026).">
-        <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]" data-testid="carga-horaria">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]" data-testid="carga-horaria">
           <div className="flex flex-col gap-4">
             <Progresso
               rotulo="Homologadas"
@@ -87,14 +87,14 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
         </div>
       </Painel>
 
-      <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]">
         <Painel titulo="Frequência" descricao={`${lancamentos.length} lançamento(s); os 30 mais recentes`} flush>
           {lancamentos.length === 0 ? (
             <p className="px-5 py-6 text-sm text-navy-900/60" data-testid="frequencias">
               Nenhum lançamento ainda.
             </p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="relative overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-navy-900/10 bg-nevoa-50 text-xs text-navy-900/60">
                   <tr>
@@ -219,7 +219,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
         </Painel>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {avaliacoes && (
           <Painel titulo="Avaliações de desempenho" descricao="Pela concedente, por critério (RF042, RF043)." flush>
             <ul className="divide-y divide-navy-900/[0.07]" data-testid="avaliacoes">
@@ -234,7 +234,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
                   </span>
                   <span className="text-lg font-semibold text-navy-900 tabular-nums">
                     {avaliacao.media ?? "—"}
-                    <span className="text-xs font-normal text-navy-900/50"> / 10</span>
+                    <span className="text-xs font-normal text-navy-900/60"> / 10</span>
                   </span>
                 </li>
               ))}

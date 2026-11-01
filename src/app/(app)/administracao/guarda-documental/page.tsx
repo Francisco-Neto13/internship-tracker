@@ -92,7 +92,7 @@ export default async function GuardaDocumentalPage({ searchParams }: { searchPar
               celula: (item) => (
                 <span className="flex flex-col">
                   <span className="text-navy-900">{formatarData(item.dataLiberacaoGuarda)}</span>
-                  <span className="text-xs text-navy-900/55">{prazoEmPalavras(item.dataLiberacaoGuarda, hoje)}</span>
+                  <span className="text-xs text-navy-900/60">{prazoEmPalavras(item.dataLiberacaoGuarda, hoje)}</span>
                 </span>
               ),
             },
@@ -115,7 +115,7 @@ export default async function GuardaDocumentalPage({ searchParams }: { searchPar
                     sucesso="Arquivo eliminado"
                   />
                 ) : (
-                  <span className="text-xs text-navy-900/50">Ainda em guarda</span>
+                  <span className="text-xs text-navy-900/60">Ainda em guarda</span>
                 ),
             },
           ]}

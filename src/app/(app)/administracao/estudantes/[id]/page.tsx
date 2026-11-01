@@ -120,7 +120,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
       />
 
       {aba === "visao" && (
-        <div className="grid gap-4 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
           <div className="flex flex-col gap-4 xl:col-span-2">
             <Painel titulo="Estágio atual" verTodos={atual ? { href: `/estagios/${atual.id}`, rotulo: "Abrir estágio" } : undefined}>
               {atual ? (
@@ -153,7 +153,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
             </Painel>
             <Painel titulo="Integralização" verTodos={integralizacao ? { href: `?aba=integralizacao`, rotulo: "Detalhes" } : undefined}>
               {integralizacao ? (
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <Progresso
                     rotulo="Estágio obrigatório"
                     atual={minutosParaHoras(integralizacao.apuracao.estagioConcluidoMinutos)}
@@ -249,7 +249,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                 celula: (atividade) => (
                   <span className="block min-w-0">
                     <span className="block truncate font-medium text-navy-900">{atividade.descricao}</span>
-                    <span className="block truncate text-xs text-navy-900/55">{atividade.instituicaoPromotora}</span>
+                    <span className="block truncate text-xs text-navy-900/60">{atividade.instituicaoPromotora}</span>
                   </span>
                 ),
               },
@@ -282,7 +282,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
 
       {aba === "dados" && <DadosAcademicos id={id} estudante={estudante} identity={identity} />}
 
-      <p className="text-xs text-navy-900/45">
+      <p className="text-xs text-navy-900/60">
         <ExternalLink className="mr-1 inline size-3" aria-hidden />
         Perfil acadêmico (RF005). Conta, perfis e senha ficam em Usuários e acesso.
       </p>
