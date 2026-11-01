@@ -79,6 +79,15 @@ describe("minutosPrevistosAte", () => {
   it("expects nothing before the start", () => {
     expect(minutosPrevistosAte(estagio, "2026-08-01")).toBe(0);
   });
+
+  it("skips the business days inside a valid leave (RF030)", () => {
+    // Leave Wednesday to the next Tuesday: 5 business days off in two weeks
+    const afastado = { ...estagio, afastamentos: [{ dataInicio: "2026-08-05", dataFim: "2026-08-11" }] };
+    expect(minutosPrevistosAte(afastado, "2026-08-14")).toBe(1800);
+    // Only the part of the leave before the reference counts
+    expect(minutosPrevistosAte(afastado, "2026-08-06")).toBe(720);
+    expect(minutosPrevistosAte({ ...estagio, afastamentos: [] }, "2026-08-14")).toBe(3600);
+  });
 });
 
 describe("avaliarDivergencia (RF028)", () => {
