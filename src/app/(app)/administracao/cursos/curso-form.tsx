@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/shared/ui/button";
+import { useFecharDialogo } from "@/shared/ui/dialogo";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 
@@ -23,11 +24,11 @@ type CursoOutput = z.output<typeof cursoSchema>;
 
 export function CursoForm() {
   const router = useRouter();
+  const fechar = useFecharDialogo();
   const [erro, setErro] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors, isSubmitting },
   } = useForm<CursoInput, unknown, CursoOutput>({ resolver: zodResolver(cursoSchema) });
 
@@ -43,12 +44,13 @@ export function CursoForm() {
       setErro(body.error?.message ?? "Não foi possível cadastrar o curso.");
       return;
     }
-    reset();
-    router.refresh();
+    const { data } = await response.json();
+    fechar();
+    router.push(`/administracao/cursos/${data.id}`);
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="surface-card grid gap-4 p-5 sm:grid-cols-2" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 sm:grid-cols-2" noValidate>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="curso-codigo">Código</Label>
         <Input id="curso-codigo" aria-invalid={Boolean(errors.codigo)} {...register("codigo")} />
@@ -88,7 +90,7 @@ export function CursoForm() {
           {erro}
         </p>
       )}
-      <Button type="submit" disabled={isSubmitting} className="sm:col-span-2 sm:w-fit">
+      <Button type="submit" disabled={isSubmitting} className="sm:col-span-2 sm:w-fit sm:justify-self-end">
         {isSubmitting ? "Salvando..." : "Cadastrar curso"}
       </Button>
     </form>

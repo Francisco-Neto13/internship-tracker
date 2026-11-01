@@ -72,7 +72,7 @@ export function EnvioDocumento({
         id={`envio-${tipo}`}
         type="file"
         accept={ACEITOS}
-        className="text-sm text-navy-900"
+        className="block w-full rounded-lg border border-dashed border-navy-900/20 bg-nevoa-50 px-3 py-3 text-sm text-navy-900/70 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-navy-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:border-azul-500/50 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none"
         onChange={(event) => {
           const arquivo = event.target.files?.[0];
           if (arquivo) void enviar(arquivo);
