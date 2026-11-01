@@ -1,70 +1,120 @@
 import { redirect } from "next/navigation";
+import { formatarData } from "@/lib/datas";
 import { getIdentity } from "@/lib/session";
 import { dataLocal } from "@/modules/academico/domain/parametros";
 import { getParametrosVigentes, listHistoricoParametros } from "@/modules/academico/services/parametro-service";
 import { FormularioApi } from "@/shared/ui/formulario-api";
+import { Painel } from "@/shared/ui/painel";
 import { PageHeader } from "@/shared/ui/page-header";
+import { StatusBadge } from "@/shared/ui/status-badge";
 
-// RF006: parameters in force and a new version (administrator). Versions never start in the
-// past, so validations already done keep the parameters of their date (DER §5.5).
+// RF006: regras gerais que todos os cursos seguem, agrupadas pelo que controlam e com o efeito
+// de cada uma. Uma versão nova nunca começa no passado: o que já foi validado mantém o parâmetro
+// da sua data (DER §5.5), e a página diz isso antes de salvar.
+
+const horas = (minutos: number) => `${(minutos / 60).toLocaleString("pt-BR")} h`;
+
 export default async function ParametrosPage() {
   const identity = await getIdentity();
   if (!identity) redirect("/login");
   const [vigente, historico] = await Promise.all([getParametrosVigentes(identity), listHistoricoParametros(identity)]);
 
-  const linhas: [string, string][] = [
-    ["Origem", vigente.origem === "PADRAO_LEGAL" ? "Padrão legal (nenhuma versão registrada)" : `Versão desde ${vigente.vigenciaInicio}`],
-    ["Jornada diária (obrigatório / não obrigatório)", `${vigente.limiteDiarioObrigatorioMinutos / 60} h / ${vigente.limiteDiarioNaoObrigatorioMinutos / 60} h`],
-    ["Jornada semanal", `${vigente.limiteSemanalMinutos / 60} h`],
-    ["Excedente de jornada", vigente.bloquearExcedente ? "Bloqueia" : "Sinaliza"],
-    ["Duração máxima", `${vigente.duracaoMaximaMeses} meses`],
-    ["Tolerância de divergência", `${vigente.toleranciaDivergenciaPercentual}%`],
-    ["Prazo de guarda", `${vigente.prazoGuardaAnos} anos`],
-    ["Alerta de convênio a vencer", `${vigente.antecedenciaAlertaConvenioDias} dias`],
+  const grupos: { titulo: string; efeito: string; itens: [string, string][] }[] = [
+    {
+      titulo: "Jornada",
+      efeito: "Limita cada lançamento de frequência (Lei 11.788/2008, art. 10).",
+      itens: [
+        ["Diária, estágio obrigatório", horas(vigente.limiteDiarioObrigatorioMinutos)],
+        ["Diária, não obrigatório", horas(vigente.limiteDiarioNaoObrigatorioMinutos)],
+        ["Semanal (semana ISO)", horas(vigente.limiteSemanalMinutos)],
+        ["Acima do limite", vigente.bloquearExcedente ? "Bloqueia o lançamento" : "Aceita e sinaliza"],
+      ],
+    },
+    {
+      titulo: "Duração",
+      efeito: "Teto do TCE, das prorrogações e dos afastamentos no par estudante–concedente (art. 11).",
+      itens: [["Duração máxima", `${vigente.duracaoMaximaMeses} meses`]],
+    },
+    {
+      titulo: "Acompanhamento",
+      efeito: "Quando a diferença entre horas cumpridas e previstas abre um caso para o orientador (RF028).",
+      itens: [["Tolerância de divergência", `${vigente.toleranciaDivergenciaPercentual.toLocaleString("pt-BR")}%`]],
+    },
+    {
+      titulo: "Conformidade",
+      efeito: "Prazo de guarda dos documentos e antecedência do aviso de convênio a vencer (RF012, RF069).",
+      itens: [
+        ["Prazo de guarda", `${vigente.prazoGuardaAnos} anos`],
+        ["Aviso de convênio a vencer", `${vigente.antecedenciaAlertaConvenioDias} dias antes`],
+      ],
+    },
   ];
 
   return (
-    <section className="flex flex-col gap-6">
-      <PageHeader eyebrow="M02 Gestão Acadêmica" title="Parâmetros institucionais" description="Limites de jornada, duração máxima, tolerância e prazos (RF006)." />
-      <dl className="surface-card grid gap-2 p-5 text-sm sm:grid-cols-2" data-testid="parametros-vigentes">
-        {linhas.map(([rotulo, valor]) => (
-          <div key={rotulo} className="flex flex-col">
-            <dt className="text-navy-900/60">{rotulo}</dt>
-            <dd className="text-navy-900">{valor}</dd>
-          </div>
-        ))}
-      </dl>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Parâmetros institucionais"
+        description="Regras gerais que valem para todos os cursos. Uma nova versão vale a partir da data escolhida; o passado mantém o parâmetro da sua época."
+        meta={
+          <StatusBadge tone={vigente.origem === "PADRAO_LEGAL" ? "neutral" : "ok"}>
+            {vigente.origem === "PADRAO_LEGAL" ? "Padrão legal: nenhuma versão registrada" : `Versão vigente desde ${formatarData(vigente.vigenciaInicio)}`}
+          </StatusBadge>
+        }
+      />
 
-      <div>
-        <h2 className="mb-3 text-sm font-medium text-navy-900/60">Nova versão (a partir de hoje ou depois)</h2>
-        <FormularioApi
-          url="/api/v1/parametros"
-          metodo="PUT"
-          rotuloEnviar="Registrar versão"
-          campos={[
-            { nome: "vigencia_inicio", rotulo: "Vigência a partir de", tipo: "date", valorInicial: dataLocal() },
-            { nome: "limite_horas_diarias_obrigatorio", rotulo: "Jornada diária, obrigatório (h)", tipo: "number", passo: "0.25", valorInicial: vigente.limiteDiarioObrigatorioMinutos / 60 },
-            { nome: "limite_horas_diarias_nao_obrigatorio", rotulo: "Jornada diária, não obrigatório (h)", tipo: "number", passo: "0.25", valorInicial: vigente.limiteDiarioNaoObrigatorioMinutos / 60 },
-            { nome: "limite_horas_semanais", rotulo: "Jornada semanal (h)", tipo: "number", passo: "0.25", valorInicial: vigente.limiteSemanalMinutos / 60 },
-            { nome: "bloquear_excedente", rotulo: "Bloquear lançamento acima do limite", tipo: "checkbox", valorInicial: vigente.bloquearExcedente },
-            { nome: "duracao_maxima_meses", rotulo: "Duração máxima (meses)", tipo: "number", valorInicial: vigente.duracaoMaximaMeses },
-            { nome: "tolerancia_divergencia_percentual", rotulo: "Tolerância de divergência (%)", tipo: "number", passo: "0.01", valorInicial: vigente.toleranciaDivergenciaPercentual },
-            { nome: "prazo_guarda_anos", rotulo: "Prazo de guarda (anos)", tipo: "number", valorInicial: vigente.prazoGuardaAnos },
-            { nome: "antecedencia_alerta_convenio_dias", rotulo: "Alerta de convênio (dias)", tipo: "number", valorInicial: vigente.antecedenciaAlertaConvenioDias },
-          ]}
-        />
+      <div className="grid gap-4 md:grid-cols-2" data-testid="parametros-vigentes">
+        {grupos.map((grupo) => (
+          <Painel key={grupo.titulo} titulo={grupo.titulo} descricao={grupo.efeito}>
+            <dl className="grid gap-3 sm:grid-cols-2">
+              {grupo.itens.map(([rotulo, valor]) => (
+                <div key={rotulo}>
+                  <dt className="text-xs text-navy-900/55">{rotulo}</dt>
+                  <dd className="text-lg font-semibold text-navy-900 tabular-nums">{valor}</dd>
+                </div>
+              ))}
+            </dl>
+          </Painel>
+        ))}
       </div>
 
-      {historico.length > 0 && (
-        <ul className="surface-card flex flex-col divide-y divide-navy-900/10 text-sm" data-testid="parametros-historico">
-          {historico.map((versao) => (
-            <li key={versao.id} className="px-5 py-3 text-navy-900">
-              Desde {versao.vigenciaInicio}: {versao.limiteSemanalMinutos / 60} h/semana, {versao.duracaoMaximaMeses} meses, tolerância{" "}
-              {versao.toleranciaDivergenciaPercentual}%
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+      <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
+        <Painel titulo="Nova versão" descricao="Começa hoje ou depois. Lançamentos, relatórios e prazos já calculados não mudam.">
+          <FormularioApi
+            url="/api/v1/parametros"
+            metodo="PUT"
+            rotuloEnviar="Registrar versão"
+            embutido
+            sucesso="Versão registrada"
+            campos={[
+              { nome: "vigencia_inicio", rotulo: "Vale a partir de", tipo: "date", valorInicial: dataLocal() },
+              { nome: "limite_horas_diarias_obrigatorio", rotulo: "Jornada diária, obrigatório (h)", tipo: "number", passo: "0.25", valorInicial: vigente.limiteDiarioObrigatorioMinutos / 60 },
+              { nome: "limite_horas_diarias_nao_obrigatorio", rotulo: "Jornada diária, não obrigatório (h)", tipo: "number", passo: "0.25", valorInicial: vigente.limiteDiarioNaoObrigatorioMinutos / 60 },
+              { nome: "limite_horas_semanais", rotulo: "Jornada semanal (h)", tipo: "number", passo: "0.25", valorInicial: vigente.limiteSemanalMinutos / 60, ajuda: "A lei permite até 30 h." },
+              { nome: "duracao_maxima_meses", rotulo: "Duração máxima (meses)", tipo: "number", valorInicial: vigente.duracaoMaximaMeses, ajuda: "A lei permite até 24 meses." },
+              { nome: "tolerancia_divergencia_percentual", rotulo: "Tolerância de divergência (%)", tipo: "number", passo: "0.01", valorInicial: vigente.toleranciaDivergenciaPercentual },
+              { nome: "prazo_guarda_anos", rotulo: "Prazo de guarda (anos)", tipo: "number", valorInicial: vigente.prazoGuardaAnos },
+              { nome: "antecedencia_alerta_convenio_dias", rotulo: "Aviso de convênio (dias)", tipo: "number", valorInicial: vigente.antecedenciaAlertaConvenioDias },
+              { nome: "bloquear_excedente", rotulo: "Bloquear lançamento acima do limite de jornada", tipo: "checkbox", valorInicial: vigente.bloquearExcedente },
+            ]}
+          />
+        </Painel>
+        <Painel titulo="Histórico de versões" descricao="Cada versão vale até o início da seguinte." flush>
+          {historico.length === 0 ? (
+            <p className="px-5 py-4 text-sm text-navy-900/60">Nenhuma versão registrada: vale o padrão legal.</p>
+          ) : (
+            <ol className="divide-y divide-navy-900/[0.07]" data-testid="parametros-historico">
+              {historico.map((versao) => (
+                <li key={versao.id} className="px-5 py-3 text-sm">
+                  <span className="block font-medium text-navy-900">Desde {formatarData(versao.vigenciaInicio)}</span>
+                  <span className="block text-xs text-navy-900/60">
+                    {horas(versao.limiteSemanalMinutos)}/semana · {versao.duracaoMaximaMeses} meses · tolerância {versao.toleranciaDivergenciaPercentual}% · guarda {versao.prazoGuardaAnos} anos
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </Painel>
+      </div>
+    </div>
   );
 }

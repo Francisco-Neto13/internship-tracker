@@ -87,6 +87,16 @@ export const TABELA_AUDITORIA: Record<string, string> = {
   atividade_complementar: "Atividade complementar",
   analise_atividade: "Análise de atividade",
   declaracao: "Declaração",
+  resposta_avaliacao: "Nota de critério de avaliação",
+  criterio_avaliacao: "Critério de avaliação",
+  categoria_atividade: "Categoria de atividade",
+  exigencia_categoria: "Limite de categoria no curso",
+  periodicidade_relatorio: "Periodicidade de relatórios",
+  historico_situacao_concedente: "Situação da concedente",
+  comprovante_atividade: "Comprovante de atividade",
+  anexo_relatorio: "Anexo de relatório",
+  porte_concedente: "Porte de concedente",
+  setor_atuacao: "Setor de atuação",
 };
 
 export const OPERACAO_AUDITORIA: Record<string, string> = { INSERT: "criado", UPDATE: "alterado", DELETE: "removido", LEITURA: "lido" };
