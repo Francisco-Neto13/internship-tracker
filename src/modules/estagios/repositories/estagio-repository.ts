@@ -1,4 +1,5 @@
-import { and, count, desc, eq, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
+import { padraoContendo } from "@/db/like";
 import { alias } from "drizzle-orm/pg-core";
 import { concedente, convenio, curso, estagio, estudante, usuario } from "@/db/schema";
 import type { Transaction } from "@/db/with-user";
@@ -14,9 +15,24 @@ export type EstagioResumo = EstagioRow & { estudanteNome: string | null; matricu
 
 const usuarioEstudante = alias(usuario, "usuario_estudante");
 
+/** Ordenações da listagem (?ordem=campo ou -campo); o padrão são os mais recentes. */
+export const ORDENS_ESTAGIO = ["estudante", "concedente", "inicio", "fim", "situacao"] as const;
+export type OrdemEstagio = (typeof ORDENS_ESTAGIO)[number];
+
 export async function findEstagios(
   tx: Transaction,
-  filtro: { situacao?: Situacao; tipo?: Tipo; cursoId?: string; concedenteId?: string; estudanteId?: string; limit: number; offset: number },
+  filtro: {
+    situacao?: Situacao;
+    tipo?: Tipo;
+    cursoId?: string;
+    concedenteId?: string;
+    estudanteId?: string;
+    busca?: string;
+    ordem?: OrdemEstagio;
+    decrescente?: boolean;
+    limit: number;
+    offset: number;
+  },
 ): Promise<{ items: EstagioResumo[]; total: number }> {
   const condicoes: SQL[] = [];
   if (filtro.situacao) condicoes.push(eq(estagio.situacao, filtro.situacao));
@@ -24,7 +40,19 @@ export async function findEstagios(
   if (filtro.cursoId) condicoes.push(eq(estagio.cursoId, filtro.cursoId));
   if (filtro.concedenteId) condicoes.push(eq(estagio.concedenteId, filtro.concedenteId));
   if (filtro.estudanteId) condicoes.push(eq(estagio.estudanteId, filtro.estudanteId));
+  if (filtro.busca) {
+    const padrao = padraoContendo(filtro.busca);
+    condicoes.push(or(ilike(usuarioEstudante.nome, padrao), ilike(estudante.matricula, padrao), ilike(concedente.razaoSocial, padrao))!);
+  }
   const where = condicoes.length > 0 ? and(...condicoes) : undefined;
+  const coluna = {
+    estudante: usuarioEstudante.nome,
+    concedente: concedente.razaoSocial,
+    inicio: estagio.dataInicio,
+    fim: estagio.dataFimPrevista,
+    situacao: estagio.situacao,
+  }[filtro.ordem ?? "inicio"];
+  const ordenacao = filtro.ordem ? [(filtro.decrescente ? desc : asc)(coluna), asc(estagio.id)] : [desc(estagio.criadoEm), asc(estagio.id)];
 
   const linhas = await tx
     .select({
@@ -38,10 +66,17 @@ export async function findEstagios(
     .leftJoin(usuarioEstudante, eq(usuarioEstudante.id, estudante.usuarioId))
     .leftJoin(concedente, eq(concedente.id, estagio.concedenteId))
     .where(where)
-    .orderBy(desc(estagio.criadoEm))
+    .orderBy(...ordenacao)
     .limit(filtro.limit)
     .offset(filtro.offset);
-  const [{ total }] = await tx.select({ total: count() }).from(estagio).where(where);
+  // Same joins as the page: the search reaches the student and the concedente names
+  const [{ total }] = await tx
+    .select({ total: count() })
+    .from(estagio)
+    .leftJoin(estudante, eq(estudante.id, estagio.estudanteId))
+    .leftJoin(usuarioEstudante, eq(usuarioEstudante.id, estudante.usuarioId))
+    .leftJoin(concedente, eq(concedente.id, estagio.concedenteId))
+    .where(where);
 
   return {
     items: linhas.map((linha) => ({
