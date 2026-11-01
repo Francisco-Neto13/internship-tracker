@@ -5,9 +5,11 @@ import { getIdentity } from "@/lib/session";
 import { TRANSICOES_SITUACAO_ACADEMICA } from "@/modules/academico/domain/situacao-academica";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { getEstudante } from "@/modules/academico/services/estudante-service";
+import { getIntegralizacao } from "@/modules/integralizacao/services/integralizacao-service";
 import { FormularioApi } from "@/shared/ui/formulario-api";
 import { PageHeader } from "@/shared/ui/page-header";
 import { StatusBadge } from "@/shared/ui/status-badge";
+import { ProgressoIntegralizacao } from "../../../integralizacao/progresso";
 
 // RF005: edit a student (API: PATCH /estudantes/{id}). The situation offers only the allowed
 // transitions (D10, pending validation with the advisor); the service and a trigger enforce them.
@@ -24,6 +26,11 @@ export default async function EstudantePage({ params }: { params: Promise<{ id: 
   });
   const { items: cursos } = await listCursos(identity, { page: 1, limit: 100 });
   const situacoes = [estudante.situacaoAcademica, ...TRANSICOES_SITUACAO_ACADEMICA[estudante.situacaoAcademica]];
+  // RF057: the coordination follows the student's integralization; the administrator does not (M07)
+  const integralizacao = await getIntegralizacao(identity, id).catch((error: unknown) => {
+    if (error instanceof DomainError && error.kind === "NOT_FOUND") return null;
+    throw error;
+  });
 
   return (
     <section className="flex flex-col gap-6">
@@ -51,6 +58,13 @@ export default async function EstudantePage({ params }: { params: Promise<{ id: 
           },
         ]}
       />
+
+      {integralizacao && (
+        <div className="flex flex-col gap-3">
+          <h2 className="text-sm font-medium text-navy-900/60">Integralização curricular</h2>
+          <ProgressoIntegralizacao integralizacao={integralizacao} />
+        </div>
+      )}
     </section>
   );
 }

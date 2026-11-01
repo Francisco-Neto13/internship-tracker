@@ -93,7 +93,7 @@ export const NAVEGACAO: NavItem[] = [
     modulo: "M06 Atividades Complementares",
     rf: "RF048-RF055",
     perfis: ["ESTUDANTE", "COORDENACAO"],
-    status: "em-construcao",
+    status: "ativo",
     icon: Award,
   },
   {
@@ -103,7 +103,7 @@ export const NAVEGACAO: NavItem[] = [
     modulo: "M07 Integralização",
     rf: "RF056-RF058",
     perfis: ["ESTUDANTE", "COORDENACAO"],
-    status: "em-construcao",
+    status: "ativo",
     icon: ListChecks,
   },
   {
