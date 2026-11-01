@@ -19,6 +19,8 @@ export type Campo = {
   /** Empty input is sent as null instead of being left out (clears an optional field). */
   vazioComoNulo?: boolean;
   passo?: string;
+  /** Uma linha de ajuda abaixo do campo (formato, consequência). */
+  ajuda?: string;
 };
 
 export const selectClass =
@@ -44,6 +46,7 @@ export function FormularioApi({
   redirecionarPara,
   envolverEmLista,
   testId,
+  embutido = false,
 }: {
   campos: Campo[];
   url: string;
@@ -57,6 +60,8 @@ export function FormularioApi({
   /** Sends { [chave]: [fields] } instead of the fields (e.g. PUT /cursos/{id}/exigencias). */
   envolverEmLista?: string;
   testId?: string;
+  /** Sem superfície própria: o formulário já está dentro de um <Painel>. */
+  embutido?: boolean;
 }) {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
@@ -100,9 +105,10 @@ export function FormularioApi({
   }
 
   return (
-    <form onSubmit={onSubmit} className="surface-card grid gap-4 p-5 sm:grid-cols-2" noValidate data-testid={testId}>
+    <form onSubmit={onSubmit} className={embutido ? "grid gap-4 sm:grid-cols-2" : "surface-card grid gap-4 p-5 sm:grid-cols-2"} noValidate data-testid={testId}>
       {campos.map((campo) => {
         const id = `campo-${campo.nome}`;
+        const ajuda = campo.ajuda ? `${id}-ajuda` : undefined;
         const inicial = campo.valorInicial ?? "";
         return (
           <div key={campo.nome} className={`flex flex-col gap-1.5 ${campo.tipo === "textarea" ? "sm:col-span-2" : ""}`}>
@@ -115,7 +121,7 @@ export function FormularioApi({
               <>
                 <Label htmlFor={id}>{campo.rotulo}</Label>
                 {campo.tipo === "select" ? (
-                  <select id={id} name={campo.nome} defaultValue={String(inicial)} className={selectClass}>
+                  <select id={id} name={campo.nome} defaultValue={String(inicial)} className={selectClass} aria-describedby={ajuda}>
                     {!campo.obrigatorio && <option value="">—</option>}
                     {campo.opcoes?.map((opcao) => (
                       <option key={opcao.valor} value={opcao.valor}>
@@ -129,10 +135,16 @@ export function FormularioApi({
                     name={campo.nome}
                     defaultValue={String(inicial)}
                     rows={4}
-                    className="w-full rounded-md border border-navy-900/20 bg-white p-3 text-sm text-navy-900"
+                    aria-describedby={ajuda}
+                    className="w-full rounded-md border border-navy-900/20 bg-white p-3 text-sm text-navy-900 transition-colors focus-visible:border-azul-500 focus-visible:ring-2 focus-visible:ring-azul-500/25 focus-visible:outline-none"
                   />
                 ) : (
-                  <Input id={id} name={campo.nome} type={campo.tipo ?? "text"} step={campo.passo} defaultValue={String(inicial)} />
+                  <Input id={id} name={campo.nome} type={campo.tipo ?? "text"} step={campo.passo} defaultValue={String(inicial)} aria-describedby={ajuda} />
+                )}
+                {campo.ajuda && (
+                  <p id={ajuda} className="text-xs text-navy-900/55">
+                    {campo.ajuda}
+                  </p>
                 )}
               </>
             )}

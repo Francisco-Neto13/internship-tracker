@@ -7,6 +7,8 @@ import {
   findEstudanteById,
   findEstudantes,
   insertEstudante,
+  ORDENS_ESTUDANTE,
+  type OrdemEstudante,
   updateEstudante,
   type EstudanteRow,
 } from "../repositories/estudante-repository";
@@ -23,13 +25,16 @@ const naoEncontrado = () =>
 
 export async function listEstudantes(
   identity: Identity,
-  query: { page: number; limit: number; cursoId?: string; situacao?: SituacaoAcademica; busca?: string },
+  query: { page: number; limit: number; cursoId?: string; situacao?: SituacaoAcademica; busca?: string; ordem?: string },
 ) {
+  const campo = query.ordem?.replace(/^-/, "");
   return withUser(identity, (tx) =>
     findEstudantes(tx, {
       cursoId: query.cursoId,
       situacao: query.situacao,
       busca: query.busca,
+      ordem: (ORDENS_ESTUDANTE as readonly string[]).includes(campo ?? "") ? (campo as OrdemEstudante) : undefined,
+      decrescente: query.ordem?.startsWith("-"),
       limit: query.limit,
       offset: (query.page - 1) * query.limit,
     }),
