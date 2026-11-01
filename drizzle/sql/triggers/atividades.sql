@@ -36,3 +36,8 @@ create or replace trigger aplicar_analise_atividade
 create or replace trigger bloquear_alteracao
   before update on public.analise_atividade
   for each row execute function app.bloquear_alteracao();
+
+-- RN-36, RF047: the double-count barrier (DER §5.9), on registration and on complementation
+create or replace trigger validar_origem_estagio
+  before insert or update of origem_estagio_id, categoria_id, horas_declaradas_minutos on public.atividade_complementar
+  for each row execute function app.validar_origem_estagio();

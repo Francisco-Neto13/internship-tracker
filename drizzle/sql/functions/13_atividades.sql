@@ -258,6 +258,51 @@ begin
 end
 $$;
 
+-- RN-36, RF046, RF047 (DER §5.9, barrier 2): an activity that counts an internship takes a
+-- NON-mandatory internship of the student itself, already CONCLUIDO or RESCINDIDO (D6), in the
+-- one category the course allows for it (RN-18), and never more than its homologated minutes.
+-- With the immutable type (barrier 1), one activity per internship (barrier 3, unique index)
+-- and disjoint sums in the assessment (barrier 4), the same hours never count twice.
+create or replace function app.validar_origem_estagio()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_estagio record;
+  v_homologados integer;
+begin
+  if new.origem_estagio_id is null then
+    return new;
+  end if;
+  select g.tipo, g.situacao, g.estudante_id into v_estagio from public.estagio g where g.id = new.origem_estagio_id;
+  if v_estagio.tipo is distinct from 'NAO_OBRIGATORIO' then
+    raise exception 'DUPLA_CONTAGEM_VEDADA: só estágio não obrigatório é aproveitado como atividade complementar' using errcode = 'P0001';
+  end if;
+  if v_estagio.estudante_id is distinct from new.estudante_id then
+    raise exception 'DUPLA_CONTAGEM_VEDADA: o estágio é de outro estudante' using errcode = 'P0001';
+  end if;
+  if v_estagio.situacao not in ('CONCLUIDO', 'RESCINDIDO') then
+    raise exception 'DUPLA_CONTAGEM_VEDADA: o estágio é aproveitado depois de concluído ou rescindido' using errcode = 'P0001';
+  end if;
+  if not exists (
+    select 1 from public.exigencia_categoria x join public.estudante e on e.curso_id = x.curso_id
+    where e.id = new.estudante_id and x.categoria_id = new.categoria_id and x.admite_estagio_nao_obrigatorio
+  ) then
+    raise exception 'DUPLA_CONTAGEM_VEDADA: o curso não prevê aproveitar estágio nesta categoria (RN-18)' using errcode = 'P0001';
+  end if;
+  select coalesce(sum(r.duracao_minutos), 0)::integer into v_homologados
+    from public.registro_frequencia r where r.estagio_id = new.origem_estagio_id and r.situacao = 'HOMOLOGADO';
+  if new.horas_declaradas_minutos > v_homologados then
+    raise exception 'DUPLA_CONTAGEM_VEDADA: % min declarados, % min homologados no estágio', new.horas_declaradas_minutos, v_homologados
+      using errcode = 'P0001';
+  end if;
+  return new;
+end
+$$;
+
+revoke all on function app.validar_origem_estagio() from public;
 revoke all on function app.estudantes_legiveis() from public;
 revoke all on function app.coordena_curso_do_estudante(uuid) from public;
 revoke all on function app.estudante_da_atividade(uuid) from public;
