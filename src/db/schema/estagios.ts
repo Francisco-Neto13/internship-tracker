@@ -313,3 +313,54 @@ export const responsavelEstagio = pgTable(
     ),
   ],
 );
+
+export const tipoAfastamento = pgEnum("tipo_afastamento", ["LICENCA", "ATESTADO_MEDICO", "OUTRO"]);
+export const situacaoAfastamento = pgEnum("situacao_afastamento", ["VALIDO", "SUBSTITUIDO"]);
+
+// RF030, RF059, RF060, RN-25 (DER §4.4, D1): a leave extends the planned end by the same
+// number of calendar days, up to the 2-year cap at the concedente; days inside a valid leave
+// take no frequency entry. A correction is a new row (the previous one becomes SUBSTITUIDO).
+// The certificate is a sensitive document (RN-38): its reads are recorded (RF072).
+export const afastamento = pgTable(
+  "afastamento",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    estagioId: uuid("estagio_id")
+      .notNull()
+      .references(() => estagio.id),
+    tipo: tipoAfastamento("tipo").notNull(),
+    // Health data: masked in the audit trail (app.coluna_sensivel)
+    descricao: text("descricao"),
+    dataInicio: date("data_inicio").notNull(),
+    dataFim: date("data_fim").notNull(),
+    diasCorridos: integer("dias_corridos")
+      .notNull()
+      .generatedAlwaysAs(sql`data_fim - data_inicio + 1`),
+    diasExtensao: integer("dias_extensao").notNull(),
+    dataFimPrevistaAnterior: date("data_fim_prevista_anterior").notNull(),
+    dataFimPrevistaNova: date("data_fim_prevista_nova").notNull(),
+    documentoId: uuid("documento_id")
+      .notNull()
+      .references((): AnyPgColumn => documento.id),
+    situacao: situacaoAfastamento("situacao").notNull().default("VALIDO"),
+    substituiAfastamentoId: uuid("substitui_afastamento_id")
+      .unique()
+      .references((): AnyPgColumn => afastamento.id),
+    justificativaSubstituicao: text("justificativa_substituicao"),
+    registradoPorUsuarioId: uuid("registrado_por_usuario_id")
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: criadoEm(),
+    atualizadoEm: atualizadoEm(),
+  },
+  (t) => [
+    index("afastamento_estagio_periodo_idx").on(t.estagioId, t.dataInicio, t.dataFim),
+    index("afastamento_documento_idx").on(t.documentoId),
+    index("afastamento_registrado_por_idx").on(t.registradoPorUsuarioId),
+    check("afastamento_periodo_valido", sql`${t.dataFim} >= ${t.dataInicio}`),
+    check("afastamento_outro_descrito", sql`${t.tipo} <> 'OUTRO' or ${t.descricao} is not null`),
+    check("afastamento_extensao_valida", sql`${t.diasExtensao} between 0 and ${t.dataFim} - ${t.dataInicio} + 1`),
+    check("afastamento_nova_data", sql`${t.dataFimPrevistaNova} = ${t.dataFimPrevistaAnterior} + ${t.diasExtensao}`),
+    check("afastamento_substituicao_justificada", sql`${t.substituiAfastamentoId} is null or ${t.justificativaSubstituicao} is not null`),
+  ],
+);
