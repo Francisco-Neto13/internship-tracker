@@ -144,6 +144,9 @@ O seed cria usuários com a senha `senha-dev-internship`:
 | `supervisor@exemplo-software.local` | Supervisor da mesma concedente |
 | `orientador@internship.local` | Professor orientador |
 
+O curso de Engenharia de Software tem as categorias de atividade complementar da RN-19 com seus
+limites (200 h no total; Extensão aceita estágio não obrigatório).
+
 A Ana tem um estágio `ATIVO` desde 2026-08-03 na Exemplo Software, com lançamentos de agosto (as
 duas primeiras semanas homologadas) e os relatórios gerados na ativação, para testar a Fase 3.
 
@@ -179,6 +182,15 @@ O `npm install` ativa os hooks versionados em `.githooks` (se não ativar, `npm 
 alter role app_runtime with login password '<senha gerada>';
 alter role auth_runtime with login password '<senha gerada>';
 ```
+
+### Produção (Vercel)
+
+A migração roda num job separado com `DATABASE_MIGRATION_URL`, nunca no build. Variáveis da
+aplicação: `DATABASE_URL` (`app_runtime`), `DATABASE_AUTH_URL` (`auth_runtime`),
+`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, as `R2_*` do bucket privado e `CRON_SECRET` (32
+caracteres ou mais). O `vercel.json` agenda `/api/cron/diaria` uma vez por dia; a Vercel envia o
+segredo no cabeçalho `Authorization`, e sem ele a rota recusa tudo. Não use a `DATABASE_URL` que
+a integração Neon injeta: é o papel dono e contorna a RLS.
 
 ## Estrutura do código
 
@@ -246,8 +258,8 @@ Commits seguem `type(scope): summary`, no imperativo, com notas em bullet explic
 | 1 · Fundação técnica | RNFs, DER lógico, migrações, wrapper de identidade, papéis e políticas RLS, auditoria, autenticação, CI, usuários e perfis, senha provisória, consulta e exportação da auditoria (**concluída**) |
 | 2 · Cadastros e formalização | Cursos, estudantes, parâmetros, concedentes, convênios, documentos, TCE, plano de atividades, responsáveis, apólice, assinaturas, ativação de estágio e aditivos (**concluída**) |
 | 3 · Acompanhamento | Frequência, homologação, carga horária, divergências, relatórios, avaliação e acompanhamento do orientador; guardas de conclusão e registro de leitura de dado de saúde (**concluída**) |
-| 4 · Atividades complementares e integralização | Cadastro, análise, limites por categoria, apuração |
-| 5 · Ocorrências, conclusão e conformidade | Afastamento, prorrogação, rescisão, guarda documental, relatórios gerenciais |
+| 4 · Atividades complementares e integralização | Cadastro com comprovante, análise, limites por categoria, vedação de dupla contagem, apuração (**concluída**) |
+| 5 · Ocorrências, conclusão e conformidade | Afastamento, rescisão e conclusão, PDFs do TCE e declarações, guarda documental, relatórios gerenciais, notificações (**concluída**) |
 
 A ordem segue a dependência de dados, não a numeração dos requisitos. Critérios de saída de cada fase em `AGENTS.md`.
 

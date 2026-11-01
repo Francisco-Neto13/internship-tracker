@@ -105,6 +105,7 @@ export function estagioAcompanhadoJson(estagio: EstagioAcompanhado) {
     data_fim_prevista: estagio.dataFimPrevista,
     carga_horas_semanal: minutosParaHoras(estagio.cargaSemanalMinutos),
     carga_horas_total: minutosParaHoras(estagio.cargaTotalMinutos),
+    afastamentos: estagio.afastamentos.map((periodo) => ({ data_inicio: periodo.dataInicio, data_fim: periodo.dataFim })),
   };
 }
 
