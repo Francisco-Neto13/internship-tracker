@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { dataPorExtenso, formatarData, formatarDataCurta, haQuantoTempo, prazoEmPalavras, saudacao } from "@/lib/datas";
 import { minutosParaHoras } from "@/lib/horas";
-import { humanizarCodigos } from "@/lib/rotulos";
+import { descreverOperacao, humanizarCodigos } from "@/lib/rotulos";
 import { getIdentity, getSession } from "@/lib/session";
 import { ROTULO_PERFIL, type Perfil } from "@/modules/acesso/schemas/perfil";
 import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
@@ -439,11 +439,7 @@ async function BlocoAdministrador({ identity }: { identity: Parameters<typeof da
           {(dados.auditoria ?? []).map((registro) => (
             <LinhaCompacta
               key={registro.id}
-              titulo={
-                <>
-                  <span className="font-mono text-xs text-navy-900/70">{registro.tabela}</span> · {registro.operacao.toLowerCase()}
-                </>
-              }
+              titulo={descreverOperacao(registro.tabela, registro.operacao)}
               subtitulo={registro.usuarioId ? "por um usuário" : "pelo sistema"}
               lateral={haQuantoTempo(registro.ocorridoEm)}
             />

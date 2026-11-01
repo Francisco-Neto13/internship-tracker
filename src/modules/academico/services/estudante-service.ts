@@ -25,12 +25,13 @@ const naoEncontrado = () =>
 
 export async function listEstudantes(
   identity: Identity,
-  query: { page: number; limit: number; cursoId?: string; situacao?: SituacaoAcademica; busca?: string; ordem?: string },
+  query: { page: number; limit: number; cursoId?: string; usuarioId?: string; situacao?: SituacaoAcademica; busca?: string; ordem?: string },
 ) {
   const campo = query.ordem?.replace(/^-/, "");
   return withUser(identity, (tx) =>
     findEstudantes(tx, {
       cursoId: query.cursoId,
+      usuarioId: query.usuarioId,
       situacao: query.situacao,
       busca: query.busca,
       ordem: (ORDENS_ESTUDANTE as readonly string[]).includes(campo ?? "") ? (campo as OrdemEstudante) : undefined,

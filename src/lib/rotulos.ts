@@ -56,3 +56,41 @@ const TODOS: Record<string, string> = Object.fromEntries(
 export function humanizarCodigos(texto: string): string {
   return texto.replace(/\b[A-Z][A-Z_]{3,}\b/g, (codigo) => TODOS[codigo] ?? codigo);
 }
+
+/** Nome legível de cada tabela auditada, para a trilha e o painel do administrador. */
+export const TABELA_AUDITORIA: Record<string, string> = {
+  usuario: "Conta de usuário",
+  vinculo_perfil: "Perfil e vínculo",
+  curso: "Curso",
+  estudante: "Estudante",
+  parametro_institucional: "Parâmetro institucional",
+  concedente: "Concedente",
+  convenio: "Convênio",
+  convenio_vigencia: "Vigência de convênio",
+  documento: "Documento",
+  estagio: "Estágio",
+  plano_atividades: "Plano de atividades",
+  responsavel_estagio: "Responsável do estágio",
+  apolice_seguro: "Apólice de seguro",
+  assinatura: "Assinatura",
+  aditivo: "Aditivo",
+  afastamento: "Afastamento",
+  rescisao: "Rescisão",
+  registro_frequencia: "Lançamento de frequência",
+  homologacao_frequencia: "Homologação de frequência",
+  divergencia_carga_horaria: "Divergência de carga",
+  relatorio: "Relatório de estágio",
+  versao_relatorio: "Versão de relatório",
+  parecer_relatorio: "Parecer de relatório",
+  avaliacao_desempenho: "Avaliação de desempenho",
+  acompanhamento: "Acompanhamento",
+  atividade_complementar: "Atividade complementar",
+  analise_atividade: "Análise de atividade",
+  declaracao: "Declaração",
+};
+
+export const OPERACAO_AUDITORIA: Record<string, string> = { INSERT: "criado", UPDATE: "alterado", DELETE: "removido", LEITURA: "lido" };
+
+export function descreverOperacao(tabela: string, operacao: string): string {
+  return `${TABELA_AUDITORIA[tabela] ?? tabela} ${OPERACAO_AUDITORIA[operacao] ?? operacao.toLowerCase()}`;
+}
