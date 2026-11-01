@@ -113,7 +113,7 @@ export const NAVEGACAO: NavItem[] = [
     modulo: "Transversal",
     rf: "RF012, RF035, RF040, RF070",
     perfis: "todos",
-    status: "em-construcao",
+    status: "ativo",
     icon: Bell,
   },
   {
