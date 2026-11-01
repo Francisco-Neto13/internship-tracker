@@ -18,6 +18,12 @@ const REGRAS_DE_GATILHO: { codigo: string; kind: DomainErrorKind; mensagem: stri
   { codigo: "HASH_DIVERGENTE", kind: "CONFLICT", mensagem: "A assinatura não corresponde ao documento vigente.", requisito: "RF019" },
   { codigo: "ADITIVO_NAO_ASSINAVEL", kind: "CONFLICT", mensagem: "O aditivo não está aguardando assinaturas.", requisito: "RF020" },
   { codigo: "REGISTRO_IMUTAVEL", kind: "CONFLICT", mensagem: "O registro não pode ser alterado.", requisito: "RN-28" },
+  { codigo: "AFASTAMENTO_RESTRITO", kind: "FORBIDDEN", mensagem: "Só a coordenação do curso registra afastamento.", requisito: "RF059" },
+  { codigo: "ESTAGIO_NAO_ATIVO", kind: "CONFLICT", mensagem: "Afastamento só em estágio ativo.", requisito: "RF059" },
+  { codigo: "AFASTAMENTO_FORA_DO_PERIODO", kind: "UNPROCESSABLE", mensagem: "O afastamento fica dentro do período do estágio.", requisito: "RF059" },
+  { codigo: "AFASTAMENTO_COM_LANCAMENTOS", kind: "CONFLICT", mensagem: "Há lançamentos de frequência no período: corrija-os ou cancele-os antes.", requisito: "RF030" },
+  { codigo: "SUBSTITUICAO_AFASTAMENTO_INVALIDA", kind: "CONFLICT", mensagem: "Só um afastamento válido do mesmo estágio é corrigido.", requisito: "RN-28" },
+  { codigo: "DOCUMENTO_INVALIDO", kind: "UNPROCESSABLE", mensagem: "Informe o atestado de afastamento enviado para este estágio.", requisito: "RF059" },
 ];
 
 const UNICOS: Record<string, { codigo: string; mensagem: string; requisito: string }> = {
@@ -27,6 +33,7 @@ const UNICOS: Record<string, { codigo: string; mensagem: string; requisito: stri
   plano_uma_versao_em_elaboracao: { codigo: "PLANO_EM_ELABORACAO", mensagem: "Já existe uma versão do plano em elaboração.", requisito: "RF016" },
   aditivo_um_pendente: { codigo: "ADITIVO_PENDENTE", mensagem: "Já existe um aditivo aguardando assinaturas.", requisito: "RF020" },
   apolice_seguro_substitui_apolice_id_unique: { codigo: "APOLICE_JA_SUBSTITUIDA", mensagem: "Esta apólice já foi substituída.", requisito: "RF018" },
+  afastamento_substitui_afastamento_id_unique: { codigo: "AFASTAMENTO_JA_SUBSTITUIDO", mensagem: "Este afastamento já foi substituído.", requisito: "RN-28" },
 };
 
 export function traduzirErroEstagio(error: unknown, acao: string): unknown {
@@ -62,6 +69,9 @@ export function traduzirErroEstagio(error: unknown, acao: string): unknown {
       message: "Já existe responsável nesta função no período; use a substituição.",
       requisito: "RN-10",
     });
+  }
+  if (isExclusionViolation(error, "afastamento_sem_sobreposicao")) {
+    return new DomainError({ code: "AFASTAMENTO_SOBREPOSTO", kind: "CONFLICT", message: "Já existe afastamento no período; corrija o registro existente.", requisito: "RF059" });
   }
   if (isForeignKeyViolation(error, "estagio_convenio_id_convenio_id_fk") || isForeignKeyViolation(error, "estagio_concedente_id_concedente_id_fk")) {
     return new DomainError({ code: "REFERENCIA_INEXISTENTE", kind: "UNPROCESSABLE", message: "Concedente ou convênio inexistente.", requisito: "RF015" });
