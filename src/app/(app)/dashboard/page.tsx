@@ -40,7 +40,7 @@ async function BlocoCoordenacao({ identity }: { identity: Parameters<typeof dado
       <h2 id="titulo-coordenacao" className="text-sm font-semibold text-navy-900/70">
         Coordenação · o que pede atenção
       </h2>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <Indicador
           rotulo="Atividades a analisar"
           valor={dados.fila?.length ?? null}
@@ -85,7 +85,7 @@ async function BlocoCoordenacao({ identity }: { identity: Parameters<typeof dado
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Painel titulo="Estágios" descricao="Por situação, em todos os cursos que você coordena" className="xl:col-span-2" verTodos={{ href: "/estagios" }}>
           <DistribuicaoEstagios contagens={dados.situacoes} />
         </Painel>
@@ -104,11 +104,11 @@ async function BlocoCoordenacao({ identity }: { identity: Parameters<typeof dado
             <div className="border-t border-navy-900/[0.07] pt-4">
               <p className="text-xs text-navy-900/60">Taxa de conclusão nos últimos 12 meses</p>
               {taxa === null ? (
-                <p className="mt-1 text-sm text-navy-900/55">Nenhum estágio encerrado no período.</p>
+                <p className="mt-1 text-sm text-navy-900/60">Nenhum estágio encerrado no período.</p>
               ) : (
                 <>
                   <p className="mt-1 text-xl font-semibold text-navy-900 tabular-nums">{taxa.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</p>
-                  <p className="text-xs text-navy-900/55">
+                  <p className="text-xs text-navy-900/60">
                     {encerrados!.concluidos} concluídos, {encerrados!.rescindidos} rescindidos
                   </p>
                 </>
@@ -118,7 +118,7 @@ async function BlocoCoordenacao({ identity }: { identity: Parameters<typeof dado
         </Painel>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Painel titulo="Fila de análise" descricao="Atividades complementares, as mais antigas primeiro" flush verTodos={{ href: "/atividades-complementares" }}>
           <ListaCompacta vazio="Nenhuma atividade aguardando análise.">
             {(dados.fila ?? []).slice(0, 5).map(({ atividade }) => (
@@ -189,12 +189,12 @@ async function BlocoOrientador({ identity }: { identity: Parameters<typeof dados
       <h2 id="titulo-orientador" className="text-sm font-semibold text-navy-900/70">
         Orientação
       </h2>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Indicador rotulo="Relatórios para analisar" valor={dados.paraAnalisar?.length ?? null} contexto="enviados pelos estagiários" href="/relatorios" icone={FileText} tom="atencao" />
         <Indicador rotulo="Divergências de carga" valor={dados.divergentes?.length ?? null} contexto="casos para o seu parecer" href="/frequencia" icone={Scale} tom="atencao" />
         <Indicador rotulo="Estágios orientados" valor={dados.ativos?.total ?? null} contexto="ativos hoje" href="/estagios?situacao=ATIVO" icone={GraduationCap} />
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Painel titulo="Relatórios para analisar" flush verTodos={{ href: "/relatorios" }}>
           <ListaCompacta vazio="Nenhum relatório aguardando a sua análise.">
             {(dados.paraAnalisar ?? []).slice(0, 6).map((relatorio) => (
@@ -236,7 +236,7 @@ async function BlocoSupervisor({ identity }: { identity: Parameters<typeof dados
       <h2 id="titulo-supervisor" className="text-sm font-semibold text-navy-900/70">
         Supervisão
       </h2>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Indicador rotulo="Estagiários ativos" valor={dados.ativos?.total ?? null} contexto="sob a sua supervisão" href="/estagios?situacao=ATIVO" icone={Users} />
         <Indicador
           rotulo="Com horas a homologar"
@@ -272,7 +272,7 @@ async function BlocoConcedente({ identity }: { identity: Parameters<typeof dados
       <h2 id="titulo-concedente" className="text-sm font-semibold text-navy-900/70">
         Concedente
       </h2>
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Painel titulo="Estágios na sua organização" className="xl:col-span-2" verTodos={{ href: "/estagios" }}>
           <DistribuicaoEstagios contagens={dados.situacoes} />
         </Painel>
@@ -313,7 +313,7 @@ async function BlocoEstudante({ identity }: { identity: Parameters<typeof dadosE
           verTodos={{ href: `/estagios/${atual.id}`, rotulo: "Abrir estágio" }}
         >
           {carga ? (
-            <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
               <div className="flex flex-col gap-4">
                 <Progresso
                   rotulo="Carga horária homologada"
@@ -340,7 +340,7 @@ async function BlocoEstudante({ identity }: { identity: Parameters<typeof dadosE
               <div>
                 <p className="mb-2 text-xs font-medium text-navy-900/60">Próximos relatórios</p>
                 {proximos.length === 0 ? (
-                  <p className="text-sm text-navy-900/55">Nenhum relatório pendente agora.</p>
+                  <p className="text-sm text-navy-900/60">Nenhum relatório pendente agora.</p>
                 ) : (
                   <ul className="flex flex-col gap-2">
                     {proximos.map((relatorio) => (
@@ -372,7 +372,7 @@ async function BlocoEstudante({ identity }: { identity: Parameters<typeof dadosE
         />
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Painel titulo="Integralização curricular" verTodos={{ href: "/integralizacao", rotulo: "Ver detalhes" }}>
           {integralizacao ? (
             <div className="flex flex-col gap-5">
@@ -391,7 +391,7 @@ async function BlocoEstudante({ identity }: { identity: Parameters<typeof dadosE
               />
             </div>
           ) : (
-            <p className="text-sm text-navy-900/55">A integralização não pôde ser carregada agora.</p>
+            <p className="text-sm text-navy-900/60">A integralização não pôde ser carregada agora.</p>
           )}
         </Painel>
         <Painel titulo="Atividades complementares" verTodos={{ href: "/atividades-complementares" }}>
@@ -421,7 +421,7 @@ async function BlocoAdministrador({ identity }: { identity: Parameters<typeof da
       <h2 id="titulo-administrador" className="text-sm font-semibold text-navy-900/70">
         Administração
       </h2>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Indicador rotulo="Usuários ativos" valor={dados.usuariosAtivos} contexto={dados.usuariosInativos !== null ? `${dados.usuariosInativos} inativos` : undefined} href="/administracao/usuarios" icone={Users} />
         <Indicador
           rotulo="Troca de senha pendente"
@@ -462,7 +462,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-1">
-        <p className="text-sm text-navy-900/55 first-letter:uppercase">{dataPorExtenso()}</p>
+        <p className="text-sm text-navy-900/60 first-letter:uppercase">{dataPorExtenso()}</p>
         <h1 className="text-[1.65rem] leading-tight font-semibold text-navy-900">
           {saudacao()}
           {primeiroNome ? `, ${primeiroNome}` : ""}

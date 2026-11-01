@@ -43,7 +43,7 @@ export default async function ConcedentesPage({ searchParams }: { searchParams: 
           <Avatar nome={concedente.nomeFantasia ?? concedente.razaoSocial} semente={concedente.id} forma="quadrado" tamanho="sm" />
           <span className="min-w-0">
             <span className="block truncate font-medium text-navy-900">{concedente.razaoSocial}</span>
-            <span className="block truncate text-xs text-navy-900/55">{concedente.nomeFantasia ?? concedente.areaAtuacao}</span>
+            <span className="block truncate text-xs text-navy-900/60">{concedente.nomeFantasia ?? concedente.areaAtuacao}</span>
           </span>
         </span>
       ),

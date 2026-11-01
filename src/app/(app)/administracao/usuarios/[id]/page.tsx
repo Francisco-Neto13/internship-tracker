@@ -67,7 +67,7 @@ export default async function UsuarioPage({ params, searchParams }: { params: Pr
         }
       />
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="flex flex-col gap-4 xl:col-span-2">
           <Painel titulo="Dados da conta" descricao="Nome exibido e e-mail usado no login.">
             <DadosConta usuario={{ id: usuario.id, nome: usuario.nome, email: usuario.email }} />
@@ -113,7 +113,7 @@ export default async function UsuarioPage({ params, searchParams }: { params: Pr
                     {ROTULO_PERFIL[vinculo.perfil]}
                     {escopo(vinculo) && <span className="text-navy-900/60">· {escopo(vinculo)}</span>}
                   </span>
-                  <span className="pl-4 text-xs text-navy-900/55">
+                  <span className="pl-4 text-xs text-navy-900/60">
                     {formatarDataHora(vinculo.vigenciaInicio)} até {vinculo.vigenciaFim ? formatarDataHora(vinculo.vigenciaFim) : "hoje (vigente)"}
                   </span>
                 </li>

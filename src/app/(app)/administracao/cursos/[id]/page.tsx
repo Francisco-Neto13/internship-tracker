@@ -58,12 +58,12 @@ export default async function CursoPage({ params }: { params: Promise<{ id: stri
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Indicador rotulo="Estudantes matriculados" valor={estudantes.total} contexto="no seu alcance" href={`/administracao/estudantes?curso_id=${id}&situacao=MATRICULADO`} icone={GraduationCap} />
         <Indicador rotulo="Estágios ativos" valor={estagios.total} contexto="no seu alcance" href={`/estagios?curso_id=${id}&situacao=ATIVO`} icone={Briefcase} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
         <div className="flex flex-col gap-4">
           <Painel titulo="Dados e exigências" descricao="Mudar uma carga reapura a integralização de todos os estudantes do curso, na mesma hora.">
             <FormularioApi

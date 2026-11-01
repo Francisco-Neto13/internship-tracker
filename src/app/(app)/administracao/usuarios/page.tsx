@@ -57,7 +57,7 @@ export default async function UsuariosPage({ searchParams }: { searchParams: Pro
           <Avatar nome={usuario.nome} semente={usuario.id} tamanho="sm" />
           <span className="min-w-0">
             <span className="block truncate font-medium text-navy-900">{usuario.nome}</span>
-            <span className="block truncate text-xs text-navy-900/55">{usuario.email}</span>
+            <span className="block truncate text-xs text-navy-900/60">{usuario.email}</span>
           </span>
         </span>
       ),
@@ -68,7 +68,7 @@ export default async function UsuariosPage({ searchParams }: { searchParams: Pro
       ocultarNoCelular: true,
       celula: (usuario) =>
         usuario.perfis.length === 0 ? (
-          <span className="text-navy-900/45">Sem perfil</span>
+          <span className="text-navy-900/60">Sem perfil</span>
         ) : (
           <span className="flex flex-wrap gap-1">
             {usuario.perfis.map((vinculo) => (
@@ -90,7 +90,7 @@ export default async function UsuariosPage({ searchParams }: { searchParams: Pro
             Senha provisória
           </span>
         ) : (
-          <span className="text-xs text-navy-900/55">Senha própria</span>
+          <span className="text-xs text-navy-900/60">Senha própria</span>
         ),
     },
     { chave: "criado", cabecalho: "Criado em", ordenavel: "criado", ocultarNoCelular: true, celula: (usuario) => <span className="text-navy-900/70">{formatarDataCurta(usuario.criadoEm.toISOString())}</span> },

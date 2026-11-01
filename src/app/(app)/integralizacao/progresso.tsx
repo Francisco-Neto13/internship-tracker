@@ -29,7 +29,7 @@ export function ProgressoIntegralizacao({ integralizacao, podeRecalcular = true 
           </>
         }
       >
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Progresso
             rotulo="Estágio obrigatório"
             atual={minutosParaHoras(apuracao.estagioConcluidoMinutos)}
@@ -56,7 +56,7 @@ export function ProgressoIntegralizacao({ integralizacao, podeRecalcular = true 
       </Painel>
       {integralizacao.categorias.length > 0 && (
         <Painel titulo="Atividades por categoria" descricao="Horas aproveitadas até o limite de cada categoria no curso">
-          <ul className="grid gap-5 md:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {integralizacao.categorias.map((categoria) => {
               const atingido = categoria.aproveitadoMinutos >= categoria.limiteMinutos;
               return (

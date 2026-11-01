@@ -81,7 +81,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Indicador rotulo="Convênios vigentes" valor={vigentes} contexto={`de ${convenios.length} convênio(s)`} icone={FileSignature} tom={vigentes === 0 ? "atencao" : "neutro"} />
         <Indicador rotulo="Estágios" valor={historico.total} contexto={Object.entries(historico.porSituacao).map(([chave, valor]) => `${valor} ${SITUACAO_ESTAGIO[chave]?.rotulo.toLowerCase() ?? chave}`).join(" · ") || "nenhum ainda"} icone={Briefcase} />
         <Indicador
@@ -94,7 +94,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
         <div className="flex flex-col gap-4">
           <Painel titulo="Convênios" descricao="Sem convênio vigente na data de início, o estágio não é ativado (RF010)." flush>
             <ul className="divide-y divide-navy-900/[0.07]" data-testid="convenios">

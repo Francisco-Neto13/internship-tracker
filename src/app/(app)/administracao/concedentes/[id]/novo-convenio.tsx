@@ -34,7 +34,7 @@ export function NovoConvenio({ concedenteId }: { concedenteId: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-3" noValidate>
+    <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-3" noValidate>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="convenio-numero">Número</Label>
         <Input id="convenio-numero" name="numero" />

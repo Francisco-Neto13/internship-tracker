@@ -80,7 +80,7 @@ export function ListaDefinicao({
     >
       {itens.map((item) => (
         <div key={item.rotulo} className={cn("min-w-0", item.largo && "sm:col-span-full")}>
-          <dt className="text-xs font-medium text-navy-900/55">{item.rotulo}</dt>
+          <dt className="text-xs font-medium text-navy-900/60">{item.rotulo}</dt>
           <dd className="mt-0.5 text-sm break-words text-navy-900">
             {item.valor === null || item.valor === undefined || item.valor === "" ? <span className="text-navy-900/40">—</span> : item.valor}
           </dd>

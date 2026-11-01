@@ -57,8 +57,8 @@ export function DataTable<T>({
   embutida = false,
 }: DataTableProps<T>) {
   return (
-    <div className={cn(!embutida && "surface-card", "overflow-hidden", className)}>
-      <div className="overflow-x-auto">
+    <div className={cn(!embutida && "surface-card", "relative overflow-hidden", className)}>
+      <div className="relative overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-navy-900/10 bg-nevoa-50">
             <tr>

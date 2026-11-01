@@ -13,7 +13,7 @@ export function EsqueletoDePagina() {
         <Esqueleto className="h-8 w-72" />
         <Esqueleto className="h-4 w-96 max-w-full" />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, indice) => (
           <Esqueleto key={indice} className="h-28 rounded-xl" />
         ))}

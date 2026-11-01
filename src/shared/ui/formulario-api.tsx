@@ -142,7 +142,7 @@ export function FormularioApi({
                   <Input id={id} name={campo.nome} type={campo.tipo ?? "text"} step={campo.passo} defaultValue={String(inicial)} aria-describedby={ajuda} />
                 )}
                 {campo.ajuda && (
-                  <p id={ajuda} className="text-xs text-navy-900/55">
+                  <p id={ajuda} className="text-xs text-navy-900/60">
                     {campo.ajuda}
                   </p>
                 )}

@@ -50,7 +50,7 @@ export function CursoForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 sm:grid-cols-2" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 sm:grid-cols-2" noValidate>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="curso-codigo">Código</Label>
         <Input id="curso-codigo" aria-invalid={Boolean(errors.codigo)} {...register("codigo")} />

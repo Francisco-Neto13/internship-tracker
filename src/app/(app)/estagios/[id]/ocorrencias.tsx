@@ -94,7 +94,7 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
       )}
 
       {estagio.situacao === "ATIVO" && (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <Painel titulo="Concluir estágio" descricao="Exige avaliação final e, se obrigatório, carga mínima homologada e relatório final aprovado; nenhum lançamento pendente (RF045).">
             <BotaoAcao
               url={`${api}/conclusao`}

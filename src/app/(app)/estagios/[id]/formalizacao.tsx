@@ -129,7 +129,7 @@ export function TrilhaFormalizacao({ detalhe }: { detalhe: Detalhe }) {
               <span className="block text-sm font-medium text-navy-900">
                 {passo.rotulo}
               </span>
-              <span className="block text-xs text-navy-900/55">
+              <span className="block text-xs text-navy-900/60">
                 {passo.detalhe}
               </span>
               <span className="sr-only">
@@ -200,7 +200,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
         </Painel>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Painel
           titulo="Responsáveis"
           descricao="Professor orientador e supervisor da concedente (RF031, RF032)."
@@ -220,7 +220,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                 <span>
                   <span className="block font-medium text-navy-900">
                     {responsavel.usuarioNome ?? (
-                      <span className="font-normal text-navy-900/55">
+                      <span className="font-normal text-navy-900/60">
                         Nome não visível para o seu perfil
                       </span>
                     )}
@@ -359,9 +359,9 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
       >
         {planoAtual ? (
           <div className="flex flex-col gap-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <p className="text-xs font-medium text-navy-900/55">
+                <p className="text-xs font-medium text-navy-900/60">
                   Atividades previstas · versão {planoAtual.versao}
                 </p>
                 <p className="mt-1 text-sm whitespace-pre-line text-navy-900">
@@ -369,7 +369,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-navy-900/55">
+                <p className="text-xs font-medium text-navy-900/60">
                   Compatibilidade com o curso
                 </p>
                 <p className="mt-1 text-sm whitespace-pre-line text-navy-900">
@@ -483,7 +483,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                       {assinatura.signatarioNome} ·{" "}
                       {PARTE[assinatura.parte] ?? assinatura.parte}
                     </span>
-                    <span className="block font-mono text-xs text-navy-900/50">
+                    <span className="block font-mono text-xs text-navy-900/60">
                       {assinatura.hashDocumento.slice(0, 16)}…
                     </span>
                   </span>
