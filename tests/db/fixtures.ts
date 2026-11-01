@@ -250,3 +250,34 @@ export async function createDocumentoDoEstagio(
     .returning();
   return row;
 }
+
+/** An active category with an hour limit in the course (RF048, RN-23). */
+export async function createCategoriaComLimite(cursoId: string, limiteMinutos: number, options: { admiteEstagioNaoObrigatorio?: boolean } = {}) {
+  const [categoria] = await ownerDatabase()
+    .insert(schema.categoriaAtividade)
+    .values({ nome: `Categoria ${suffix()}` })
+    .returning();
+  await ownerDatabase()
+    .insert(schema.exigenciaCategoria)
+    .values({ cursoId, categoriaId: categoria.id, limiteMinutos, admiteEstagioNaoObrigatorio: options.admiteEstagioNaoObrigatorio ?? false });
+  return categoria;
+}
+
+/** A confirmed document of a student (COMPROVANTE_ATIVIDADE), with its own file hash. */
+export async function createComprovanteDoEstudante(estudanteId: string, enviadoPorUsuarioId: string, sha256?: string) {
+  const id = suffix();
+  const [row] = await ownerDatabase()
+    .insert(schema.documento)
+    .values({
+      tipo: "COMPROVANTE_ATIVIDADE",
+      chaveObjeto: `documentos/comprovante-${id}-${randomUUID()}.pdf`,
+      nomeOriginal: `certificado-${id}.pdf`,
+      tipoMime: "application/pdf",
+      tamanhoBytes: 100,
+      sha256: sha256 ?? randomUUID().replaceAll("-", "").padEnd(64, "0"),
+      estudanteId,
+      enviadoPorUsuarioId,
+    })
+    .returning();
+  return row;
+}
