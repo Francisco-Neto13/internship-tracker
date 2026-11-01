@@ -1,4 +1,5 @@
 import {
+  Archive,
   Award,
   BarChart3,
   Bell,
@@ -113,7 +114,7 @@ export const NAVEGACAO: NavItem[] = [
     modulo: "Transversal",
     rf: "RF012, RF035, RF040, RF070",
     perfis: "todos",
-    status: "em-construcao",
+    status: "ativo",
     icon: Bell,
   },
   {
@@ -194,8 +195,18 @@ export const NAVEGACAO: NavItem[] = [
         modulo: "M08 Administração e Controle",
         rf: "RF067-RF068",
         perfis: ["COORDENACAO", "ADMINISTRADOR"],
-        status: "em-construcao",
+        status: "ativo",
         icon: BarChart3,
+      },
+      {
+        href: "/administracao/guarda-documental",
+        titulo: "Guarda Documental",
+        descricao: "Documentos com prazo de guarda atingido e eliminação do arquivo.",
+        modulo: "M08 Administração e Controle",
+        rf: "RF069",
+        perfis: ["ADMINISTRADOR"],
+        status: "ativo",
+        icon: Archive,
       },
       {
         href: "/administracao/auditoria",

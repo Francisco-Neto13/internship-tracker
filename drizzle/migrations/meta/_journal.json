@@ -85,6 +85,34 @@
       "when": 1793534473737,
       "tag": "0011_integralizacao",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793535646120,
+      "tag": "0012_notificacoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793536062859,
+      "tag": "0013_afastamento",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793536856868,
+      "tag": "0014_rescisao",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793537958387,
+      "tag": "0015_declaracao",
+      "breakpoints": true
     }
   ]
 }

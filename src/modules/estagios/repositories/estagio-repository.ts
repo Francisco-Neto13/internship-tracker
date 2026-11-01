@@ -1,6 +1,6 @@
 import { and, count, desc, eq, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { concedente, estagio, estudante, usuario } from "@/db/schema";
+import { concedente, convenio, curso, estagio, estudante, usuario } from "@/db/schema";
 import type { Transaction } from "@/db/with-user";
 
 // No authorization filter: RLS (app.pode_ler_estagio) decides which internships exist for the
@@ -60,6 +60,27 @@ export async function findEstagioById(tx: Transaction, id: string): Promise<Esta
 }
 
 /** Locks the row for the rest of the transaction (activation, amendments). */
+/** RF022: names of the parties for the documents; null where the caller cannot read them. */
+export async function findIdentificacaoEstagio(tx: Transaction, row: EstagioRow) {
+  const [linha] = await tx
+    .select({
+      estudanteNome: usuarioEstudante.nome,
+      matricula: estudante.matricula,
+      curso: curso.nome,
+      concedente: concedente.razaoSocial,
+      cnpj: concedente.cnpj,
+      convenio: convenio.numero,
+    })
+    .from(estagio)
+    .leftJoin(estudante, eq(estudante.id, estagio.estudanteId))
+    .leftJoin(usuarioEstudante, eq(usuarioEstudante.id, estudante.usuarioId))
+    .leftJoin(curso, eq(curso.id, estagio.cursoId))
+    .leftJoin(concedente, eq(concedente.id, estagio.concedenteId))
+    .leftJoin(convenio, eq(convenio.id, estagio.convenioId))
+    .where(eq(estagio.id, row.id));
+  return linha ?? { estudanteNome: null, matricula: null, curso: null, concedente: null, cnpj: null, convenio: null };
+}
+
 export async function lockEstagio(tx: Transaction, id: string): Promise<EstagioRow | undefined> {
   const [row] = await tx.select().from(estagio).where(eq(estagio.id, id)).for("update");
   return row;

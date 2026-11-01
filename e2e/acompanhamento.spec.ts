@@ -1,6 +1,6 @@
-import { randomUUID } from "node:crypto";
-import { expect, test, type Browser } from "@playwright/test";
-import { dados, erro, SENHA, sessoes } from "./support/api";
+import { expect, test } from "@playwright/test";
+import { dados, erro, sessoes } from "./support/api";
+import { criarEstagioAtivoDesdeAgosto } from "./support/estagio";
 
 // Fase 3 end to end through the HTTP API: an internship that started on 2026-08-03 is
 // formalized and activated, then each person does their part of the follow-up: the student
@@ -9,69 +9,7 @@ import { dados, erro, SENHA, sessoes } from "./support/api";
 // is created on every run, so a previous run never blocks this one.
 
 const sessao = sessoes(90);
-
-async function estagioAtivoDesdeAgosto(browser: Browser) {
-  const admin = await sessao(browser, "admin@internship.local", SENHA);
-  const curso = (await dados<{ id: string; codigo: string }[]>(await admin.get("/api/v1/cursos"))).find((item) => item.codigo === "ENG-SOFT")!;
-  const buscarId = async (email: string) => (await dados<{ id: string }[]>(await admin.get(`/api/v1/usuarios?busca=${email}`)))[0].id;
-  const email = `acompanhamento-${randomUUID().slice(0, 8)}@internship.local`;
-  const novo = await dados<{ id: string; senha_provisoria: string }>(
-    await admin.post("/api/v1/usuarios", { data: { nome: "Estagiária E2E", email, perfis: [{ perfil: "ESTUDANTE" }] } }),
-    201,
-  );
-  const estudante = await dados<{ id: string }>(
-    await admin.post("/api/v1/estudantes", { data: { usuario_id: novo.id, curso_id: curso.id, matricula: `E2E${randomUUID().slice(0, 8)}`, periodo: 5 } }),
-    201,
-  );
-
-  const coordenacao = await sessao(browser, "coordenacao.software@internship.local", SENHA);
-  const [concedente] = await dados<{ id: string }[]>(await coordenacao.get("/api/v1/concedentes?busca=11222333000181"));
-  const convenio = (await dados<{ id: string; numero: string }[]>(await coordenacao.get(`/api/v1/concedentes/${concedente.id}/convenios`))).find(
-    (item) => item.numero === "CV-2026-0001",
-  )!;
-  const estagio = await dados<{ id: string }>(
-    await coordenacao.post("/api/v1/estagios", {
-      data: {
-        estudante_id: estudante.id,
-        concedente_id: concedente.id,
-        convenio_id: convenio.id,
-        tipo: "OBRIGATORIO",
-        data_inicio: "2026-08-03",
-        data_fim_pactuada: "2027-07-30",
-        carga_horas_diaria: 6,
-        carga_horas_semanal: 30,
-        carga_horas_total: 400,
-        condicoes_pactuadas: "Desenvolvimento de software sob supervisão",
-      },
-    }),
-    201,
-  );
-  const id = estagio.id;
-  await dados(await coordenacao.post(`/api/v1/estagios/${id}/responsaveis`, { data: { papel: "ORIENTADOR", usuario_id: await buscarId("orientador@internship.local") } }), 201);
-  await dados(await coordenacao.post(`/api/v1/estagios/${id}/responsaveis`, { data: { papel: "SUPERVISOR", usuario_id: await buscarId("supervisor@exemplo-software.local") } }), 201);
-
-  const aluno = await sessao(browser, email, novo.senha_provisoria);
-  await dados(await aluno.post("/api/v1/auth/senha", { data: { senha_atual: novo.senha_provisoria, nova_senha: "frase segura do acompanhamento e2e" } }));
-  await dados(await aluno.put(`/api/v1/estagios/${id}/plano-atividades`, { data: { atividades_previstas: "Sistemas web", justificativa_compatibilidade: "Engenharia de software" } }));
-  await dados(await aluno.post(`/api/v1/estagios/${id}/plano-atividades/envio`));
-  const orientador = await sessao(browser, "orientador@internship.local", SENHA);
-  await dados(await orientador.post(`/api/v1/estagios/${id}/plano-atividades/aprovacao`));
-  const concedenteRh = await sessao(browser, "rh@exemplo-software.local", SENHA);
-  await dados(
-    await concedenteRh.post(`/api/v1/estagios/${id}/apolices`, {
-      data: { seguradora: "Seguradora E2E", numero_apolice: "AP-E2E-3", contratante: "CONCEDENTE", vigencia_inicio: "2026-08-01", vigencia_fim: "2027-12-31" },
-    }),
-    201,
-  );
-  await dados(await coordenacao.post(`/api/v1/estagios/${id}/tce/fechamento`));
-  await dados(await coordenacao.post(`/api/v1/estagios/${id}/assinaturas`, { data: { parte: "INSTITUICAO" } }), 201);
-  await dados(await aluno.post(`/api/v1/estagios/${id}/assinaturas`, { data: { parte: "ESTUDANTE" } }), 201);
-  await dados(await concedenteRh.post(`/api/v1/estagios/${id}/assinaturas`, { data: { parte: "CONCEDENTE" } }), 201);
-  await dados(await coordenacao.post(`/api/v1/estagios/${id}/ativacao`));
-
-  const supervisor = await sessao(browser, "supervisor@exemplo-software.local", SENHA);
-  return { id, aluno, orientador, supervisor, coordenacao, concedenteRh };
-}
+const estagioAtivoDesdeAgosto = (browser: Parameters<typeof criarEstagioAtivoDesdeAgosto>[0]) => criarEstagioAtivoDesdeAgosto(browser, sessao, "acompanhamento");
 
 test("an active internship is followed through the API (Fase 3)", async ({ browser }) => {
   const { id, aluno, orientador, supervisor, coordenacao } = await estagioAtivoDesdeAgosto(browser);

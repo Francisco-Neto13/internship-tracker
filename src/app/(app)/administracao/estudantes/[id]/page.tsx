@@ -9,6 +9,7 @@ import { getIntegralizacao } from "@/modules/integralizacao/services/integraliza
 import { FormularioApi } from "@/shared/ui/formulario-api";
 import { PageHeader } from "@/shared/ui/page-header";
 import { StatusBadge } from "@/shared/ui/status-badge";
+import { DeclaracoesEstudante } from "../../../integralizacao/declaracoes";
 import { ProgressoIntegralizacao } from "../../../integralizacao/progresso";
 
 // RF005: edit a student (API: PATCH /estudantes/{id}). The situation offers only the allowed
@@ -63,6 +64,11 @@ export default async function EstudantePage({ params }: { params: Promise<{ id: 
         <div className="flex flex-col gap-3">
           <h2 className="text-sm font-medium text-navy-900/60">Integralização curricular</h2>
           <ProgressoIntegralizacao integralizacao={integralizacao} />
+          <DeclaracoesEstudante
+            identity={identity}
+            estudanteId={id}
+            atividadesCumpridas={integralizacao.apuracao.atividadesAproveitadoMinutos >= integralizacao.apuracao.atividadesExigidoMinutos}
+          />
         </div>
       )}
     </section>

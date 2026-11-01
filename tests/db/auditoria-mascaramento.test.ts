@@ -75,13 +75,14 @@ describe("sensitive columns masked in the audit trail (RN-38, RF071)", () => {
   it("keeps an empty sensitive column as null, so absence is not mistaken for content", async () => {
     const dados = await emTransacaoRevertida(async (client) => {
       await client.query(`
-        create table public.afastamento (id uuid primary key default gen_random_uuid(), descricao text);
-        alter table public.afastamento enable row level security;
-        create trigger registrar_auditoria after insert on public.afastamento
+        create table public.teste_mascaramento_nulo (id uuid primary key default gen_random_uuid(), descricao text);
+        alter table public.teste_mascaramento_nulo enable row level security;
+        create trigger registrar_auditoria after insert on public.teste_mascaramento_nulo
           for each row execute function app.registrar_auditoria();
+        insert into app.coluna_sensivel (tabela, coluna, motivo) values ('teste_mascaramento_nulo', 'descricao', 'teste');
       `);
-      await client.query(`insert into public.afastamento (descricao) values (null)`);
-      const { rows } = await client.query<Registro>(`select dados_novos from public.auditoria where tabela = 'afastamento'`);
+      await client.query(`insert into public.teste_mascaramento_nulo (descricao) values (null)`);
+      const { rows } = await client.query<Registro>(`select dados_novos from public.auditoria where tabela = 'teste_mascaramento_nulo'`);
       return rows[0].dados_novos;
     });
 

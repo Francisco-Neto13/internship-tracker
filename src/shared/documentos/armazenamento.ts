@@ -21,6 +21,8 @@ export type Armazenamento = {
   ler(chave: string): Promise<Uint8Array>;
   copiar(origem: string, destino: string): Promise<void>;
   remover(chave: string): Promise<void>;
+  /** Server-side write of a document the system generates itself (RF022, RF058). */
+  gravar(chave: string, conteudo: Uint8Array, tipoMime: string): Promise<void>;
 };
 
 function configuracaoS3() {
@@ -82,6 +84,9 @@ function armazenamentoS3(): Armazenamento {
     },
     async remover(chave) {
       await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: chave }));
+    },
+    async gravar(chave, conteudo, tipoMime) {
+      await client.send(new PutObjectCommand({ Bucket: bucket, Key: chave, Body: conteudo, ContentType: tipoMime, ContentLength: conteudo.length }));
     },
   };
 }

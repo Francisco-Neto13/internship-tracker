@@ -146,4 +146,30 @@ export function toNovoAditivo(body: z.infer<typeof aditivoBodySchema>) {
   };
 }
 
+// RF059, RF060: leave of an active internship, with its certificate
+export const afastamentoBodySchema = z
+  .object({
+    tipo: z.enum(["LICENCA", "ATESTADO_MEDICO", "OUTRO"]),
+    descricao: z.string().trim().min(1).max(2000).nullable().default(null),
+    data_inicio: z.iso.date(),
+    data_fim: z.iso.date(),
+    documento_id: z.uuid(),
+  })
+  .refine((body) => body.data_fim >= body.data_inicio, { message: "data_fim antes de data_inicio", path: ["data_fim"] })
+  .refine((body) => body.tipo !== "OUTRO" || body.descricao, { message: "Descreva o afastamento do tipo OUTRO", path: ["descricao"] });
+
+export const substituicaoAfastamentoBodySchema = afastamentoBodySchema.and(z.object({ justificativa: z.string().trim().min(1).max(2000) }));
+
+export function toNovoAfastamento(body: z.infer<typeof afastamentoBodySchema>) {
+  return { tipo: body.tipo, descricao: body.descricao, dataInicio: body.data_inicio, dataFim: body.data_fim, documentoId: body.documento_id };
+}
+
+// RF063, RN-27: rescission requested by one of the parties, recorded by the coordination
+export const rescisaoBodySchema = z.object({
+  data_rescisao: z.iso.date(),
+  solicitante: z.enum(["ESTUDANTE", "CONCEDENTE", "INSTITUICAO"]),
+  motivo: z.string().trim().min(1).max(2000),
+  documento_id: z.uuid().nullable().default(null),
+});
+
 export const idParamSchema = z.object({ id: z.uuid() });

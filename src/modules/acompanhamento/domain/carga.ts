@@ -8,6 +8,8 @@ export type EstagioCarga = {
   dataFimPrevista: string;
   cargaSemanalMinutos: number;
   cargaTotalMinutos: number;
+  /** RF030, RF060: valid leaves; their business days are not expected work. */
+  afastamentos?: readonly { dataInicio: string; dataFim: string }[];
 };
 
 const umDia = 24 * 60 * 60 * 1000;
@@ -35,11 +37,17 @@ export function diasUteis(inicio: string, fim: string): number {
 /**
  * Hours expected until `dataReferencia`: the weekly workload of the TCE spread over the
  * business days elapsed since the start (5 a week), never above the total workload. Days
- * after the planned end do not add.
+ * after the planned end and business days inside a valid leave (RF030) do not add.
  */
 export function minutosPrevistosAte(estagio: EstagioCarga, dataReferencia: string): number {
   const fim = dataReferencia < estagio.dataFimPrevista ? dataReferencia : estagio.dataFimPrevista;
-  const previstos = Math.floor((estagio.cargaSemanalMinutos * diasUteis(estagio.dataInicio, fim)) / 5);
+  // Valid leaves never overlap (exclusion constraint), so their days are subtracted once
+  const emAfastamento = (estagio.afastamentos ?? []).reduce(
+    (total, periodo) =>
+      total + diasUteis(periodo.dataInicio < estagio.dataInicio ? estagio.dataInicio : periodo.dataInicio, periodo.dataFim < fim ? periodo.dataFim : fim),
+    0,
+  );
+  const previstos = Math.floor((estagio.cargaSemanalMinutos * (diasUteis(estagio.dataInicio, fim) - emAfastamento)) / 5);
   return Math.min(previstos, estagio.cargaTotalMinutos);
 }
 

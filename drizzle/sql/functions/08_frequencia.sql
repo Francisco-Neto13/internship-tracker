@@ -61,8 +61,7 @@ begin
 end
 $$;
 
--- RF030 extension point: days inside a valid leave do not take entries. Leaves arrive with
--- the afastamento table (Fase 5), which replaces this body; until then no day is a leave.
+-- RF030: days inside a valid leave take no frequency entry (afastamento, Fase 5)
 create or replace function app.em_afastamento(p_estagio_id uuid, p_data date)
 returns boolean
 language sql
@@ -70,7 +69,10 @@ stable
 security definer
 set search_path = ''
 as $$
-  select false
+  select exists (
+    select 1 from public.afastamento a
+    where a.estagio_id = p_estagio_id and a.situacao = 'VALIDO' and p_data between a.data_inicio and a.data_fim
+  )
 $$;
 
 -- RF023 to RF025 (DER §5.3, D2, D4): the entry of a day of an ATIVO internship, on a past or

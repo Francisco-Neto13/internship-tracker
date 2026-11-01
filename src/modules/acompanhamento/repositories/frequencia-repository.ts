@@ -14,7 +14,10 @@ export type SituacaoFrequencia = FrequenciaRow["situacao"];
 export type EstagioAcompanhado = Pick<
   typeof estagio.$inferSelect,
   "id" | "situacao" | "tipo" | "cursoId" | "estudanteId" | "concedenteId" | "dataInicio" | "dataFimPrevista" | "cargaSemanalMinutos" | "cargaTotalMinutos"
->;
+> & { afastamentos: { dataInicio: string; dataFim: string }[] };
+
+type Periodo = { data_inicio: string; data_fim: string };
+const paraPeriodos = (periodos: Periodo[] | null) => (periodos ?? []).map((p) => ({ dataInicio: p.data_inicio, dataFim: p.data_fim }));
 
 const colunasEstagio = {
   id: estagio.id,
@@ -31,7 +34,10 @@ const colunasEstagio = {
 
 export async function findEstagioAcompanhado(tx: Transaction, id: string): Promise<EstagioAcompanhado | undefined> {
   const [row] = await tx.select(colunasEstagio).from(estagio).where(eq(estagio.id, id));
-  return row;
+  if (!row) return undefined;
+  // RF030: dates of the valid leaves, readable by whoever reads the internship (M04 function)
+  const { rows } = await tx.execute<Periodo>(sql`select data_inicio::text, data_fim::text from app.periodos_afastamento(${id}::uuid)`);
+  return { ...row, afastamentos: paraPeriodos(rows) };
 }
 
 /** Locks the internship for writes that depend on its sums (weekly limit, homologation). */
@@ -234,10 +240,11 @@ export async function findEstagiosAtivosComCumpridos(tx: Transaction, dataRefere
     carga_semanal_minutos: number;
     carga_total_minutos: number;
     minutos: string | null;
+    afastamentos: Periodo[] | null;
   }>(sql`
     select g.id, g.situacao, g.tipo, g.curso_id, g.estudante_id, g.concedente_id,
            g.data_inicio::text as data_inicio, g.data_fim_prevista::text as data_fim_prevista,
-           g.carga_semanal_minutos, g.carga_total_minutos, c.minutos
+           g.carga_semanal_minutos, g.carga_total_minutos, c.minutos, a.afastamentos
     from public.estagio g
     left join lateral (
       select sum(r.duracao_minutos) as minutos
@@ -246,6 +253,12 @@ export async function findEstagiosAtivosComCumpridos(tx: Transaction, dataRefere
         and r.situacao in ('REGISTRADO', 'SINALIZADO', 'HOMOLOGADO')
         and r.data <= ${dataReferencia}::date
     ) c on true
+    -- RF030: advisor and coordination read the leaves themselves (policy afastamento_leitura)
+    left join lateral (
+      select jsonb_agg(jsonb_build_object('data_inicio', af.data_inicio, 'data_fim', af.data_fim)) as afastamentos
+      from public.afastamento af
+      where af.estagio_id = g.id and af.situacao = 'VALIDO'
+    ) a on true
     where g.situacao = 'ATIVO'
       and g.id in (select app.estagios_legiveis(true))
       and (app.e_responsavel_vigente(g.id, 'ORIENTADOR') or app.coordena_curso(g.curso_id))
@@ -263,6 +276,7 @@ export async function findEstagiosAtivosComCumpridos(tx: Transaction, dataRefere
       dataFimPrevista: row.data_fim_prevista,
       cargaSemanalMinutos: row.carga_semanal_minutos,
       cargaTotalMinutos: row.carga_total_minutos,
+      afastamentos: paraPeriodos(row.afastamentos),
     },
     minutosCumpridos: Number(row.minutos ?? 0),
   }));

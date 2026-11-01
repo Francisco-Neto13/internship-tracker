@@ -42,7 +42,8 @@ create policy convenio_vigencia_insercao on public.convenio_vigencia for insert 
 alter table public.documento enable row level security;
 
 grant select, insert on public.documento to app_runtime;
-grant update (data_liberacao_guarda, eliminado_em, eliminado_por_usuario_id) on public.documento to app_runtime;
+-- No UPDATE: the retention date and the elimination are written only by the definer
+-- functions of functions/18_guarda.sql (RF069), so no one shortens a retention period
 
 create policy documento_leitura_proprio on public.documento for select to app_runtime
   using (enviado_por_usuario_id = (select app.usuario_atual_id()));
@@ -61,6 +62,3 @@ create policy documento_insercao on public.documento for insert to app_runtime w
   and app.pode_enviar_documento(tipo, concedente_id, estagio_id, estudante_id)
 );
 
-create policy documento_guarda on public.documento for update to app_runtime
-  using ((select app.tem_perfil_vigente('ADMINISTRADOR')))
-  with check ((select app.tem_perfil_vigente('ADMINISTRADOR')));
