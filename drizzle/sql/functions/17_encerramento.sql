@@ -75,7 +75,8 @@ end
 $$;
 
 -- AFTER UPDATE OF situacao on estagio, ATIVO -> CONCLUIDO | RESCINDIDO (DER §5.2, §5.12): the
--- pending amendment is cancelled and the responsibles leave on the end date. Runs after the
+-- pending amendment is cancelled, the responsibles leave on the end date and the retention of
+-- the documents starts (functions/18_guarda.sql). Runs after the
 -- situation notification (trigger name order), so they are still told of the end.
 create or replace function app.encerrar_estagio()
 returns trigger
@@ -96,6 +97,8 @@ begin
   update public.responsavel_estagio
      set vigencia_fim = greatest(v_data, vigencia_inicio)
    where estagio_id = new.id and (vigencia_fim is null or vigencia_fim > v_data);
+  -- RF069 (DER §5.11): the retention of the internship documents counts from the end
+  perform app.definir_guarda_estagio(new.id, (new.encerrado_em at time zone 'America/Sao_Paulo')::date);
   return null;
 end
 $$;
