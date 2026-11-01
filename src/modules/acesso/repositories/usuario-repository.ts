@@ -1,4 +1,4 @@
-import { and, asc, count, eq, exists, ilike, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, ilike, or, sql, type SQL } from "drizzle-orm";
 import { usuario, vinculoPerfil } from "@/db/schema";
 import { padraoContendo } from "@/db/like";
 import type { Transaction } from "@/db/with-user";
@@ -31,9 +31,13 @@ const colunas = {
   criadoEm: usuario.criadoEm,
 };
 
+/** Ordenações aceitas pela listagem (?ordem=campo ou -campo); o padrão é o nome. */
+export const ORDENS_USUARIO = ["nome", "email", "situacao", "criado"] as const;
+export type OrdemUsuario = (typeof ORDENS_USUARIO)[number];
+
 export async function findUsuarios(
   tx: Transaction,
-  filter: { perfil?: Perfil; situacao?: Situacao; busca?: string; limit: number; offset: number },
+  filter: { perfil?: Perfil; situacao?: Situacao; busca?: string; ordem?: OrdemUsuario; decrescente?: boolean; limit: number; offset: number },
 ): Promise<{ items: UsuarioRow[]; total: number }> {
   const condicoes: SQL[] = [];
   if (filter.situacao) condicoes.push(eq(usuario.situacao, filter.situacao));
@@ -57,7 +61,10 @@ export async function findUsuarios(
     .select(colunas)
     .from(usuario)
     .where(where)
-    .orderBy(asc(usuario.nome), asc(usuario.email))
+    .orderBy(
+      (filter.decrescente ? desc : asc)({ nome: usuario.nome, email: usuario.email, situacao: usuario.situacao, criado: usuario.criadoEm }[filter.ordem ?? "nome"]),
+      asc(usuario.email),
+    )
     .limit(filter.limit)
     .offset(filter.offset);
   const [{ total }] = await tx.select({ total: count() }).from(usuario).where(where);

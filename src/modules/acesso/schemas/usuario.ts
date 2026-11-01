@@ -23,6 +23,7 @@ export const listUsuariosQuerySchema = z.object({
   perfil: z.enum(perfil.enumValues).optional(),
   situacao: z.enum(["ATIVO", "INATIVO"]).optional(),
   busca: z.string().trim().min(1).max(100).optional(),
+  ordem: z.enum(["nome", "-nome", "email", "-email", "situacao", "-situacao", "criado", "-criado"]).optional(),
 });
 
 export const createUsuarioBodySchema = z.object({ nome, email, perfis });

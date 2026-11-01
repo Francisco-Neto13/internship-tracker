@@ -49,10 +49,11 @@ const colunasEstudante = {
 
 export async function findEstudantes(
   tx: Transaction,
-  filter: { cursoId?: string; situacao?: SituacaoAcademica; busca?: string; ordem?: OrdemEstudante; decrescente?: boolean; limit: number; offset: number },
+  filter: { cursoId?: string; usuarioId?: string; situacao?: SituacaoAcademica; busca?: string; ordem?: OrdemEstudante; decrescente?: boolean; limit: number; offset: number },
 ): Promise<{ items: EstudanteRow[]; total: number }> {
   const condicoes: SQL[] = [];
   if (filter.cursoId) condicoes.push(eq(estudante.cursoId, filter.cursoId));
+  if (filter.usuarioId) condicoes.push(eq(estudante.usuarioId, filter.usuarioId));
   if (filter.situacao) condicoes.push(eq(estudante.situacaoAcademica, filter.situacao));
   if (filter.busca) {
     const padrao = padraoContendo(filter.busca);
