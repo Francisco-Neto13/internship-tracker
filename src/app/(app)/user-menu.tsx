@@ -39,7 +39,7 @@ export function UserMenu({ nome, perfis }: { nome: string; perfis: string[] }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="group flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1.5 outline-none transition-colors hover:bg-nevoa-100 focus-visible:ring-2 focus-visible:ring-azul-500/40">
-        <span className="inline-grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-navy-700 to-navy-900 text-[11px] font-semibold text-white ring-1 ring-black/10">
+        <span className="inline-grid size-8 shrink-0 place-items-center rounded-full bg-navy-700 text-[11px] font-semibold text-white">
           {iniciais}
         </span>
         <span
@@ -53,7 +53,7 @@ export function UserMenu({ nome, perfis }: { nome: string; perfis: string[] }) {
 
       <DropdownMenuContent align="end" className="w-64 p-0">
         <div className="flex items-center gap-3 border-b border-navy-900/10 px-4 py-3.5">
-          <span className="inline-grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-navy-700 to-navy-900 text-sm font-semibold text-white ring-1 ring-black/10">
+          <span className="inline-grid size-10 shrink-0 place-items-center rounded-full bg-navy-700 text-sm font-semibold text-white">
             {iniciais}
           </span>
           <div className="min-w-0">
@@ -62,7 +62,7 @@ export function UserMenu({ nome, perfis }: { nome: string; perfis: string[] }) {
               {perfis.map((perfil) => (
                 <span
                   key={perfil}
-                  className="rounded-full bg-nevoa-100 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-navy-700 uppercase ring-1 ring-navy-900/10"
+                  className="rounded-full bg-nevoa-100 px-2 py-0.5 text-xs font-medium text-navy-700"
                 >
                   {perfil}
                 </span>

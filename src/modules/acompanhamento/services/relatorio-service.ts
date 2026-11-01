@@ -151,6 +151,6 @@ export async function listRelatoriosPendentes(identity: Identity) {
     const diaAtual = await hoje(tx);
     return (await findRelatoriosEmAberto(tx))
       .filter(({ relatorio }) => relatorio.situacao === "EM_ANALISE" || (relatorio.periodoFim !== null && relatorio.periodoFim < diaAtual))
-      .map(({ relatorio }) => comSituacaoExibida(relatorio, diaAtual));
+      .map(({ relatorio, estudanteNome }) => ({ ...comSituacaoExibida(relatorio, diaAtual), estudanteNome }));
   });
 }

@@ -2,7 +2,10 @@ import type { CSSProperties } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { ROTULO_PERFIL } from "@/modules/acesso/schemas/perfil";
+import { Bell } from "lucide-react";
+import Link from "next/link";
 import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
+import { listNotificacoes } from "@/shared/notificacoes/notificacao-service";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/shared/ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
 import { TopbarTitle } from "./topbar-title";
@@ -23,24 +26,37 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const vinculos = await listPerfisVigentes(session.identity);
   const perfis = vinculos.map((vinculo) => vinculo.perfil);
   const rotulosPerfis = perfis.map((perfil) => ROTULO_PERFIL[perfil]);
+  const { naoLidas } = await listNotificacoes(session.identity, { apenasNaoLidas: true, limite: 1 });
 
   return (
     <SidebarProvider
       className="min-h-0 flex-1"
       style={{ "--sidebar-width-icon": "5.125rem" } as CSSProperties}
     >
-      <AppSidebar perfis={perfis} />
+      <AppSidebar perfis={perfis} naoLidas={naoLidas} />
       <SidebarInset>
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-navy-900/10 bg-white/95 px-4 backdrop-blur md:px-6">
           <SidebarTrigger />
           <div className="h-6 w-px bg-navy-900/10" />
           <TopbarTitle />
           <div className="flex-1" />
+          <Link
+            href="/notificacoes"
+            aria-label={naoLidas > 0 ? `Notificações: ${naoLidas} não lidas` : "Notificações"}
+            className="relative inline-flex size-10 items-center justify-center rounded-lg text-navy-900/70 transition-colors hover:bg-nevoa-100 hover:text-navy-900 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none"
+          >
+            <Bell className="size-5" aria-hidden />
+            {naoLidas > 0 && (
+              <span className="absolute top-1.5 right-1.5 min-w-4 rounded-full bg-status-danger-text px-1 text-center text-[10px] leading-4 font-semibold text-white tabular-nums">
+                {naoLidas > 9 ? "9+" : naoLidas}
+              </span>
+            )}
+          </Link>
           <UserMenu nome={session.user.nome} perfis={rotulosPerfis} />
         </header>
         {/* Sem bg proprio: o cartao branco so se destaca se a pagina atras for levemente
             tingida (nevoa-50 no body). Tres planos: sidebar navy, pagina tingida, cartao branco. */}
-        <main className="animate-fade-in flex-1 px-4 py-8 md:px-6 md:py-10">{children}</main>
+        <main id="conteudo" className="animate-fade-in mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

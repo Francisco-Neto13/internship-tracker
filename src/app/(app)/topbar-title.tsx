@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { encontrarItem } from "@/shared/ui/navigation";
 
-/** Titulo da pagina atual, lido do mesmo registro NAVEGACAO da sidebar — nunca diverge da tela. */
+/** Área e página atuais, lidas do mesmo registro NAVEGACAO da sidebar: nunca divergem da tela. */
 export function TopbarTitle() {
   const pathname = usePathname();
   const item = encontrarItem(pathname);
@@ -11,7 +11,7 @@ export function TopbarTitle() {
 
   return (
     <div className="min-w-0">
-      <p className="truncate text-[10px] font-medium tracking-[0.14em] text-navy-900/45 uppercase">{item.modulo}</p>
+      {item.modulo !== item.titulo && <p className="truncate text-xs text-navy-900/50">{item.modulo}</p>}
       <p className="truncate text-sm font-semibold text-navy-900">{item.titulo}</p>
     </div>
   );

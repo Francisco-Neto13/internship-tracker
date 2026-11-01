@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
-import { anexoRelatorio, documento, estagio, parecerRelatorio, relatorio, usuario, versaoRelatorio } from "@/db/schema";
+import { anexoRelatorio, documento, estagio, estudante, parecerRelatorio, relatorio, usuario, versaoRelatorio } from "@/db/schema";
 import type { Transaction } from "@/db/with-user";
 
 // Reports (RF036 to RF041). No authorization filter: RLS decides who reads, and the triggers of
@@ -93,9 +93,12 @@ export async function podeLerRelatorios(tx: Transaction, estagioId: string): Pro
  */
 export async function findRelatoriosEmAberto(tx: Transaction) {
   return tx
-    .select({ relatorio, estagioTipo: estagio.tipo, estudanteId: estagio.estudanteId })
+    .select({ relatorio, estagioTipo: estagio.tipo, estudanteId: estagio.estudanteId, estudanteNome: usuario.nome })
     .from(relatorio)
     .innerJoin(estagio, eq(estagio.id, relatorio.estagioId))
+    // Name for the lists; left join so a student hidden by its own policy keeps the report
+    .leftJoin(estudante, eq(estudante.id, estagio.estudanteId))
+    .leftJoin(usuario, eq(usuario.id, estudante.usuarioId))
     .where(and(eq(estagio.situacao, "ATIVO"), inArray(relatorio.situacao, ["PENDENTE", "DEVOLVIDO", "EM_ANALISE"])))
     .orderBy(asc(relatorio.prazoEntrega));
 }
