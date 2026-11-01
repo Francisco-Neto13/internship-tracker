@@ -1,203 +1,198 @@
+import { FileDown } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
+import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
+import { diasEntre, formatarData, formatarDataCurta, hojeSaoPaulo } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
+import { minutosParaHoras } from "@/lib/horas";
+import { SITUACAO_ESTAGIO, TIPO_ESTAGIO } from "@/lib/rotulos";
 import { getIdentity } from "@/lib/session";
 import { getEstagioDetalhado } from "@/modules/estagios/services/estagio-service";
+import { Abas } from "@/shared/ui/abas";
+import { Avatar } from "@/shared/ui/avatar";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
 import { FormularioApi } from "@/shared/ui/formulario-api";
+import { ListaDefinicao, Painel } from "@/shared/ui/painel";
 import { PageHeader } from "@/shared/ui/page-header";
 import { StatusBadge } from "@/shared/ui/status-badge";
 import { AcompanhamentoEstagio } from "./acompanhamento";
+import { FormalizacaoEstagio, TrilhaFormalizacao } from "./formalizacao";
 import { OcorrenciasEstagio } from "./ocorrencias";
 
-// One internship: TCE, formalization steps (D9) and the actions of each step. Every button
-// calls the API, which decides by profile and link (RLS) and by life cycle; refused actions
-// show the API message. Functional screen, refined later.
+// Um estágio (M04, M05): quem são as partes, em que situação está e o que falta. A aba inicial
+// segue o momento do ciclo: formalização enquanto o TCE não está ativo, acompanhamento durante
+// o estágio, resumo depois do encerramento. Toda ação vai à API, que decide por perfil e vínculo.
 
-const SITUACAO: Record<string, string> = { EM_FORMALIZACAO: "Em formalização", ATIVO: "Ativo", CONCLUIDO: "Concluído", RESCINDIDO: "Rescindido" };
+const ABAS = ["resumo", "formalizacao", "acompanhamento", "ocorrencias"] as const;
+const reais = (valor: string | null) => (valor === null ? "Não se aplica" : Number(valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
+const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
+const TIPO_ADITIVO: Record<string, string> = { PRORROGACAO: "Prorrogação", ALTERACAO_CARGA_HORARIA: "Alteração de carga horária", SUBSTITUICAO_SUPERVISOR: "Substituição de supervisor" };
+const SITUACAO_ADITIVO: Record<string, { rotulo: string; tom: "ok" | "pending" | "neutral" }> = {
+  AGUARDANDO_ASSINATURAS: { rotulo: "Aguardando assinaturas", tom: "pending" },
+  VIGENTE: { rotulo: "Vigente", tom: "ok" },
+  CANCELADO: { rotulo: "Cancelado", tom: "neutral" },
+};
 
-function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-3">
-      <h2 className="text-sm font-medium text-navy-900/60">{titulo}</h2>
-      {children}
-    </div>
-  );
+function destinoDeVolta(valor: string | undefined) {
+  return valor && valor.startsWith("/estagios") ? valor : "/estagios";
 }
 
-export default async function EstagioPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EstagioPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParamsBrutos> }) {
   const identity = await getIdentity();
   if (!identity) redirect("/login");
   const parsed = z.object({ id: z.uuid() }).safeParse(await params);
   if (!parsed.success) notFound();
   const { id } = parsed.data;
+  const consulta = lerConsulta(await searchParams);
 
   const detalhe = await getEstagioDetalhado(identity, id).catch((error: unknown) => {
     if (error instanceof DomainError && error.kind === "NOT_FOUND") notFound();
     throw error;
   });
-  const { estagio, etapas } = detalhe;
-  const emFormalizacao = estagio.situacao === "EM_FORMALIZACAO";
-  const planoAtual = detalhe.planos[0];
+  const { estagio, identificacao, aditivos } = detalhe;
+  const padrao = estagio.situacao === "EM_FORMALIZACAO" ? "formalizacao" : estagio.situacao === "ATIVO" ? "acompanhamento" : "resumo";
+  const aba = (ABAS as readonly string[]).includes(consulta.aba ?? "") ? consulta.aba! : padrao;
+  const situacao = SITUACAO_ESTAGIO[estagio.situacao];
   const api = `/api/v1/estagios/${id}`;
+  const hoje = hojeSaoPaulo();
+  const restantes = diasEntre(hoje, estagio.dataFimPrevista);
+  const ordem = ["resumo", "formalizacao", "acompanhamento", "ocorrencias"].sort((a, b) => (a === padrao ? -1 : b === padrao ? 1 : 0));
+  const rotulos: Record<string, string> = { resumo: "Resumo", formalizacao: "Formalização", acompanhamento: "Acompanhamento", ocorrencias: "Ocorrências" };
+  const linkDocumento = "inline-flex items-center gap-1.5 rounded-md border border-navy-900/15 bg-white px-3 h-9 text-sm text-navy-900 hover:bg-nevoa-100 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none";
 
   return (
-    <section className="flex flex-col gap-6">
-      <PageHeader eyebrow="M04 Gestão de Estágios" title={`Estágio ${estagio.dataInicio} a ${estagio.dataFimPrevista}`} description={estagio.condicoesPactuadas} />
-      <div className="flex flex-wrap items-center gap-3 text-sm">
-        <StatusBadge tone={estagio.situacao === "ATIVO" ? "ok" : "pending"}>{SITUACAO[estagio.situacao]}</StatusBadge>
-        <span className="text-navy-900/70">
-          {estagio.tipo === "OBRIGATORIO" ? "Obrigatório" : "Não obrigatório"} · {estagio.cargaDiariaMinutos / 60} h/dia ·{" "}
-          {estagio.cargaSemanalMinutos / 60} h/semana · {estagio.cargaTotalMinutos / 60} h no total
-        </span>
-        {estagio.dispensaDuracaoMaxima && <StatusBadge tone="neutral">Dispensa do limite de 2 anos (art. 11)</StatusBadge>}
-      </div>
-
-      {emFormalizacao && (
-        <Bloco titulo="Formalização">
-          <p className="text-sm text-navy-900/70" data-testid="etapas-formalizacao">
-            TCE {etapas.tce === "FECHADO" ? "fechado para assinatura" : "em edição"} · assinaturas pendentes:{" "}
-            {etapas.partesPendentes.length === 0 ? "nenhuma" : etapas.partesPendentes.join(", ")}
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {etapas.tce === "EM_EDICAO" ? (
-              <BotaoAcao url={`${api}/tce/fechamento`} rotulo="Fechar TCE para assinatura" />
-            ) : (
-              <>
-                <BotaoAcao url={`${api}/tce/reabertura`} rotulo="Reabrir TCE" pedirMotivo={{ campo: "justificativa", pergunta: "Justificativa da reabertura" }} />
-                {etapas.partesPendentes.map((parte) => (
-                  <BotaoAcao key={parte} url={`${api}/assinaturas`} rotulo={`Assinar como ${parte}`} corpo={{ parte }} />
-                ))}
-              </>
-            )}
-            <BotaoAcao url={`${api}/ativacao`} rotulo="Ativar estágio" variante="default" />
-          </div>
-        </Bloco>
-      )}
-
-      <Bloco titulo="Responsáveis">
-        <ul className="surface-card flex flex-col divide-y divide-navy-900/10 text-sm">
-          {detalhe.responsaveis.length === 0 && <li className="px-5 py-3 text-navy-900/60">Nenhum responsável vinculado.</li>}
-          {detalhe.responsaveis.map((r) => (
-            <li key={r.id} className="px-5 py-3 text-navy-900">
-              {r.papel} · {r.usuarioNome ?? r.usuarioId} · desde {r.vigenciaInicio}
-              {r.vigenciaFim && (r.vigenciaFim === r.vigenciaInicio ? " · designação anulada" : ` até ${r.vigenciaFim}`)}
-            </li>
-          ))}
-        </ul>
-        {emFormalizacao && (
-          <FormularioApi
-            url={`${api}/responsaveis`}
-            rotuloEnviar="Vincular responsável"
-            campos={[
-              { nome: "papel", rotulo: "Papel", tipo: "select", obrigatorio: true, opcoes: [{ valor: "ORIENTADOR", rotulo: "Orientador" }, { valor: "SUPERVISOR", rotulo: "Supervisor" }] },
-              { nome: "usuario_id", rotulo: "Id do usuário (veja em Administração > Usuários)" },
-            ]}
-          />
-        )}
-      </Bloco>
-
-      <Bloco titulo="Plano de atividades">
-        {planoAtual ? (
-          <div className="surface-card flex flex-col gap-2 p-5 text-sm text-navy-900">
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        voltar={{ href: destinoDeVolta(consulta.voltar), rotulo: "Estágios" }}
+        identidade={<Avatar nome={identificacao.estudanteNome} semente={estagio.estudanteId} tamanho="xl" />}
+        title={identificacao.estudanteNome ?? "Estágio"}
+        description={
+          <>
+            {TIPO_ESTAGIO[estagio.tipo]} na <span className="font-medium text-navy-900">{identificacao.concedente ?? "concedente"}</span>
+            {identificacao.curso ? ` · ${identificacao.curso}` : ""}
+          </>
+        }
+        meta={
+          <>
+            <StatusBadge tone={situacao.tom}>{situacao.rotulo}</StatusBadge>
             <span>
-              Versão {planoAtual.versao} · {planoAtual.situacao}
-              {planoAtual.parecer && ` · parecer: ${planoAtual.parecer}`}
+              {formatarDataCurta(estagio.dataInicio)} – {formatarDataCurta(estagio.dataFimPrevista)}
+              {estagio.dataFimPrevista !== estagio.dataFimPactuada && <span className="text-navy-900/50"> (pactuado até {formatarDataCurta(estagio.dataFimPactuada)})</span>}
             </span>
-            <p className="whitespace-pre-line text-navy-900/80">{planoAtual.atividadesPrevistas}</p>
-            <div className="flex flex-wrap gap-3">
-              {planoAtual.situacao === "RASCUNHO" && <BotaoAcao url={`${api}/plano-atividades/envio`} rotulo="Enviar ao orientador" />}
-              {planoAtual.situacao === "AGUARDANDO_APROVACAO" && (
-                <>
-                  <BotaoAcao url={`${api}/plano-atividades/aprovacao`} rotulo="Aprovar (orientador)" variante="default" />
-                  <BotaoAcao url={`${api}/plano-atividades/devolucao`} rotulo="Devolver (orientador)" pedirMotivo={{ campo: "parecer", pergunta: "Parecer da devolução" }} />
-                </>
-              )}
-            </div>
+            {estagio.situacao === "ATIVO" && <span>{restantes > 0 ? `${restantes} dias restantes` : "termina hoje"}</span>}
+            <span>
+              {h(estagio.cargaDiariaMinutos)}/dia · {h(estagio.cargaSemanalMinutos)}/semana
+            </span>
+            {estagio.dispensaDuracaoMaxima && <StatusBadge tone="neutral">Dispensa do limite de 2 anos</StatusBadge>}
+          </>
+        }
+        acoes={
+          <div className="flex flex-wrap gap-2" data-testid="documentos-estagio">
+            <a className={linkDocumento} href={`${api}/tce/pdf`}>
+              <FileDown className="size-4" aria-hidden />
+              TCE (PDF)
+            </a>
+            <a className={linkDocumento} href={`${api}/plano-atividades/pdf`}>
+              <FileDown className="size-4" aria-hidden />
+              Plano (PDF)
+            </a>
           </div>
+        }
+      />
+
+      {estagio.situacao === "EM_FORMALIZACAO" && <TrilhaFormalizacao detalhe={detalhe} />}
+
+      <Abas
+        caminho={`/estagios/${id}`}
+        consulta={{ voltar: consulta.voltar }}
+        atual={aba}
+        abas={ordem.map((chave) => ({ chave, rotulo: rotulos[chave] }))}
+      />
+
+      {aba === "resumo" && (
+        <div className="grid gap-4 xl:grid-cols-3">
+          <Painel titulo="Termo de Compromisso" className="xl:col-span-2" descricao={estagio.hashTce ? `SHA-256 ${estagio.hashTce.slice(0, 24)}…` : "Em edição, ainda sem hash"}>
+            <ListaDefinicao
+              colunas={3}
+              itens={[
+                { rotulo: "Estudante", valor: identificacao.estudanteNome && `${identificacao.estudanteNome} (${identificacao.matricula})` },
+                { rotulo: "Concedente", valor: identificacao.concedente },
+                { rotulo: "Convênio", valor: identificacao.convenio },
+                { rotulo: "Início", valor: formatarData(estagio.dataInicio) },
+                { rotulo: "Término pactuado", valor: formatarData(estagio.dataFimPactuada) },
+                { rotulo: "Término previsto", valor: formatarData(estagio.dataFimPrevista) },
+                { rotulo: "Jornada diária", valor: h(estagio.cargaDiariaMinutos) },
+                { rotulo: "Jornada semanal", valor: h(estagio.cargaSemanalMinutos) },
+                { rotulo: "Carga total", valor: h(estagio.cargaTotalMinutos) },
+                { rotulo: "Bolsa", valor: reais(estagio.bolsaValor) },
+                { rotulo: "Auxílio-transporte", valor: reais(estagio.auxilioTransporteValor) },
+                { rotulo: "Seguro", valor: estagio.seguroExigido ? "Exigido" : "Não exigido" },
+                { rotulo: "Condições pactuadas", valor: <span className="whitespace-pre-line">{estagio.condicoesPactuadas}</span>, largo: true },
+              ]}
+            />
+          </Painel>
+          <Painel titulo="Aditivos" descricao="Mudanças no TCE depois da ativação, com as três assinaturas (RF020)." flush>
+            <ul className="divide-y divide-navy-900/[0.07]">
+              {aditivos.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/60">Nenhum aditivo.</li>}
+              {aditivos.map((aditivo) => (
+                <li key={aditivo.id} className="flex flex-col gap-2 px-5 py-3 text-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium text-navy-900">
+                      Nº {aditivo.numero} · {TIPO_ADITIVO[aditivo.tipo] ?? aditivo.tipo}
+                    </span>
+                    <StatusBadge tone={SITUACAO_ADITIVO[aditivo.situacao]?.tom ?? "neutral"}>{SITUACAO_ADITIVO[aditivo.situacao]?.rotulo ?? aditivo.situacao}</StatusBadge>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <a className="text-xs font-medium text-azul-500 hover:text-navy-700" href={`/api/v1/aditivos/${aditivo.id}/pdf`}>
+                      Baixar PDF
+                    </a>
+                    {aditivo.situacao === "AGUARDANDO_ASSINATURAS" &&
+                      (["ESTUDANTE", "INSTITUICAO", "CONCEDENTE"] as const).map((parte) => (
+                        <BotaoAcao key={parte} url={`/api/v1/aditivos/${aditivo.id}/assinaturas`} rotulo={`Assinar (${parte.toLowerCase()})`} corpo={{ parte }} tamanho="sm" />
+                      ))}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {estagio.situacao === "ATIVO" && (
+              <details className="border-t border-navy-900/[0.07] px-5 py-4">
+                <summary className="cursor-pointer text-sm font-medium text-azul-500 hover:text-navy-700">Propor prorrogação</summary>
+                <div className="mt-4">
+                  <FormularioApi
+                    url={`${api}/aditivos`}
+                    rotuloEnviar="Propor prorrogação"
+                    extras={{ tipo: "PRORROGACAO" }}
+                    embutido
+                    sucesso="Aditivo proposto: aguarda as três assinaturas"
+                    campos={[
+                      { nome: "nova_data_fim_pactuada", rotulo: "Novo término", tipo: "date", ajuda: "Respeita o teto de 2 anos na concedente." },
+                      { nome: "justificativa", rotulo: "Justificativa", tipo: "textarea" },
+                    ]}
+                  />
+                </div>
+              </details>
+            )}
+          </Painel>
+        </div>
+      )}
+
+      {aba === "formalizacao" && <FormalizacaoEstagio detalhe={detalhe} />}
+      {aba === "acompanhamento" &&
+        (estagio.situacao === "EM_FORMALIZACAO" ? (
+          <Painel titulo="Acompanhamento">
+            <p className="text-sm text-navy-900/60">Frequência, relatórios e avaliações começam depois da ativação do estágio.</p>
+          </Painel>
         ) : (
-          <p className="text-sm text-navy-900/60">Nenhum plano registrado.</p>
-        )}
-        <FormularioApi
-          url={`${api}/plano-atividades`}
-          metodo="PUT"
-          rotuloEnviar="Salvar plano"
-          campos={[
-            { nome: "atividades_previstas", rotulo: "Atividades previstas", tipo: "textarea", valorInicial: planoAtual?.situacao === "RASCUNHO" ? planoAtual.atividadesPrevistas : "" },
-            {
-              nome: "justificativa_compatibilidade",
-              rotulo: "Compatibilidade com o curso",
-              tipo: "textarea",
-              valorInicial: planoAtual?.situacao === "RASCUNHO" ? planoAtual.justificativaCompatibilidade : "",
-            },
-          ]}
-        />
-      </Bloco>
-
-      <Bloco titulo="Apólice de seguro">
-        <ul className="surface-card flex flex-col divide-y divide-navy-900/10 text-sm">
-          {detalhe.apolices.length === 0 && <li className="px-5 py-3 text-navy-900/60">Nenhuma apólice registrada.</li>}
-          {detalhe.apolices.map((a) => (
-            <li key={a.id} className="px-5 py-3 text-navy-900">
-              {a.seguradora} · {a.numeroApolice} · {a.vigenciaInicio} a {a.vigenciaFim} · contratante {a.contratante}
-            </li>
-          ))}
-        </ul>
-        <FormularioApi
-          url={`${api}/apolices`}
-          rotuloEnviar="Registrar apólice"
-          campos={[
-            { nome: "seguradora", rotulo: "Seguradora" },
-            { nome: "numero_apolice", rotulo: "Número" },
-            { nome: "contratante", rotulo: "Contratante", tipo: "select", obrigatorio: true, opcoes: [{ valor: "CONCEDENTE", rotulo: "Concedente" }, { valor: "INSTITUICAO", rotulo: "Instituição" }] },
-            { nome: "vigencia_inicio", rotulo: "Início", tipo: "date" },
-            { nome: "vigencia_fim", rotulo: "Fim", tipo: "date" },
-          ]}
-        />
-      </Bloco>
-
-      {detalhe.assinaturas.length > 0 && (
-        <Bloco titulo="Assinaturas">
-          <ul className="surface-card flex flex-col divide-y divide-navy-900/10 text-sm" data-testid="assinaturas">
-            {detalhe.assinaturas.map((a) => (
-              <li key={a.id} className="px-5 py-3 text-navy-900">
-                {a.aditivoId ? "Aditivo" : "TCE"} · {a.parte} · {a.signatarioNome} · {a.criadoEm.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
-                {a.hashDocumento !== estagio.hashTce && !a.aditivoId && " · sobre versão anterior do TCE"}
-              </li>
-            ))}
-          </ul>
-        </Bloco>
-      )}
-
-      {!emFormalizacao && <AcompanhamentoEstagio identity={identity} estagioId={id} />}
-
-      <OcorrenciasEstagio identity={identity} estagio={estagio} aditivos={detalhe.aditivos} />
-
-      {estagio.situacao === "ATIVO" && (
-        <Bloco titulo="Aditivos">
-          <ul className="surface-card flex flex-col divide-y divide-navy-900/10 text-sm">
-            {detalhe.aditivos.length === 0 && <li className="px-5 py-3 text-navy-900/60">Nenhum aditivo.</li>}
-            {detalhe.aditivos.map((a) => (
-              <li key={a.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-navy-900">
-                Nº {a.numero} · {a.tipo} · {a.situacao}
-                {a.situacao === "AGUARDANDO_ASSINATURAS" &&
-                  (["ESTUDANTE", "INSTITUICAO", "CONCEDENTE"] as const).map((parte) => (
-                    <BotaoAcao key={parte} url={`/api/v1/aditivos/${a.id}/assinaturas`} rotulo={`Assinar como ${parte}`} corpo={{ parte }} />
-                  ))}
-              </li>
-            ))}
-          </ul>
-          <FormularioApi
-            url={`${api}/aditivos`}
-            rotuloEnviar="Propor prorrogação"
-            extras={{ tipo: "PRORROGACAO" }}
-            campos={[
-              { nome: "nova_data_fim_pactuada", rotulo: "Novo término", tipo: "date" },
-              { nome: "justificativa", rotulo: "Justificativa", tipo: "textarea" },
-            ]}
-          />
-        </Bloco>
-      )}
-    </section>
+          <AcompanhamentoEstagio identity={identity} estagioId={id} />
+        ))}
+      {aba === "ocorrencias" &&
+        (estagio.situacao === "EM_FORMALIZACAO" ? (
+          <Painel titulo="Ocorrências">
+            <p className="text-sm text-navy-900/60">Afastamentos, conclusão e rescisão valem para estágios ativos.</p>
+          </Painel>
+        ) : (
+          <OcorrenciasEstagio identity={identity} estagio={estagio} />
+        ))}
+    </div>
   );
 }
