@@ -205,6 +205,7 @@ declare
     'carga_semanal_minutos', 'carga_total_minutos'];
   v_campo text;
   v_aditivo_efetivado boolean;
+  v_afastamento_registrado boolean;
 begin
   if new.estudante_id <> old.estudante_id or new.curso_id <> old.curso_id or new.criado_por_usuario_id <> old.criado_por_usuario_id then
     raise exception 'ALTERACAO_ESTAGIO_VEDADA: estudante, curso e autor do estágio não mudam' using errcode = 'P0001';
@@ -260,7 +261,14 @@ begin
     select 1 from public.aditivo a
     where a.estagio_id = new.id and a.situacao = 'VIGENTE' and a.efetivado_em = now()
   ) into v_aditivo_efetivado;
+  -- RF060 (D1): a leave registered in this same transaction extends the planned end only
+  select exists (
+    select 1 from public.afastamento af where af.estagio_id = new.id and af.atualizado_em = now()
+  ) into v_afastamento_registrado;
   foreach v_campo in array v_campos_aditivo loop
+    if v_campo = 'data_fim_prevista' and v_afastamento_registrado then
+      continue;
+    end if;
     if (to_jsonb(new) -> v_campo) is distinct from (to_jsonb(old) -> v_campo) and not v_aditivo_efetivado then
       raise exception 'ALTERACAO_ESTAGIO_VEDADA: % só muda por aditivo efetivado', v_campo using errcode = 'P0001';
     end if;
@@ -469,6 +477,8 @@ as $$
       and p_estudante_id = app.estudante_atual_id()
     when p_estagio_id is null or p_concedente_id is not null or p_estudante_id is not null then false
     when p_tipo in ('TCE', 'ADITIVO', 'ASSINATURA', 'DISPENSA_DURACAO') then app.coordena_curso_do_estagio(p_estagio_id)
+    -- RF059: the certificate of a leave, sent by the student or the coordination (sensitive, RN-38)
+    when p_tipo = 'ATESTADO_AFASTAMENTO' then app.coordena_curso_do_estagio(p_estagio_id) or app.e_estudante_do_estagio(p_estagio_id)
     when p_tipo = 'APOLICE' then app.coordena_curso_do_estagio(p_estagio_id) or app.representa_concedente_do_estagio(p_estagio_id)
     when p_tipo = 'PLANO_ATIVIDADES' then
       app.coordena_curso_do_estagio(p_estagio_id) or app.e_estudante_do_estagio(p_estagio_id)
