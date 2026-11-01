@@ -9,8 +9,8 @@ type CursoInput = Omit<CursoRow, "id">;
 const naoEncontrado = () =>
   new DomainError({ code: "CURSO_NAO_ENCONTRADO", kind: "NOT_FOUND", message: "Curso não encontrado.", requisito: "RF004" });
 
-export async function listCursos(identity: Identity, query: { page: number; limit: number }) {
-  return withUser(identity, (tx) => findCursos(tx, { limit: query.limit, offset: (query.page - 1) * query.limit }));
+export async function listCursos(identity: Identity, query: { page: number; limit: number; busca?: string; comContagens?: boolean }) {
+  return withUser(identity, (tx) => findCursos(tx, { busca: query.busca, comContagens: query.comContagens, limit: query.limit, offset: (query.page - 1) * query.limit }));
 }
 
 export async function getCurso(identity: Identity, id: string): Promise<CursoRow> {
