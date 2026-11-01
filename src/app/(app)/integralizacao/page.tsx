@@ -4,6 +4,7 @@ import { getIdentity } from "@/lib/session";
 import { getMinhaIntegralizacao } from "@/modules/integralizacao/services/integralizacao-service";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { PageHeader } from "@/shared/ui/page-header";
+import { DeclaracoesEstudante } from "./declaracoes";
 import { ProgressoIntegralizacao } from "./progresso";
 
 // RF057, RN-24: the student's integralization at any moment. The coordination sees each
@@ -20,7 +21,14 @@ export default async function IntegralizacaoPage() {
     <section className="flex flex-col gap-6">
       <PageHeader eyebrow="M07 Integralização" title="Integralização curricular" description="Estágio obrigatório e atividades complementares frente às exigências do curso (RF056, RF057)." />
       {integralizacao ? (
-        <ProgressoIntegralizacao integralizacao={integralizacao} />
+        <>
+          <ProgressoIntegralizacao integralizacao={integralizacao} />
+          <DeclaracoesEstudante
+            identity={identity}
+            estudanteId={integralizacao.estudanteId}
+            atividadesCumpridas={integralizacao.apuracao.atividadesAproveitadoMinutos >= integralizacao.apuracao.atividadesExigidoMinutos}
+          />
+        </>
       ) : (
         <EstadoVazio variante="vazio" titulo="Disponível para estudantes" descricao="A coordenação consulta a integralização de cada estudante na página do estudante." />
       )}
