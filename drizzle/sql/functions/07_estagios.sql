@@ -463,6 +463,10 @@ as $$
     when p_tipo = 'CONVENIO' then
       p_concedente_id is not null and p_estagio_id is null and p_estudante_id is null
       and (app.tem_perfil_vigente('ADMINISTRADOR') or app.tem_perfil_vigente('COORDENACAO'))
+    -- RF050: the proof of a complementary activity is sent by the student itself
+    when p_tipo = 'COMPROVANTE_ATIVIDADE' then
+      p_estudante_id is not null and p_estagio_id is null and p_concedente_id is null
+      and p_estudante_id = app.estudante_atual_id()
     when p_estagio_id is null or p_concedente_id is not null or p_estudante_id is not null then false
     when p_tipo in ('TCE', 'ADITIVO', 'ASSINATURA', 'DISPENSA_DURACAO') then app.coordena_curso_do_estagio(p_estagio_id)
     when p_tipo = 'APOLICE' then app.coordena_curso_do_estagio(p_estagio_id) or app.representa_concedente_do_estagio(p_estagio_id)
@@ -492,7 +496,12 @@ as $$
     where d.id = p_documento_id
       and d.eliminado_em is null
       and (
-        (d.tipo = 'CONVENIO' and (
+        -- Student-scoped documents (COMPROVANTE_ATIVIDADE): the student and the coordination of its course
+        (d.estudante_id is not null and d.estagio_id is null and not d.sensivel and exists (
+          select 1 from public.estudante e
+          where e.id = d.estudante_id and (e.usuario_id = app.usuario_atual_id() or app.coordena_curso(e.curso_id))
+        ))
+        or (d.tipo = 'CONVENIO' and (
           app.tem_perfil_vigente('ADMINISTRADOR') or app.tem_perfil_vigente('COORDENACAO') or app.representa_concedente(d.concedente_id)
         ))
         or (d.estagio_id is not null and not d.sensivel and d.tipo <> 'RELATORIO' and app.pode_ler_estagio(d.estagio_id))
