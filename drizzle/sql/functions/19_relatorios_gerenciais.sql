@@ -139,8 +139,10 @@ as $$
       and (ap.criado_em at time zone 'America/Sao_Paulo')::date <= coalesce(p_ate, app.hoje())
     order by ap.criado_em desc limit 1
   ) a on true
+  -- CASE and OFFSET 0 keep the calculation lazy: without them the planner flattens the
+  -- subquery and runs it for every student, assessed or not (600 ms instead of 15 ms)
   left join lateral (
-    select app.calcular_integralizacao(e.id) as calculo where a.id is null
+    select case when a.id is null then app.calcular_integralizacao(e.id) end as calculo offset 0
   ) x on true
   where e.curso_id in (select app.cursos_gerenciaveis())
     and (p_curso_id is null or e.curso_id = p_curso_id)
