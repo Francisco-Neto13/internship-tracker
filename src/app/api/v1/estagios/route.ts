@@ -15,6 +15,8 @@ export const GET = authenticatedRoute(async ({ request, identity }) => {
     cursoId: query.curso_id,
     concedenteId: query.concedente_id,
     estudanteId: query.estudante_id,
+    busca: query.busca,
+    ordem: query.ordem,
   });
   return dataResponse(items.map(estagioJson), { meta: { total, page: query.page, limit: query.limit } });
 });

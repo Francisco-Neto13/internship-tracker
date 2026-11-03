@@ -12,6 +12,7 @@ export const GET = authenticatedRoute(async ({ request, identity }) => {
     cursoId: query.curso_id,
     situacao: query.situacao,
     busca: query.busca,
+    ordem: query.ordem,
   });
   return dataResponse(items.map(estudanteJson), { meta: { total, page: query.page, limit: query.limit } });
 });

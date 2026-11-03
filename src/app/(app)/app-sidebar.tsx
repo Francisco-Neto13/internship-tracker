@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Perfil } from "@/modules/acesso/schemas/perfil";
-import { itensVisiveis, type NavItem } from "@/shared/ui/navigation";
+import { encontrarItem, gruposVisiveis, type NavItem } from "@/shared/ui/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -18,43 +18,20 @@ import {
   useSidebar,
 } from "@/shared/ui/sidebar";
 
-/**
- * O href mais especifico que casa com a rota vence. Sem isto, "/administracao" e
- * "/administracao/cursos" acendem juntos — eram pai e filho aninhados, agora sao irmaos
- * no mesmo grupo, e dois itens destacados leem como defeito.
- */
-function hrefAtivo(pathname: string, hrefs: string[]) {
-  const candidatos = hrefs.filter((href) => pathname === href || pathname.startsWith(`${href}/`));
-  return candidatos.sort((a, b) => b.length - a.length)[0];
-}
-
-function ItemDeMenu({
-  item,
-  ativo,
-  onNavigate,
-}: {
-  item: NavItem;
-  ativo: boolean;
-  onNavigate: () => void;
-}) {
+function ItemDeMenu({ item, ativo, contagem, onNavigate }: { item: NavItem; ativo: boolean; contagem?: number; onNavigate: () => void }) {
   const Icon = item.icon;
-
+  const rotulo = item.curto ?? item.titulo;
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={ativo} tooltip={item.titulo}>
-        <Link href={item.href} onClick={onNavigate}>
+        <Link href={item.href} onClick={onNavigate} aria-current={ativo ? "page" : undefined}>
           <Icon />
-          <span className="truncate group-data-[collapsible=icon]:hidden">{item.titulo}</span>
-          {item.status === "em-construcao" && (
-            <SidebarMenuBadge className="group-data-[collapsible=icon]:hidden">
-              <span
-                role="img"
-                aria-label="em construção"
-                title="Em construção"
-                className="size-1.5 shrink-0 rounded-full bg-status-pending-text"
-              />
+          <span className="truncate group-data-[collapsible=icon]:hidden">{rotulo}</span>
+          {contagem ? (
+            <SidebarMenuBadge className="rounded-full bg-white/15 px-1.5 text-[11px] tabular-nums group-data-[collapsible=icon]:hidden">
+              <span aria-label={`${contagem} não lidas`}>{contagem > 99 ? "99+" : contagem}</span>
             </SidebarMenuBadge>
-          )}
+          ) : null}
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -62,37 +39,15 @@ function ItemDeMenu({
 }
 
 /**
- * Agrupamento e so de apresentacao: NAVEGACAO continua uma lista plana (com
- * Administracao carregando seus filhos, ainda lidos direto por administracao/page.tsx
- * para os cards do hub). Aqui a Administracao vira mais um grupo com seus filhos soltos,
- * do mesmo jeito que os tres CRMs de referencia organizam a barra lateral em secoes.
+ * Barra lateral por área de trabalho (Estágios, Formação, Acadêmico, Parcerias, Administração)
+ * em vez de "Módulos" e "Administração": cada perfil vê só os grupos em que tem o que fazer, e o
+ * item ativo é o da rota mais específica, inclusive dentro de um registro.
  */
-function agruparNavegacao(navegacao: NavItem[]) {
-  const painel = navegacao.find((item) => item.href === "/dashboard");
-  const administracao = navegacao.find((item) => item.href === "/administracao");
-  const modulos = navegacao.filter((item) => item.href !== "/dashboard" && item.href !== "/administracao");
-
-  const grupos: { titulo: string; itens: NavItem[] }[] = [];
-  if (painel) grupos.push({ titulo: "Visão geral", itens: [painel] });
-  if (modulos.length > 0) grupos.push({ titulo: "Módulos", itens: modulos });
-  if (administracao) {
-    grupos.push({
-      titulo: "Administração",
-      itens: [{ ...administracao, children: undefined }, ...(administracao.children ?? [])],
-    });
-  }
-  return grupos;
-}
-
-export function AppSidebar({ perfis }: { perfis: Perfil[] }) {
-  const navegacao = itensVisiveis(perfis);
-  const grupos = agruparNavegacao(navegacao);
+export function AppSidebar({ perfis, naoLidas }: { perfis: Perfil[]; naoLidas: number }) {
+  const grupos = gruposVisiveis(perfis);
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
-  const ativo = hrefAtivo(
-    pathname,
-    grupos.flatMap((grupo) => grupo.itens.map((item) => item.href)),
-  );
+  const ativo = encontrarItem(pathname)?.href;
 
   function onNavigate() {
     if (isMobile) setOpenMobile(false);
@@ -115,10 +70,8 @@ export function AppSidebar({ perfis }: { perfis: Perfil[] }) {
         </Link>
       </SidebarHeader>
       <SidebarContent className="py-4">
-        {/* Sem linha entre grupos: a respiracao (gap-5) separa melhor que um filete, que a
-            4px do rotulo seguinte le como sublinhado dele. Padrao dos tres projetos. */}
         {grupos.map((grupo) => (
-          <SidebarGroup key={grupo.titulo}>
+          <SidebarGroup key={grupo.chave}>
             <SidebarGroupLabel>{grupo.titulo}</SidebarGroupLabel>
             <SidebarMenu>
               {grupo.itens.map((item) => (
@@ -126,6 +79,7 @@ export function AppSidebar({ perfis }: { perfis: Perfil[] }) {
                   key={item.href}
                   item={item}
                   ativo={item.href === ativo}
+                  contagem={item.href === "/notificacoes" ? naoLidas : undefined}
                   onNavigate={onNavigate}
                 />
               ))}

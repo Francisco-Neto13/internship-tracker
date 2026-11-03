@@ -1,69 +1,116 @@
-import Link from "next/link";
+import { Plus } from "lucide-react";
 import { redirect } from "next/navigation";
+import { comConsulta, lerConsulta, lerPaginacao, opcao, type SearchParamsBrutos } from "@/lib/consulta";
+import { formatarCnpj, SITUACAO_CONCEDENTE } from "@/lib/rotulos";
 import { getIdentity } from "@/lib/session";
 import { listConcedentes } from "@/modules/concedentes/services/concedente-service";
+import { Avatar } from "@/shared/ui/avatar";
+import { BarraFiltros } from "@/shared/ui/barra-filtros";
 import { DataTable, type DataTableColumn } from "@/shared/ui/data-table";
+import { Dialogo } from "@/shared/ui/dialogo";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { FormularioApi } from "@/shared/ui/formulario-api";
 import { PageHeader } from "@/shared/ui/page-header";
+import { Paginacao } from "@/shared/ui/paginacao";
 import { StatusBadge } from "@/shared/ui/status-badge";
 
+// RF007, RF013: organizações que recebem estagiários. Busca por razão social, nome fantasia ou
+// CNPJ e filtro de situação no servidor; o cadastro abre num diálogo e leva à página criada.
+
 type Concedente = Awaited<ReturnType<typeof listConcedentes>>["items"][number];
+const SITUACOES = ["ATIVA", "SUSPENSA"] as const;
 
-const COLUNAS: DataTableColumn<Concedente>[] = [
-  {
-    chave: "razao",
-    cabecalho: "Razão social",
-    celula: (c) => (
-      <Link href={`/administracao/concedentes/${c.id}`} className="text-navy-900 underline-offset-4 hover:underline">
-        {c.razaoSocial}
-      </Link>
-    ),
-  },
-  { chave: "cnpj", cabecalho: "CNPJ", celula: (c) => <span className="font-mono text-navy-900/70">{c.cnpj}</span> },
-  { chave: "municipio", cabecalho: "Município", celula: (c) => <span className="text-navy-900/70">{`${c.municipio}/${c.uf}`}</span> },
-  { chave: "situacao", cabecalho: "Situação", celula: (c) => <StatusBadge tone={c.situacao === "ATIVA" ? "ok" : "danger"}>{c.situacao}</StatusBadge> },
-];
-
-// RF007, RF013: catalog of concedentes and registration (administrator or coordination)
-export default async function ConcedentesPage() {
+export default async function ConcedentesPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
   const identity = await getIdentity();
   if (!identity) redirect("/login");
-  const { items } = await listConcedentes(identity, { page: 1, limit: 100 });
+  const consulta = lerConsulta(await searchParams);
+  const { pagina, porPagina } = lerPaginacao(consulta);
+  const { items, total } = await listConcedentes(identity, {
+    page: pagina,
+    limit: porPagina,
+    busca: consulta.busca,
+    situacao: opcao(consulta.situacao, SITUACOES),
+  });
+  const filtrando = Boolean(consulta.busca || consulta.situacao);
+  const voltar = encodeURIComponent(comConsulta("/administracao/concedentes", consulta));
+
+  const colunas: DataTableColumn<Concedente>[] = [
+    {
+      chave: "razao",
+      cabecalho: "Organização",
+      celula: (concedente) => (
+        <span className="flex min-w-0 items-center gap-3">
+          <Avatar nome={concedente.nomeFantasia ?? concedente.razaoSocial} semente={concedente.id} forma="quadrado" tamanho="sm" />
+          <span className="min-w-0">
+            <span className="block truncate font-medium text-navy-900">{concedente.razaoSocial}</span>
+            <span className="block truncate text-xs text-navy-900/60">{concedente.nomeFantasia ?? concedente.areaAtuacao}</span>
+          </span>
+        </span>
+      ),
+    },
+    { chave: "cnpj", cabecalho: "CNPJ", ocultarNoCelular: true, celula: (concedente) => <span className="font-mono text-[13px] whitespace-nowrap text-navy-900/75">{formatarCnpj(concedente.cnpj)}</span> },
+    { chave: "local", cabecalho: "Município", ocultarNoCelular: true, celula: (concedente) => <span className="text-navy-900/75">{`${concedente.municipio}/${concedente.uf}`}</span> },
+    { chave: "area", cabecalho: "Área de atuação", ocultarNoCelular: true, celula: (concedente) => <span className="block max-w-48 truncate text-navy-900/75">{concedente.areaAtuacao}</span> },
+    {
+      chave: "situacao",
+      cabecalho: "Situação",
+      celula: (concedente) => <StatusBadge tone={SITUACAO_CONCEDENTE[concedente.situacao].tom}>{SITUACAO_CONCEDENTE[concedente.situacao].rotulo}</StatusBadge>,
+    },
+  ];
 
   return (
-    <section className="flex flex-col gap-6">
-      <PageHeader eyebrow="M03 Concedentes e Convênios" title="Concedentes" description="Cadastro, situação e convênios das concedentes (RF007-RF014)." />
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Concedentes"
+        description="Organizações que recebem estagiários. Suspensa não ativa estágios novos; os em andamento seguem."
+        acoes={
+          <Dialogo gatilho={{ rotulo: "Nova concedente", icone: <Plus className="size-4" aria-hidden /> }} titulo="Nova concedente" descricao="Dados da organização e do representante legal (RF007)." largura="lg">
+            <FormularioApi
+              url="/api/v1/concedentes"
+              rotuloEnviar="Cadastrar concedente"
+              redirecionarPara="/administracao/concedentes/:id"
+              embutido
+              campos={[
+                { nome: "razao_social", rotulo: "Razão social" },
+                { nome: "nome_fantasia", rotulo: "Nome fantasia" },
+                { nome: "cnpj", rotulo: "CNPJ", ajuda: "Numérico ou alfanumérico, sem pontuação." },
+                { nome: "area_atuacao", rotulo: "Área de atuação" },
+                { nome: "logradouro", rotulo: "Logradouro" },
+                { nome: "numero_endereco", rotulo: "Número" },
+                { nome: "complemento", rotulo: "Complemento" },
+                { nome: "bairro", rotulo: "Bairro" },
+                { nome: "municipio", rotulo: "Município" },
+                { nome: "uf", rotulo: "UF" },
+                { nome: "cep", rotulo: "CEP" },
+                { nome: "email_contato", rotulo: "E-mail de contato", tipo: "email" },
+                { nome: "telefone_contato", rotulo: "Telefone" },
+                { nome: "representante_legal_nome", rotulo: "Representante legal" },
+                { nome: "representante_legal_cargo", rotulo: "Cargo do representante" },
+              ]}
+            />
+          </Dialogo>
+        }
+      />
+      <BarraFiltros
+        busca="Razão social, nome fantasia ou CNPJ"
+        filtros={[{ chave: "situacao", rotulo: "Situação", todos: "Todas as situações", opcoes: SITUACOES.map((situacao) => ({ valor: situacao, rotulo: SITUACAO_CONCEDENTE[situacao].rotulo })) }]}
+      />
       {items.length === 0 ? (
-        <EstadoVazio variante="vazio" titulo="Nenhuma concedente" descricao="Cadastre a primeira no formulário abaixo." />
+        filtrando ? (
+          <EstadoVazio variante="sem-resultados" titulo="Nenhuma concedente encontrada" descricao="Nenhuma organização corresponde à busca e aos filtros." />
+        ) : (
+          <EstadoVazio titulo="Nenhuma concedente" descricao="Cadastre a primeira organização em Nova concedente." />
+        )
       ) : (
-        <DataTable columns={COLUNAS} items={items} getRowKey={(c) => c.id} testId="concedentes-lista" />
-      )}
-      <div>
-        <h2 className="mb-3 text-sm font-medium text-navy-900/60">Nova concedente</h2>
-        <FormularioApi
-          url="/api/v1/concedentes"
-          rotuloEnviar="Cadastrar concedente"
-          redirecionarPara="/administracao/concedentes/:id"
-          campos={[
-            { nome: "razao_social", rotulo: "Razão social" },
-            { nome: "nome_fantasia", rotulo: "Nome fantasia" },
-            { nome: "cnpj", rotulo: "CNPJ (numérico ou alfanumérico)" },
-            { nome: "area_atuacao", rotulo: "Área de atuação" },
-            { nome: "logradouro", rotulo: "Logradouro" },
-            { nome: "numero_endereco", rotulo: "Número" },
-            { nome: "complemento", rotulo: "Complemento" },
-            { nome: "bairro", rotulo: "Bairro" },
-            { nome: "municipio", rotulo: "Município" },
-            { nome: "uf", rotulo: "UF" },
-            { nome: "cep", rotulo: "CEP" },
-            { nome: "email_contato", rotulo: "E-mail de contato", tipo: "email" },
-            { nome: "telefone_contato", rotulo: "Telefone" },
-            { nome: "representante_legal_nome", rotulo: "Representante legal" },
-            { nome: "representante_legal_cargo", rotulo: "Cargo do representante" },
-          ]}
+        <DataTable
+          columns={colunas}
+          items={items}
+          getRowKey={(concedente) => concedente.id}
+          getRowHref={(concedente) => `/administracao/concedentes/${concedente.id}?voltar=${voltar}`}
+          testId="concedentes-lista"
+          rodape={<Paginacao pagina={pagina} porPagina={porPagina} total={total} rotuloItens="concedentes" />}
         />
-      </div>
-    </section>
+      )}
+    </div>
   );
 }

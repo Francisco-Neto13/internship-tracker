@@ -16,7 +16,9 @@ import {
   findUsuarioById,
   findUsuarios,
   insertUsuario,
+  ORDENS_USUARIO,
   updateUsuario,
+  type OrdemUsuario,
   type UsuarioRow,
 } from "../repositories/usuario-repository";
 import {
@@ -109,13 +111,16 @@ async function comPerfis(tx: Transaction, usuarios: UsuarioRow[]): Promise<Usuar
 
 export async function listUsuarios(
   identity: Identity,
-  query: { page: number; limit: number; perfil?: Perfil; situacao?: Situacao; busca?: string },
+  query: { page: number; limit: number; perfil?: Perfil; situacao?: Situacao; busca?: string; ordem?: string },
 ): Promise<{ items: UsuarioComPerfis[]; total: number }> {
+  const campo = query.ordem?.replace(/^-/, "");
   return withUser(identity, async (tx) => {
     const { items, total } = await findUsuarios(tx, {
       perfil: query.perfil,
       situacao: query.situacao,
       busca: query.busca,
+      ordem: (ORDENS_USUARIO as readonly string[]).includes(campo ?? "") ? (campo as OrdemUsuario) : undefined,
+      decrescente: query.ordem?.startsWith("-"),
       limit: query.limit,
       offset: (query.page - 1) * query.limit,
     });

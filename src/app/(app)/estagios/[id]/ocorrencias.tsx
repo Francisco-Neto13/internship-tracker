@@ -1,31 +1,23 @@
+import { formatarDataCurta } from "@/lib/datas";
+import { minutosParaHoras } from "@/lib/horas";
 import type { Identity } from "@/lib/identity";
+import type { EstagioRow } from "@/modules/estagios/repositories/estagio-repository";
 import { listAfastamentos, listPeriodosAfastamento } from "@/modules/estagios/services/afastamento-service";
 import { getRescisao } from "@/modules/estagios/services/encerramento-service";
-import type { EstagioRow } from "@/modules/estagios/repositories/estagio-repository";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
 import { FormularioApi } from "@/shared/ui/formulario-api";
+import { ListaDefinicao, Painel } from "@/shared/ui/painel";
+import { StatusBadge } from "@/shared/ui/status-badge";
 import { NovoAfastamento } from "./novo-afastamento";
 
-// Fase 5 on the internship page: documents (RF022), leaves (RF059, RF060), end by conclusion
-// or rescission (RF045, RF063, RF064) and the conclusion declaration (RF058). Each action
-// goes to the API, which decides by profile and link; refused actions show its message.
+// Ocorrências de um estágio (Fase 5): afastamentos (RF059, RF060), encerramento por conclusão
+// ou rescisão (RF045, RF063, RF064) e a declaração de conclusão (RF058). Cada ação vai à API,
+// que decide por perfil e vínculo; as que não se desfazem pedem confirmação.
 
-const data = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 const TIPO_AFASTAMENTO: Record<string, string> = { LICENCA: "Licença", ATESTADO_MEDICO: "Atestado médico", OUTRO: "Outro" };
 const SOLICITANTE: Record<string, string> = { ESTUDANTE: "Estudante", CONCEDENTE: "Concedente", INSTITUICAO: "Instituição" };
 
-function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-3">
-      <h2 className="text-sm font-medium text-navy-900/60">{titulo}</h2>
-      {children}
-    </div>
-  );
-}
-
-const linkClass = "text-sm text-azul-600 underline-offset-4 hover:underline";
-
-export async function OcorrenciasEstagio({ identity, estagio, aditivos }: { identity: Identity; estagio: EstagioRow; aditivos: { id: string; numero: number }[] }) {
+export async function OcorrenciasEstagio({ identity, estagio }: { identity: Identity; estagio: EstagioRow }) {
   const id = estagio.id;
   const api = `/api/v1/estagios/${id}`;
   const [afastamentos, periodos, rescisao] = await Promise.all([
@@ -35,90 +27,109 @@ export async function OcorrenciasEstagio({ identity, estagio, aditivos }: { iden
   ]);
 
   return (
-    <>
-      <Bloco titulo="Documentos (RF022)">
-        <div className="flex flex-wrap gap-4" data-testid="documentos-estagio">
-          <a className={linkClass} href={`${api}/tce/pdf`}>
-            TCE (PDF)
-          </a>
-          <a className={linkClass} href={`${api}/plano-atividades/pdf`}>
-            Plano de atividades (PDF)
-          </a>
-          {aditivos.map((aditivo) => (
-            <a key={aditivo.id} className={linkClass} href={`/api/v1/aditivos/${aditivo.id}/pdf`}>
-              Aditivo nº {aditivo.numero} (PDF)
-            </a>
-          ))}
-        </div>
-      </Bloco>
-
-      {estagio.situacao !== "EM_FORMALIZACAO" && (
-        <Bloco titulo="Afastamentos (RF059, RF060)">
-          <ul className="surface-card flex flex-col divide-y divide-navy-900/10 text-sm" data-testid="afastamentos">
-            {afastamentos.length > 0
-              ? afastamentos.map((item) => (
-                  <li key={item.id} className="px-5 py-3 text-navy-900">
-                    {TIPO_AFASTAMENTO[item.tipo]} · {data(item.dataInicio)} a {data(item.dataFim)} · {item.diasCorridos} dia(s), estendeu {item.diasExtensao}
-                    {item.diasExtensao < item.diasCorridos && " (teto de 2 anos atingido)"}
-                    {item.situacao === "SUBSTITUIDO" && " · substituído por correção"}
-                  </li>
-                ))
-              : periodos.map((periodo) => (
-                  <li key={periodo.dataInicio} className="px-5 py-3 text-navy-900">
-                    Afastamento de {data(periodo.dataInicio)} a {data(periodo.dataFim)}
-                  </li>
-                ))}
-            {afastamentos.length === 0 && periodos.length === 0 && <li className="px-5 py-3 text-navy-900/60">Nenhum afastamento.</li>}
-          </ul>
-          {estagio.situacao === "ATIVO" && <NovoAfastamento estagioId={id} />}
-        </Bloco>
-      )}
-
-      {estagio.situacao === "ATIVO" && (
-        <Bloco titulo="Encerramento">
-          <div className="flex flex-wrap gap-3">
-            <BotaoAcao url={`${api}/conclusao`} rotulo="Concluir estágio (coordenação)" variante="default" />
-          </div>
-          <FormularioApi
-            url={`${api}/rescisao`}
-            rotuloEnviar="Registrar rescisão"
-            testId="rescisao"
-            campos={[
-              { nome: "data_rescisao", rotulo: "Data da rescisão", tipo: "date", obrigatorio: true },
-              {
-                nome: "solicitante",
-                rotulo: "Solicitante",
-                tipo: "select",
-                obrigatorio: true,
-                opcoes: Object.entries(SOLICITANTE).map(([valor, rotulo]) => ({ valor, rotulo })),
-              },
-              { nome: "motivo", rotulo: "Motivo", tipo: "textarea", obrigatorio: true },
-            ]}
-          />
-        </Bloco>
-      )}
-
+    <div className="flex flex-col gap-4">
       {rescisao && (
-        <Bloco titulo="Rescisão (RF063, RF064)">
-          <p className="surface-card p-5 text-sm text-navy-900" data-testid="rescisao-registrada">
-            Em {data(rescisao.dataRescisao)}, a pedido de {SOLICITANTE[rescisao.solicitante].toLowerCase()}: {rescisao.motivo}. Horas consolidadas:{" "}
-            {rescisao.minutosCumpridosConsolidados / 60} h cumpridas, {rescisao.minutosHomologadosConsolidados / 60} h homologadas.
-          </p>
-        </Bloco>
+        <Painel titulo="Rescisão" descricao="Horas consolidadas até a data da rescisão (RF064).">
+          <div data-testid="rescisao-registrada">
+            <ListaDefinicao
+              colunas={3}
+              itens={[
+                { rotulo: "Data", valor: formatarDataCurta(rescisao.dataRescisao) },
+                { rotulo: "Solicitante", valor: SOLICITANTE[rescisao.solicitante] },
+                { rotulo: "Horas cumpridas", valor: `${minutosParaHoras(rescisao.minutosCumpridosConsolidados)} h` },
+                { rotulo: "Horas homologadas", valor: `${minutosParaHoras(rescisao.minutosHomologadosConsolidados)} h` },
+                { rotulo: "Motivo", valor: rescisao.motivo, largo: true },
+              ]}
+            />
+          </div>
+        </Painel>
       )}
 
       {estagio.situacao === "CONCLUIDO" && (
-        <Bloco titulo="Declaração (RF058)">
-          <div className="flex flex-wrap gap-3">
-            <BotaoAcao
-              url={`/api/v1/estudantes/${estagio.estudanteId}/declaracoes`}
-              rotulo="Emitir declaração de conclusão"
-              corpo={{ tipo: "CONCLUSAO_ESTAGIO", estagio_id: id }}
-              variante="default"
-            />
-          </div>
-        </Bloco>
+        <Painel titulo="Declaração de conclusão" descricao="PDF com código de verificação, guardado como documento do estágio (RF058).">
+          <BotaoAcao
+            url={`/api/v1/estudantes/${estagio.estudanteId}/declaracoes`}
+            rotulo="Emitir declaração de conclusão"
+            corpo={{ tipo: "CONCLUSAO_ESTAGIO", estagio_id: id }}
+            variante="default"
+            sucesso="Declaração emitida: veja na integralização do estudante"
+          />
+        </Painel>
       )}
-    </>
+
+      {estagio.situacao !== "EM_FORMALIZACAO" && (
+        <Painel titulo="Afastamentos" descricao="Estendem o término previsto pelos mesmos dias corridos, até o teto de 2 anos na concedente (RF060)." flush>
+          <ul className="divide-y divide-navy-900/[0.07]" data-testid="afastamentos">
+            {afastamentos.length > 0
+              ? afastamentos.map((item) => (
+                  <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
+                    <span>
+                      <span className="block font-medium text-navy-900">
+                        {TIPO_AFASTAMENTO[item.tipo]} · {formatarDataCurta(item.dataInicio)} a {formatarDataCurta(item.dataFim)}
+                      </span>
+                      <span className="block text-xs text-navy-900/60">
+                        {item.diasCorridos} dia(s) corridos · estendeu {item.diasExtensao}
+                        {item.diasExtensao < item.diasCorridos && " (teto de 2 anos atingido)"}
+                      </span>
+                    </span>
+                    {item.situacao === "SUBSTITUIDO" && <StatusBadge tone="neutral">Substituído por correção</StatusBadge>}
+                  </li>
+                ))
+              : periodos.map((periodo) => (
+                  <li key={periodo.dataInicio} className="px-5 py-3 text-sm text-navy-900">
+                    Afastamento de {formatarDataCurta(periodo.dataInicio)} a {formatarDataCurta(periodo.dataFim)}
+                  </li>
+                ))}
+            {afastamentos.length === 0 && periodos.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/60">Nenhum afastamento.</li>}
+          </ul>
+          {estagio.situacao === "ATIVO" && (
+            <details className="border-t border-navy-900/[0.07] px-5 py-4">
+              <summary className="cursor-pointer text-sm font-medium text-azul-500 hover:text-navy-700">Registrar afastamento (coordenação)</summary>
+              <div className="mt-4">
+                <NovoAfastamento estagioId={id} />
+              </div>
+            </details>
+          )}
+        </Painel>
+      )}
+
+      {estagio.situacao === "ATIVO" && (
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <Painel titulo="Concluir estágio" descricao="Exige avaliação final e, se obrigatório, carga mínima homologada e relatório final aprovado; nenhum lançamento pendente (RF045).">
+            <BotaoAcao
+              url={`${api}/conclusao`}
+              rotulo="Concluir estágio"
+              variante="default"
+              confirmacao={{
+                titulo: "Concluir o estágio?",
+                descricao: "O estágio passa a Concluído, os responsáveis deixam de ter acesso e começa o prazo de guarda dos documentos. Se faltar algum requisito, a lista aparece aqui e nada muda.",
+                confirmar: "Concluir",
+              }}
+              sucesso="Estágio concluído"
+            />
+          </Painel>
+          <Painel titulo="Rescindir estágio" descricao="Encerramento antecipado a pedido de uma das partes; as horas até a data são consolidadas (RF063, RF064).">
+            <FormularioApi
+              url={`${api}/rescisao`}
+              rotuloEnviar="Registrar rescisão"
+              testId="rescisao"
+              embutido
+              sucesso="Rescisão registrada"
+              campos={[
+                { nome: "data_rescisao", rotulo: "Data da rescisão", tipo: "date", obrigatorio: true },
+                {
+                  nome: "solicitante",
+                  rotulo: "Solicitante",
+                  tipo: "select",
+                  obrigatorio: true,
+                  opcoes: Object.entries(SOLICITANTE).map(([valor, rotulo]) => ({ valor, rotulo })),
+                },
+                { nome: "motivo", rotulo: "Motivo", tipo: "textarea", obrigatorio: true, ajuda: "Lançamentos depois da data são cancelados; a rescisão não se desfaz." },
+              ]}
+            />
+          </Painel>
+        </div>
+      )}
+    </div>
   );
 }
