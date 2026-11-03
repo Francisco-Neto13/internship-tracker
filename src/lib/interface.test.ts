@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { janelaDePaginas } from "@/shared/ui/paginacao";
 import { comConsulta, lerConsulta, lerPaginacao, opcao, uuidOu } from "./consulta";
 import { diasEntre, formatarData, haQuantoTempo, prazoEmPalavras } from "./datas";
-import { descreverOperacao, formatarCnpj, humanizarCodigos } from "./rotulos";
+import { descreverOperacao, formatarCnpj, humanizarCodigos, identificarEstagio } from "./rotulos";
 
 describe("janelaDePaginas", () => {
   it("keeps first and last, two neighbours, and ellipsis only for two or more hidden pages", () => {
@@ -65,5 +65,12 @@ describe("rotulos", () => {
     expect(formatarCnpj("12ABC34501DE35")).toBe("12.ABC.345/01DE-35");
     expect(descreverOperacao("convenio_vigencia", "INSERT")).toBe("Vigência de convênio criado");
     expect(descreverOperacao("tabela_nova", "UPDATE")).toBe("tabela_nova alterado");
+  });
+});
+
+describe("identificarEstagio", () => {
+  it("uses the name when RLS shows it and the start date when it does not", () => {
+    expect(identificarEstagio({ estudanteNome: "Ana", dataInicio: "2026-08-03" })).toBe("Ana");
+    expect(identificarEstagio({ estudanteNome: null, dataInicio: "2026-08-03" })).toBe("Início em 3 de ago. de 2026");
   });
 });

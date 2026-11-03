@@ -1,3 +1,4 @@
+import { TIPO_ESTAGIO } from "@/lib/rotulos";
 import { Download } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -156,7 +157,7 @@ export default async function RelatoriosGerenciaisPage({ searchParams }: { searc
                       const numero = typeof linha[coluna] === "number";
                       return (
                         <td key={coluna} className={cn("px-4 py-2.5 text-navy-900", numero && "text-right tabular-nums")}>
-                          {linha[coluna] === null ? "—" : numero ? Number(linha[coluna]).toLocaleString("pt-BR") : String(linha[coluna])}
+                          {linha[coluna] === null ? "—" : numero ? Number(linha[coluna]).toLocaleString("pt-BR") : coluna === "tipo" ? (TIPO_ESTAGIO[String(linha[coluna])] ?? String(linha[coluna])) : String(linha[coluna])}
                         </td>
                       );
                     })}
@@ -168,7 +169,7 @@ export default async function RelatoriosGerenciaisPage({ searchParams }: { searc
                   <tr>
                     {colunas.map((coluna, indice) => (
                       <td key={coluna} className={cn("px-4 py-2.5 text-navy-900", SOMAVEIS.includes(coluna) && "text-right tabular-nums")}>
-                        {indice === 0 ? `Total (${linhas.length} linhas)` : SOMAVEIS.includes(coluna) ? total(coluna).toLocaleString("pt-BR") : ""}
+                        {indice === 0 ? `Total (${linhas.length} ${linhas.length === 1 ? "linha" : "linhas"})` : SOMAVEIS.includes(coluna) ? total(coluna).toLocaleString("pt-BR") : ""}
                       </td>
                     ))}
                   </tr>

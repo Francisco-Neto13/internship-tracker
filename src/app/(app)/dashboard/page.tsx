@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { dataPorExtenso, formatarData, formatarDataCurta, haQuantoTempo, prazoEmPalavras, saudacao } from "@/lib/datas";
 import { minutosParaHoras } from "@/lib/horas";
-import { descreverOperacao, humanizarCodigos } from "@/lib/rotulos";
+import { descreverOperacao, humanizarCodigos, identificarEstagio } from "@/lib/rotulos";
 import { getIdentity, getSession } from "@/lib/session";
 import { ROTULO_PERFIL, type Perfil } from "@/modules/acesso/schemas/perfil";
 import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
@@ -209,14 +209,14 @@ async function BlocoOrientador({ identity }: { identity: Parameters<typeof dados
             ))}
           </ListaCompacta>
         </Painel>
-        <Painel titulo="Estagiários" descricao="Estágios ativos que você orienta" flush verTodos={{ href: "/estagios?situacao=ATIVO" }}>
+        <Painel titulo="Estagiários" descricao={(dados.ativos?.items ?? []).some((estagio) => !estagio.estudanteNome) ? "O nome do estudante não é visível para o seu perfil." : "Estágios ativos que você orienta"} flush verTodos={{ href: "/estagios?situacao=ATIVO" }}>
           <ListaCompacta vazio="Nenhum estágio ativo sob a sua orientação.">
             {(dados.ativos?.items ?? []).map((estagio) => (
               <LinhaCompacta
                 key={estagio.id}
                 href={`/estagios/${estagio.id}`}
                 avatar={{ nome: estagio.estudanteNome, semente: estagio.estudanteId }}
-                titulo={estagio.estudanteNome ?? "Estudante"}
+                titulo={identificarEstagio(estagio)}
                 subtitulo={estagio.concedenteRazaoSocial ?? undefined}
                 lateral={<>até {formatarDataCurta(estagio.dataFimPrevista)}</>}
               />
@@ -254,7 +254,7 @@ async function BlocoSupervisor({ identity }: { identity: Parameters<typeof dados
               key={estagio.id}
               href={`/estagios/${estagio.id}`}
               avatar={{ nome: estagio.estudanteNome, semente: estagio.estudanteId }}
-              titulo={estagio.estudanteNome ?? "Estudante"}
+              titulo={identificarEstagio(estagio)}
               subtitulo={`${horas(carga!.resumo.minutosHomologados)} homologadas de ${horas(carga!.resumo.cargaTotalMinutos)}`}
               lateral={<span className="font-medium text-status-pending-text tabular-nums">{horas(carga!.resumo.minutosPendentes)} a homologar</span>}
             />
@@ -283,7 +283,7 @@ async function BlocoConcedente({ identity }: { identity: Parameters<typeof dados
                 key={estagio.id}
                 href={`/estagios/${estagio.id}`}
                 avatar={{ nome: estagio.estudanteNome, semente: estagio.estudanteId }}
-                titulo={estagio.estudanteNome ?? "Estudante"}
+                titulo={identificarEstagio(estagio)}
                 subtitulo={`até ${formatarDataCurta(estagio.dataFimPrevista)}`}
               />
             ))}

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { comConsulta, lerConsulta, lerPaginacao, opcao, uuidOu, type SearchParamsBrutos } from "@/lib/consulta";
 import { diasEntre, formatarDataCurta, hojeSaoPaulo } from "@/lib/datas";
-import { SITUACAO_ESTAGIO, TIPO_ESTAGIO } from "@/lib/rotulos";
+import { identificarEstagio, SITUACAO_ESTAGIO, TIPO_ESTAGIO } from "@/lib/rotulos";
 import { getIdentity } from "@/lib/session";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
@@ -77,8 +77,8 @@ export default async function EstagiosPage({ searchParams }: { searchParams: Pro
         <span className="flex min-w-0 items-center gap-3">
           <Avatar nome={estagio.estudanteNome} semente={estagio.estudanteId} tamanho="sm" />
           <span className="min-w-0">
-            <span className="block truncate font-medium text-navy-900">{estagio.estudanteNome ?? "Estudante"}</span>
-            <span className="block truncate font-mono text-xs text-navy-900/60">{estagio.matricula ?? "—"}</span>
+            <span className="block truncate font-medium text-navy-900">{identificarEstagio(estagio)}</span>
+            {estagio.matricula ? <span className="block truncate font-mono text-xs text-navy-900/60">{estagio.matricula}</span> : <span className="block truncate text-xs text-navy-900/60">Nome não visível para o seu perfil</span>}
           </span>
         </span>
       ),
