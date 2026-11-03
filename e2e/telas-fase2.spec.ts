@@ -28,6 +28,8 @@ test("coordination opens the Fase 2 screens and registers an agreement with its 
   await expect(page.getByTestId("curso-edicao")).toBeVisible();
   await page.goto("/administracao/estudantes");
   await page.getByTestId("estudantes-lista").getByRole("link").first().click();
+  // The academic data form lives in its own tab of the student profile
+  await page.getByRole("link", { name: "Dados acadêmicos" }).click();
   await expect(page.getByTestId("estudante-edicao")).toBeVisible();
 
   // Concedente page and the agreement upload through the browser
