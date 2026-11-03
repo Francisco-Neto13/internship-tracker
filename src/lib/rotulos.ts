@@ -1,4 +1,5 @@
 import type { StatusTone } from "@/shared/ui/status-badge";
+import { formatarDataCurta } from "./datas";
 
 // Nomes e tons de situação exibidos na interface, num lugar só: a mesma situação tem o mesmo
 // nome e a mesma cor em lista, perfil, painel e notificação (REQUISITOSEREGRAS §8.4).
@@ -108,4 +109,12 @@ export function descreverOperacao(tabela: string, operacao: string): string {
 /** "11.222.333/0001-81" (também o CNPJ alfanumérico de 2026, mesmo formato). */
 export function formatarCnpj(cnpj: string): string {
   return cnpj.length === 14 ? cnpj.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, "$1.$2.$3/$4-$5") : cnpj;
+}
+
+/**
+ * Como chamar um estágio numa lista. A RLS não mostra nome nem matrícula do estudante a orientador,
+ * supervisor e concedente; aí a data de início separa as linhas, em vez de "Estudante" repetido.
+ */
+export function identificarEstagio(estagio: { estudanteNome: string | null; dataInicio: string }): string {
+  return estagio.estudanteNome ?? `Início em ${formatarDataCurta(estagio.dataInicio)}`;
 }
