@@ -3,7 +3,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { KeyRound, UserCheck, UserX } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -143,11 +143,22 @@ function Confirmar({
   aoConfirmar: () => void;
   enviando: boolean;
 }) {
+  // Aberto sem Dialog.Trigger, o Radix não sabe para onde devolver o foco ao fechar
+  const origemDoFoco = useRef<HTMLElement | null>(null);
   return (
     <Dialog.Root open={aberto} onOpenChange={aoMudar}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-navy-900/40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-navy-900/10 bg-white p-6 shadow-elevated focus:outline-none">
+        <Dialog.Content
+          onOpenAutoFocus={() => {
+            origemDoFoco.current = document.activeElement as HTMLElement | null;
+          }}
+          onCloseAutoFocus={(evento) => {
+            evento.preventDefault();
+            origemDoFoco.current?.focus();
+          }}
+          className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-navy-900/10 bg-white p-6 shadow-elevated focus:outline-none"
+        >
           <Dialog.Title className="text-base font-semibold text-navy-900">{titulo}</Dialog.Title>
           <Dialog.Description className="mt-1.5 text-sm text-navy-900/65">{descricao}</Dialog.Description>
           <div className="mt-6 flex justify-end gap-2">
