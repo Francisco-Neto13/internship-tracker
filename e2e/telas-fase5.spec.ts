@@ -21,8 +21,9 @@ test("the coordination opens the management reports and an internship", async ({
   await expect(page.getByRole("link", { name: "Exportar PDF" })).toHaveAttribute("href", /formato=pdf/);
   await expect(page.getByTestId("relatorio-gerencial")).toContainText("Estudante");
 
-  await page.goto("/estagios");
-  await page.getByRole("link", { name: "Ana Estudante" }).first().click();
+  // The list is paginated on the server: search instead of relying on the first page
+  await page.goto("/estagios?busca=Ana%20Estudante");
+  await page.getByRole("link", { name: /Ana Estudante/ }).first().click();
   await expect(page.getByTestId("documentos-estagio")).toContainText("TCE (PDF)");
 });
 

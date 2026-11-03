@@ -142,6 +142,12 @@ ferramenta.
 - Erro de negócio é `DomainError` com código estável (`src/lib/errors.ts`); a
   tradução para HTTP fica em `src/lib/api.ts`.
 - Toda decisão técnica cita o RF ou a RN que a motiva.
+- Estado de listagem mora na URL e é resolvido no servidor: `?busca=&pagina=&por_pagina=&ordem=campo|-campo&<filtros>`
+  (`src/lib/consulta.ts`, componentes `Paginacao`, `BarraFiltros`, `DataTable`). Ordem desconhecida cai no padrão.
+  O link de volta de um registro leva `?voltar=`, aceito só com o prefixo da própria listagem.
+- Nome e tom de situação ficam em `src/lib/rotulos.ts`; datas em `src/lib/datas.ts`. Tela não exibe código cru.
+- Indicador sem dado é `null` e aparece como travessão com o motivo, nunca como zero. O painel só mostra número
+  que vem do banco; não há tendência porque não há série histórica.
 
 ## Módulos de domínio
 
@@ -456,6 +462,15 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
   ainda consegue remover a regra de retenção. É uma segunda barreira, não a
   única (a primeira é o gatilho `BEFORE DELETE` no banco).
 
+- Grid sem coluna base (`grid-cols-1`) estica até a largura do conteúdo e estoura a página no celular. Contêiner
+  com rolagem precisa de `relative`, senão o rótulo `sr-only` (absoluto) escapa dele e cria rolagem na página.
+- Em subconsulta correlacionada do Drizzle, `${curso.id}` sai sem qualificação e casa com a tabela interna:
+  a contagem dá 0 sem erro. Escrever `"curso"."id"` literal (`findCursos`).
+- Diálogo do Radix aberto sem `Dialog.Trigger` não devolve o foco ao fechar: guardar a origem em
+  `onOpenAutoFocus` e restaurar em `onCloseAutoFocus` (`botao-acao.tsx`).
+- A RLS não mostra nome nem matrícula do estudante a orientador, supervisor e concedente (`usuario_leitura`,
+  `estudante_leitura`). A tela usa `identificarEstagio`; a busca por nome não acha nada para esses perfis.
+
 ## Roadmap (fases)
 
 0. Fechamento da documentação (**concluída**).
@@ -485,6 +500,10 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
    o teto, rescisão e conclusão com encerramento comum, guarda documental sem exclusão,
    relatórios gerenciais com CSV e PDF, PDFs do TCE, plano e aditivo, declarações com código de
    verificação.
+
+6. Interface (**em revisão**, lote `integration/fase-6-interface`): reformulação das telas sobre os
+   componentes de `src/shared/ui`, painel por perfil, perfil do estudante em abas, listagens com busca,
+   ordenação e paginação no servidor, confirmações em diálogo. Sem mudança de schema, política ou permissão.
 
 A ordem segue dependência de dados, não a numeração dos RFs: sem perfil e
 vínculo (Fase 1), nenhuma política RLS pode ser escrita; sem curso e

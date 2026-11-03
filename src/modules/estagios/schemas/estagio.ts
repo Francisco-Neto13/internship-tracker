@@ -88,6 +88,8 @@ export const listEstagiosQuerySchema = z.object({
   tipo: z.enum(["OBRIGATORIO", "NAO_OBRIGATORIO"]).optional(),
   curso_id: z.uuid().optional(),
   concedente_id: z.uuid().optional(),
+  busca: z.string().trim().min(1).max(100).optional(),
+  ordem: z.enum(["estudante", "-estudante", "concedente", "-concedente", "inicio", "-inicio", "fim", "-fim", "situacao", "-situacao"]).optional(),
   estudante_id: z.uuid().optional(),
 });
 

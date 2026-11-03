@@ -1,49 +1,95 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
+import { formatarDataCurta } from "@/lib/datas";
+import { minutosParaHoras } from "@/lib/horas";
 import { getIdentity } from "@/lib/session";
 import { listEstagiosDivergentes } from "@/modules/acompanhamento/services/frequencia-service";
 import { listEstagios } from "@/modules/estagios/services/estagio-service";
+import { Avatar } from "@/shared/ui/avatar";
+import { BarraFiltros } from "@/shared/ui/barra-filtros";
+import { DataTable } from "@/shared/ui/data-table";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { PageHeader } from "@/shared/ui/page-header";
+import { Paginacao } from "@/shared/ui/paginacao";
 import { StatusBadge } from "@/shared/ui/status-badge";
 
-// RF023 to RF028: active internships the caller follows (hours are recorded and homologated on
-// each internship page) and, for advisor and coordination, the ones whose hours diverge now.
-export default async function FrequenciaPage() {
+// RF023-RF028: estágios ativos que a pessoa acompanha. Lançar, homologar e analisar acontecem na
+// página de cada estágio; aqui está a fila, com a divergência de carga já calculada para
+// orientador e coordenação (até ontem, na tolerância institucional).
+
+const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
+
+export default async function FrequenciaPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
   const identity = await getIdentity();
   if (!identity) redirect("/login");
-  const [{ items }, divergentes] = await Promise.all([listEstagios(identity, { page: 1, limit: 100 }), listEstagiosDivergentes(identity)]);
-  const ativos = items.filter((estagio) => estagio.situacao === "ATIVO");
-  const divergencia = new Map(divergentes.map((item) => [item.estagio.id, item.divergencia]));
+  const consulta = lerConsulta(await searchParams);
+  const { pagina, porPagina } = lerPaginacao(consulta);
+  const [{ items, total }, divergentes] = await Promise.all([
+    listEstagios(identity, { page: pagina, limit: porPagina, situacao: "ATIVO", busca: consulta.busca, ordem: consulta.ordem ?? "estudante" }),
+    listEstagiosDivergentes(identity),
+  ]);
+  const divergencia = new Map(divergentes.map((item) => [item.estagio.id, item]));
+  const comDivergencia = divergentes.filter((item) => item.divergencia.divergente).length;
 
   return (
-    <section className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="M05 Acompanhamento"
         title="Frequência e carga horária"
-        description="Registro, homologação e divergências de cada estágio ativo (RF023-RF030)."
+        description="Estágios ativos que você acompanha. O registro do dia, a homologação e a análise de divergências ficam na página de cada estágio."
+        meta={comDivergencia > 0 ? <StatusBadge tone="danger">{comDivergencia} com divergência acima da tolerância</StatusBadge> : undefined}
       />
-      {ativos.length === 0 ? (
-        <EstadoVazio variante="vazio" titulo="Nenhum estágio ativo" descricao="Nenhum estágio ativo no seu recorte de acesso." />
+      <BarraFiltros busca="Estudante, matrícula ou concedente" />
+      {items.length === 0 ? (
+        consulta.busca ? (
+          <EstadoVazio variante="sem-resultados" titulo="Nenhum estágio encontrado" descricao="Nenhum estágio ativo corresponde à busca." />
+        ) : (
+          <EstadoVazio titulo="Nenhum estágio ativo" descricao="Quando um estágio em que você participa for ativado, a frequência dele aparece aqui." />
+        )
       ) : (
-        <ul className="surface-card flex flex-col divide-y divide-navy-900/10 text-sm" data-testid="estagios-ativos">
-          {ativos.map((estagio) => {
-            const item = divergencia.get(estagio.id);
-            return (
-              <li key={estagio.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-navy-900">
-                <Link href={`/estagios/${estagio.id}`} className="underline-offset-4 hover:underline">
-                  {estagio.estudanteNome ?? estagio.matricula} · {estagio.concedenteRazaoSocial}
-                </Link>
-                {item?.divergente && (
+        <DataTable
+          items={items}
+          getRowKey={(estagio) => estagio.id}
+          getRowHref={(estagio) => `/estagios/${estagio.id}`}
+          consulta={consulta}
+          caminho="/frequencia"
+          testId="estagios-ativos"
+          rodape={<Paginacao pagina={pagina} porPagina={porPagina} total={total} rotuloItens="estágios ativos" />}
+          columns={[
+            {
+              chave: "estudante",
+              cabecalho: "Estudante",
+              ordenavel: "estudante",
+              celula: (estagio) => (
+                <span className="flex min-w-0 items-center gap-3">
+                  <Avatar nome={estagio.estudanteNome} semente={estagio.estudanteId} tamanho="sm" />
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium text-navy-900">{estagio.estudanteNome ?? estagio.matricula}</span>
+                    <span className="block truncate text-xs text-navy-900/60">{estagio.concedenteRazaoSocial}</span>
+                  </span>
+                </span>
+              ),
+            },
+            { chave: "jornada", cabecalho: "Jornada", ocultarNoCelular: true, celula: (estagio) => `${h(estagio.cargaDiariaMinutos)}/dia · ${h(estagio.cargaSemanalMinutos)}/semana` },
+            { chave: "fim", cabecalho: "Término previsto", ordenavel: "fim", ocultarNoCelular: true, celula: (estagio) => formatarDataCurta(estagio.dataFimPrevista) },
+            {
+              chave: "divergencia",
+              cabecalho: "Carga até ontem",
+              celula: (estagio) => {
+                const item = divergencia.get(estagio.id);
+                if (!item) return <span className="text-xs text-navy-900/60">Dentro do previsto</span>;
+                const { minutosCumpridos, minutosPrevistos, percentual, divergente } = item.divergencia;
+                return divergente ? (
                   <StatusBadge tone="danger">
-                    {`Divergência de ${item.percentual}%: ${item.minutosCumpridos / 60} h de ${item.minutosPrevistos / 60} h previstas`}
+                    {h(minutosCumpridos)} de {h(minutosPrevistos)} · {percentual?.toLocaleString("pt-BR")}%
                   </StatusBadge>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                ) : (
+                  <StatusBadge tone="pending">Caso aberto para o orientador</StatusBadge>
+                );
+              },
+            },
+          ]}
+        />
       )}
-    </section>
+    </div>
   );
 }

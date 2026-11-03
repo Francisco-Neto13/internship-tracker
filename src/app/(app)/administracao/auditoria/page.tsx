@@ -1,163 +1,190 @@
+import { Download } from "lucide-react";
 import { redirect } from "next/navigation";
+import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
+import { formatarDataHora } from "@/lib/datas";
+import { descreverOperacao, OPERACAO_AUDITORIA, TABELA_AUDITORIA } from "@/lib/rotulos";
 import { getIdentity } from "@/lib/session";
 import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
 import { listAuditoriaQuerySchema, toFiltroAuditoria } from "@/modules/administracao/schemas/auditoria";
 import { listRegistros } from "@/modules/administracao/services/auditoria-service";
-import { Button } from "@/shared/ui/button";
+import { Avatar } from "@/shared/ui/avatar";
+import { BarraFiltros } from "@/shared/ui/barra-filtros";
+import { Button, buttonVariants } from "@/shared/ui/button";
 import { DataTable, type DataTableColumn } from "@/shared/ui/data-table";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { PageHeader } from "@/shared/ui/page-header";
+import { Paginacao } from "@/shared/ui/paginacao";
 import { StatusBadge, type StatusTone } from "@/shared/ui/status-badge";
 
-const OPERACAO_TONE: Record<string, StatusTone> = {
-  INSERT: "ok",
-  UPDATE: "pending",
-  DELETE: "danger",
-};
-
-const selectClass =
-  "h-11 w-full rounded-md border border-navy-900/20 bg-white px-3 text-sm text-navy-900 outline-none transition-colors focus:border-azul-500 focus:ring-2 focus:ring-azul-500/25";
-
-const dataHora = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "medium", timeZone: "America/Sao_Paulo" });
+// RF065, RF066: a trilha, somente leitura. Filtros na URL (o mesmo endereço alimenta a tabela e
+// a exportação CSV), nomes do produto no lugar dos nomes de tabela, e cada linha mostra o que
+// mudou, antes e depois. Colunas sensíveis já chegam mascaradas pelo banco ([omitido]).
 
 type Registro = Awaited<ReturnType<typeof listRegistros>>["items"][number];
+const TOM: Record<string, StatusTone> = { INSERT: "ok", UPDATE: "pending", DELETE: "danger", LEITURA: "neutral" };
+
+function valor(dados: unknown, campo: string) {
+  if (!dados || typeof dados !== "object") return "—";
+  const bruto = (dados as Record<string, unknown>)[campo];
+  if (bruto === null || bruto === undefined) return "—";
+  return typeof bruto === "object" ? JSON.stringify(bruto) : String(bruto);
+}
+
+function Alteracao({ registro }: { registro: Registro }) {
+  const campos = registro.camposAlterados ?? (registro.operacao === "INSERT" ? Object.keys((registro.dadosNovos as object) ?? {}) : []);
+  if (campos.length === 0) return <span className="text-xs text-navy-900/60">—</span>;
+  return (
+    <details className="relative z-10 text-xs">
+      <summary className="cursor-pointer text-azul-500 hover:text-navy-700">
+        {registro.operacao === "INSERT" ? `${campos.length} campos` : campos.slice(0, 3).join(", ") + (campos.length > 3 ? ` +${campos.length - 3}` : "")}
+      </summary>
+      <table className="mt-2 w-full max-w-xl text-left">
+        <thead className="text-navy-900/60">
+          <tr>
+            <th className="py-1 pr-3 font-medium">Campo</th>
+            {registro.operacao !== "INSERT" && <th className="py-1 pr-3 font-medium">Antes</th>}
+            <th className="py-1 font-medium">{registro.operacao === "INSERT" ? "Valor" : "Depois"}</th>
+          </tr>
+        </thead>
+        <tbody className="font-mono">
+          {campos.map((campo) => (
+            <tr key={campo} className="border-t border-navy-900/[0.07] align-top">
+              <td className="py-1 pr-3 text-navy-900/70">{campo}</td>
+              {registro.operacao !== "INSERT" && <td className="max-w-48 truncate py-1 pr-3 text-navy-900/60">{valor(registro.dadosAnteriores, campo)}</td>}
+              <td className="max-w-48 truncate py-1 text-navy-900">{valor(registro.dadosNovos, campo)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  );
+}
 
 const COLUNAS: DataTableColumn<Registro>[] = [
-  {
-    chave: "data",
-    cabecalho: "Data e hora",
-    celula: (registro) => <span className="text-navy-900/60">{dataHora.format(registro.ocorridoEm)}</span>,
-  },
+  { chave: "data", cabecalho: "Quando", celula: (registro) => <span className="whitespace-nowrap text-navy-900/75">{formatarDataHora(registro.ocorridoEm)}</span> },
   {
     chave: "autor",
     cabecalho: "Autor",
-    celula: (registro) => <span className="text-navy-900">{registro.autorNome ?? (registro.usuarioId ? "-" : "sistema")}</span>,
+    celula: (registro) =>
+      registro.usuarioId ? (
+        <span className="flex min-w-0 items-center gap-2">
+          <Avatar nome={registro.autorNome} semente={registro.usuarioId} tamanho="sm" />
+          <span className="min-w-0">
+            <span className="block truncate text-navy-900">{registro.autorNome ?? "—"}</span>
+            <span className="block truncate text-xs text-navy-900/60">{registro.autorEmail}</span>
+          </span>
+        </span>
+      ) : (
+        <span className="text-navy-900/60">Sistema</span>
+      ),
   },
-  { chave: "tabela", cabecalho: "Tabela", celula: (registro) => <span className="font-mono text-navy-900">{registro.tabela}</span> },
   {
     chave: "operacao",
     cabecalho: "Operação",
     celula: (registro) => (
-      <StatusBadge tone={OPERACAO_TONE[registro.operacao] ?? "neutral"}>{registro.operacao}</StatusBadge>
+      <span className="flex flex-col gap-1">
+        <span className="text-navy-900">{descreverOperacao(registro.tabela, registro.operacao)}</span>
+        <span className="flex items-center gap-2">
+          <StatusBadge tone={TOM[registro.operacao] ?? "neutral"}>{registro.operacao}</StatusBadge>
+          <span className="font-mono text-xs text-navy-900/60">{registro.registroId.slice(0, 8)}</span>
+        </span>
+      </span>
     ),
   },
-  {
-    chave: "campos",
-    cabecalho: "Campos alterados",
-    celula: (registro) => (
-      <span className="font-mono text-xs text-navy-900/60">{registro.camposAlterados?.join(", ") ?? "-"}</span>
-    ),
-  },
+  { chave: "campos", cabecalho: "O que mudou", celula: (registro) => <Alteracao registro={registro} /> },
 ];
 
-// RF066: filters travel in the query string (a plain GET form), so the same URL drives
-// the table and the CSV export
-export default async function AuditoriaPage({ searchParams }: { searchParams: Promise<Record<string, string | string[]>> }) {
+export default async function AuditoriaPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
   const identity = await getIdentity();
   if (!identity) redirect("/login");
-
-  const brutos = Object.fromEntries(
-    Object.entries(await searchParams)
-      .map(([chave, valor]) => [chave, Array.isArray(valor) ? valor[0] : valor])
-      .filter(([, valor]) => valor !== ""),
-  );
-  const consulta = listAuditoriaQuerySchema.safeParse(brutos);
-  const query = consulta.success ? consulta.data : listAuditoriaQuerySchema.parse({});
-
-  const [{ items, total }, perfis] = await Promise.all([
-    listRegistros(identity, toFiltroAuditoria(query), { page: query.page, limit: query.limit }),
-    listPerfisVigentes(identity),
-  ]);
+  const brutos = lerConsulta(await searchParams);
+  const { pagina, porPagina } = lerPaginacao(brutos, 50);
+  const consulta = listAuditoriaQuerySchema.safeParse({ ...brutos, page: pagina, limit: porPagina });
+  const query = consulta.success ? consulta.data : listAuditoriaQuerySchema.parse({ page: pagina, limit: porPagina });
+  const perfis = await listPerfisVigentes(identity);
   const ehAdministrador = perfis.some((vinculo) => vinculo.perfil === "ADMINISTRADOR");
 
-  const { tabela, registro_id, usuario_id, operacao, de, ate } = query;
-  const filtrosAtivos = new URLSearchParams(
-    Object.entries({ tabela, registro_id, usuario_id, operacao, de, ate }).filter(
-      (entrada): entrada is [string, string] => Boolean(entrada[1]),
-    ),
-  );
-  const paginas = Math.max(1, Math.ceil(total / query.limit));
-  const linkPagina = (page: number) => `?${new URLSearchParams({ ...Object.fromEntries(filtrosAtivos), page: String(page) })}`;
-
-  return (
-    <section className="flex flex-col gap-6">
-      <PageHeader
-        eyebrow="M08 Administração e Controle"
-        title="Auditoria"
-        description="Trilha de operações relevantes, somente leitura (RF065, RF066)."
-      />
-
-      {!ehAdministrador ? (
+  if (!ehAdministrador) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Auditoria" description="Trilha de operações relevantes, somente leitura (RF065, RF066)." />
         <EstadoVazio
           variante="sem-permissao"
           titulo="Restrito ao perfil Administrador"
-          descricao="A trilha de auditoria (RF065, RF066) só fica visível para quem tem o perfil Administrador. Isto é a política de acesso funcionando, não um erro."
+          descricao="A trilha de auditoria só fica visível para quem tem o perfil Administrador. Isto é a política de acesso funcionando, não um erro."
         />
+      </div>
+    );
+  }
+
+  const { items, total } = await listRegistros(identity, toFiltroAuditoria(query), { page: query.page, limit: query.limit });
+  const { tabela, registro_id, usuario_id, operacao, de, ate } = query;
+  const filtros = new URLSearchParams(Object.entries({ tabela, registro_id, usuario_id, operacao, de, ate }).filter((par): par is [string, string] => Boolean(par[1])));
+
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Auditoria"
+        description="Toda operação relevante, com autor, data e o que mudou. Somente leitura: a trilha não aceita alteração nem exclusão (RN-28)."
+        acoes={
+          <a href={`/api/v1/auditoria/exportacao?${filtros}`} className={buttonVariants({ variant: "outline" })}>
+            <Download className="size-4" aria-hidden />
+            Exportar CSV
+          </a>
+        }
+      />
+      <BarraFiltros
+        filtros={[
+          { chave: "tabela", rotulo: "Registro", todos: "Todos os registros", opcoes: Object.entries(TABELA_AUDITORIA).map(([valor, rotulo]) => ({ valor, rotulo })) },
+          { chave: "operacao", rotulo: "Operação", todos: "Todas as operações", opcoes: ["INSERT", "UPDATE", "DELETE", "LEITURA"].map((valor) => ({ valor, rotulo: OPERACAO_AUDITORIA[valor] })) },
+        ]}
+      />
+      <details className="surface-card px-5 py-4" open={Boolean(de || ate || registro_id || usuario_id)}>
+        <summary className="cursor-pointer text-sm font-medium text-navy-900">Período, registro e autor</summary>
+        <form method="get" className="mt-4 grid gap-4 sm:grid-cols-4" data-testid="auditoria-filtros">
+          {tabela && <input type="hidden" name="tabela" value={tabela} />}
+          {operacao && <input type="hidden" name="operacao" value={operacao} />}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="filtro-de">De</Label>
+            <Input id="filtro-de" name="de" type="date" defaultValue={de} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="filtro-ate">Até</Label>
+            <Input id="filtro-ate" name="ate" type="date" defaultValue={ate} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="filtro-registro">Código do registro</Label>
+            <Input id="filtro-registro" name="registro_id" defaultValue={registro_id} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="filtro-usuario">Código do autor</Label>
+            <Input id="filtro-usuario" name="usuario_id" defaultValue={usuario_id} />
+          </div>
+          {!consulta.success && (
+            <p role="alert" className="text-sm text-status-danger-text sm:col-span-4">
+              Filtros inválidos foram ignorados: {consulta.error.issues.map((issue) => issue.message).join("; ")}
+            </p>
+          )}
+          <div className="sm:col-span-4">
+            <Button type="submit" variant="outline">
+              Aplicar
+            </Button>
+          </div>
+        </form>
+      </details>
+      {items.length === 0 ? (
+        <EstadoVazio variante="sem-resultados" titulo="Nenhum registro" descricao="Nenhuma operação corresponde aos filtros." />
       ) : (
-        <>
-          <form method="get" className="surface-card grid gap-4 p-5 sm:grid-cols-3" data-testid="auditoria-filtros">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="filtro-tabela">Tabela</Label>
-              <Input id="filtro-tabela" name="tabela" defaultValue={query.tabela} placeholder="ex.: estudante" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="filtro-registro">Id do registro</Label>
-              <Input id="filtro-registro" name="registro_id" defaultValue={query.registro_id} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="filtro-usuario">Id do autor</Label>
-              <Input id="filtro-usuario" name="usuario_id" defaultValue={query.usuario_id} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="filtro-operacao">Operação</Label>
-              <select id="filtro-operacao" name="operacao" defaultValue={query.operacao ?? ""} className={selectClass}>
-                <option value="">Todas</option>
-                <option value="INSERT">INSERT</option>
-                <option value="UPDATE">UPDATE</option>
-                <option value="DELETE">DELETE</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="filtro-de">De</Label>
-              <Input id="filtro-de" name="de" type="date" defaultValue={query.de} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="filtro-ate">Até</Label>
-              <Input id="filtro-ate" name="ate" type="date" defaultValue={query.ate} />
-            </div>
-            {!consulta.success && (
-              <p role="alert" className="text-sm text-status-danger-text sm:col-span-3">
-                Filtros inválidos foram ignorados: {consulta.error.issues.map((issue) => issue.message).join("; ")}
-              </p>
-            )}
-            <div className="flex flex-wrap gap-3 sm:col-span-3">
-              <Button type="submit">Filtrar</Button>
-              <Button asChild variant="outline">
-                <a href={`/api/v1/auditoria/exportacao?${filtrosAtivos}`}>Exportar CSV</a>
-              </Button>
-            </div>
-          </form>
-
-          <p className="text-sm text-navy-900/60">
-            {total} registro(s) · página {query.page} de {paginas}
-          </p>
-
-          {items.length === 0 ? (
-            <EstadoVazio variante="vazio" titulo="Nenhum registro" descricao="Nenhuma operação corresponde aos filtros." />
-          ) : (
-            <DataTable columns={COLUNAS} items={items} getRowKey={(registro) => String(registro.id)} testId="auditoria-lista" />
-          )}
-
-          {paginas > 1 && (
-            <nav className="flex gap-3 text-sm" aria-label="Paginação">
-              {query.page > 1 && <a href={linkPagina(query.page - 1)}>Anterior</a>}
-              {query.page < paginas && <a href={linkPagina(query.page + 1)}>Próxima</a>}
-            </nav>
-          )}
-        </>
+        <DataTable
+          columns={COLUNAS}
+          items={items}
+          getRowKey={(registro) => String(registro.id)}
+          testId="auditoria-lista"
+          rodape={<Paginacao pagina={query.page} porPagina={query.limit} total={total} rotuloItens="operações" />}
+        />
       )}
-    </section>
+    </div>
   );
 }

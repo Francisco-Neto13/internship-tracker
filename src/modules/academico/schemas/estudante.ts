@@ -13,6 +13,7 @@ export const listEstudantesQuerySchema = z.object({
   curso_id: z.uuid().optional(),
   situacao: z.enum(situacaoAcademica.enumValues).optional(),
   busca: z.string().trim().min(1).max(100).optional(),
+  ordem: z.enum(["nome", "-nome", "matricula", "-matricula", "periodo", "-periodo", "situacao", "-situacao", "curso", "-curso"]).optional(),
 });
 
 export const createEstudanteBodySchema = z.object({

@@ -18,8 +18,8 @@ export default async function IntegralizacaoPage() {
   });
 
   return (
-    <section className="flex flex-col gap-6">
-      <PageHeader eyebrow="M07 Integralização" title="Integralização curricular" description="Estágio obrigatório e atividades complementares frente às exigências do curso (RF056, RF057)." />
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Integralização curricular" description="Quanto você já cumpriu do estágio obrigatório e das atividades complementares exigidos pelo curso, e as declarações emitidas." />
       {integralizacao ? (
         <>
           <ProgressoIntegralizacao integralizacao={integralizacao} />
@@ -32,6 +32,6 @@ export default async function IntegralizacaoPage() {
       ) : (
         <EstadoVazio variante="vazio" titulo="Disponível para estudantes" descricao="A coordenação consulta a integralização de cada estudante na página do estudante." />
       )}
-    </section>
+    </div>
   );
 }

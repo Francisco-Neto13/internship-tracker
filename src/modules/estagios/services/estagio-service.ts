@@ -12,9 +12,12 @@ import {
   diasUsadosNoPar,
   findEstagioById,
   findEstagios,
+  findIdentificacaoEstagio,
   historicoConcedente,
   insertEstagio,
   lockEstagio,
+  ORDENS_ESTAGIO,
+  type OrdemEstagio,
   situacaoAcademica,
   situacaoConcedente,
   temOutroEstagioAtivo,
@@ -119,9 +122,27 @@ async function gravar(tx: Transaction, id: string, values: Partial<EstagioRow>, 
 
 export async function listEstagios(
   identity: Identity,
-  query: { page: number; limit: number; situacao?: Situacao; tipo?: EstagioRow["tipo"]; cursoId?: string; concedenteId?: string; estudanteId?: string },
+  query: {
+    page: number;
+    limit: number;
+    situacao?: Situacao;
+    tipo?: EstagioRow["tipo"];
+    cursoId?: string;
+    concedenteId?: string;
+    estudanteId?: string;
+    busca?: string;
+    ordem?: string;
+  },
 ) {
-  return withUser(identity, (tx) => findEstagios(tx, { ...query, offset: (query.page - 1) * query.limit }));
+  const campo = query.ordem?.replace(/^-/, "");
+  return withUser(identity, (tx) =>
+    findEstagios(tx, {
+      ...query,
+      ordem: (ORDENS_ESTAGIO as readonly string[]).includes(campo ?? "") ? (campo as OrdemEstagio) : undefined,
+      decrescente: query.ordem?.startsWith("-"),
+      offset: (query.page - 1) * query.limit,
+    }),
+  );
 }
 
 /** RF015: creates the internship in EM_FORMALIZACAO with its TCE in edition. */
@@ -277,7 +298,8 @@ export async function getEstagioDetalhado(identity: Identity, id: string) {
       await findAssinaturas(tx, id),
       await findAditivos(tx, id),
     ];
-    return { estagio, planos, responsaveis, apolices, assinaturas, aditivos, etapas: etapasFormalizacao(estagio, assinaturas) };
+    const identificacao = await findIdentificacaoEstagio(tx, estagio);
+    return { estagio, identificacao, planos, responsaveis, apolices, assinaturas, aditivos, etapas: etapasFormalizacao(estagio, assinaturas) };
   });
 }
 

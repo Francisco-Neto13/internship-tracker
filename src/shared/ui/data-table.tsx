@@ -1,3 +1,5 @@
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "./cn";
 
@@ -6,54 +8,135 @@ export type DataTableColumn<T> = {
   cabecalho: string;
   celula: (item: T) => ReactNode;
   className?: string;
+  /** Campo de ordenação aceito pelo backend (?ordem=campo ou -campo). */
+  ordenavel?: string;
+  /** Some em telas estreitas: a coluna principal e a situação ficam sempre. */
+  ocultarNoCelular?: boolean;
+  alinhar?: "esquerda" | "direita";
 };
 
 type DataTableProps<T> = {
   columns: DataTableColumn<T>[];
   items: T[];
   getRowKey: (item: T) => string;
+  /** Linha inteira clicável: o link vai na primeira célula e cobre a linha (sem JS). */
+  getRowHref?: (item: T) => string;
+  /** Consulta atual (para montar os links de ordenação sem perder filtros e página). */
+  consulta?: Record<string, string | undefined>;
+  caminho?: string;
   testId?: string;
+  rodape?: ReactNode;
+  className?: string;
+  /** Sem borda própria: dentro de um <Painel> que já tem a superfície. */
+  embutida?: boolean;
 };
 
+function hrefOrdem(caminho: string, consulta: Record<string, string | undefined>, campo: string) {
+  const atual = consulta.ordem;
+  const proxima = atual === campo ? `-${campo}` : atual === `-${campo}` ? undefined : campo;
+  const parametros = new URLSearchParams(Object.entries({ ...consulta, ordem: proxima, pagina: undefined }).filter(([, v]) => v) as [string, string][]);
+  const texto = parametros.toString();
+  return texto ? `${caminho}?${texto}` : caminho;
+}
+
 /**
- * Tabela de listagem generica por colunas; sem estado, renderiza no servidor como as demais
- * telas. Lista vazia nao entra aqui: a pagina decide entre <DataTable> e <EstadoVazio> antes de
- * renderizar, para o painel vazio substituir a tabela em vez de virar uma linha dentro dela.
+ * Tabela de listagem renderizada no servidor. Cabeçalho com ordenação por link (o backend
+ * ordena), linha inteira clicável quando há destino, coluna principal fixa à esquerda no
+ * celular. Lista vazia não entra aqui: a página troca a tabela por <EstadoVazio>.
  */
-export function DataTable<T>({ columns, items, getRowKey, testId }: DataTableProps<T>) {
+export function DataTable<T>({
+  columns,
+  items,
+  getRowKey,
+  getRowHref,
+  consulta = {},
+  caminho = "",
+  testId,
+  rodape,
+  className,
+  embutida = false,
+}: DataTableProps<T>) {
   return (
-    <div className="surface-card overflow-x-auto">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-nevoa-100/60">
-          <tr>
-            {columns.map((column) => (
-              <th
-                key={column.chave}
-                className={cn(
-                  "px-5 py-3 text-[10px] font-medium tracking-wide text-navy-900/60 uppercase",
-                  column.className,
-                )}
-              >
-                {column.cabecalho}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody data-testid={testId}>
-          {items.map((item) => (
-            <tr
-              key={getRowKey(item)}
-              className="border-b border-navy-900/10 transition-colors last:border-0 hover:bg-nevoa-100/50"
-            >
-              {columns.map((column) => (
-                <td key={column.chave} className="px-5 py-3.5">
-                  {column.celula(item)}
-                </td>
-              ))}
+    <div className={cn(!embutida && "surface-card", "relative overflow-hidden", className)}>
+      <div className="relative overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-navy-900/10 bg-nevoa-50">
+            <tr>
+              {columns.map((column) => {
+                const ordem = consulta.ordem;
+                const ativa = column.ordenavel && (ordem === column.ordenavel || ordem === `-${column.ordenavel}`);
+                const Icone = !ativa ? ArrowUpDown : ordem?.startsWith("-") ? ArrowDown : ArrowUp;
+                return (
+                  <th
+                    key={column.chave}
+                    scope="col"
+                    aria-sort={ativa ? (ordem?.startsWith("-") ? "descending" : "ascending") : undefined}
+                    className={cn(
+                      "px-4 py-2.5 text-xs font-medium whitespace-nowrap text-navy-900/60",
+                      column.alinhar === "direita" && "text-right",
+                      column.ocultarNoCelular && "hidden md:table-cell",
+                      column.className,
+                    )}
+                  >
+                    {column.ordenavel ? (
+                      <Link
+                        href={hrefOrdem(caminho, consulta, column.ordenavel)}
+                        scroll={false}
+                        className={cn(
+                          "-mx-1 inline-flex items-center gap-1 rounded px-1 hover:text-navy-900 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none",
+                          ativa && "text-navy-900",
+                        )}
+                      >
+                        {column.cabecalho}
+                        <Icone className={cn("size-3.5", !ativa && "opacity-40")} aria-hidden />
+                      </Link>
+                    ) : (
+                      column.cabecalho
+                    )}
+                  </th>
+                );
+              })}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody data-testid={testId}>
+            {items.map((item) => {
+              const href = getRowHref?.(item);
+              return (
+                <tr
+                  key={getRowKey(item)}
+                  className={cn(
+                    "relative border-b border-navy-900/[0.07] transition-colors last:border-0",
+                    href && "hover:bg-nevoa-50 focus-within:bg-nevoa-50",
+                  )}
+                >
+                  {columns.map((column, indice) => (
+                    <td
+                      key={column.chave}
+                      className={cn(
+                        "px-4 py-3 align-middle",
+                        column.alinhar === "direita" && "text-right tabular-nums",
+                        column.ocultarNoCelular && "hidden md:table-cell",
+                      )}
+                    >
+                      {href && indice === 0 ? (
+                        <Link
+                          href={href}
+                          className="block rounded outline-none after:absolute after:inset-0 after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-azul-500 focus-visible:after:ring-inset"
+                        >
+                          {column.celula(item)}
+                        </Link>
+                      ) : (
+                        column.celula(item)
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {rodape}
     </div>
   );
 }
