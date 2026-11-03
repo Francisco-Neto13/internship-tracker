@@ -56,7 +56,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </header>
         {/* Sem bg proprio: o cartao branco so se destaca se a pagina atras for levemente
             tingida (nevoa-50 no body). Tres planos: sidebar navy, pagina tingida, cartao branco. */}
-        <main id="conteudo" className="animate-fade-in mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+        <main id="conteudo" className="animate-fade-in w-full min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
