@@ -3,7 +3,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Button } from "./button";
 import { mensagemDaApi } from "./formulario-api";
 
@@ -41,6 +41,8 @@ export function BotaoAcao({
   const [enviando, setEnviando] = useState(false);
   const [aberto, setAberto] = useState(false);
   const [motivo, setMotivo] = useState("");
+  // Aberto sem Dialog.Trigger, o Radix não sabe para onde devolver o foco ao fechar
+  const origemDoFoco = useRef<HTMLElement | null>(null);
 
   async function executar() {
     setErro(null);
@@ -99,7 +101,16 @@ export function BotaoAcao({
         <Dialog.Root open={aberto} onOpenChange={setAberto}>
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 z-50 bg-navy-900/40 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-navy-900/10 bg-white p-6 shadow-elevated focus:outline-none">
+            <Dialog.Content
+              onOpenAutoFocus={() => {
+                origemDoFoco.current = document.activeElement as HTMLElement | null;
+              }}
+              onCloseAutoFocus={(evento) => {
+                evento.preventDefault();
+                origemDoFoco.current?.focus();
+              }}
+              className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-navy-900/10 bg-white p-6 shadow-elevated focus:outline-none"
+            >
               <Dialog.Title className="text-base font-semibold text-navy-900">{confirmacao?.titulo ?? rotulo}</Dialog.Title>
               <Dialog.Description className="mt-1.5 text-sm text-navy-900/65">
                 {confirmacao?.descricao ?? pedirMotivo?.pergunta}
