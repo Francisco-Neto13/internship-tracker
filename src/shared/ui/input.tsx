@@ -1,9 +1,12 @@
+import { FAIXA_DATA } from "@/lib/campos";
 import type { ComponentProps } from "react";
 import { cn } from "./cn";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
   return (
+    // eslint-disable-next-line no-restricted-syntax -- the rule looks at who uses this component
     <input
+      {...(props.type === "date" ? FAIXA_DATA : {})}
       className={cn(
         "h-11 w-full rounded-md border border-navy-900/20 bg-white px-3 text-sm text-navy-900 outline-none transition-colors",
         "placeholder:text-navy-900/60",

@@ -1,3 +1,5 @@
+import { dataSchema } from "@/lib/campos";
+import { LIMITE } from "@/lib/campos";
 import { z } from "zod";
 import { horasParaMinutos, horasSchema } from "@/lib/horas";
 
@@ -10,10 +12,10 @@ export const idParamSchema = z.object({ id: z.uuid() });
 
 const campos = {
   categoria_id: z.uuid(),
-  descricao: texto(500),
-  instituicao_promotora: texto(300),
-  data_inicio: z.iso.date(),
-  data_fim: z.iso.date(),
+  descricao: texto(LIMITE.descricaoAtividade),
+  instituicao_promotora: texto(LIMITE.instituicao),
+  data_inicio: dataSchema,
+  data_fim: dataSchema,
   horas_declaradas: horasSchema({ min: 1 / 60, max: 10_000 }),
 };
 
@@ -58,7 +60,7 @@ export const complementacaoBodySchema = z
     retirarComprovanteIds: body.retirar_comprovante_ids,
   }));
 
-export const motivoBodySchema = z.object({ motivo: texto(4000) });
+export const motivoBodySchema = z.object({ motivo: texto(LIMITE.motivoAtividade) });
 
 export const atividadesQuerySchema = z
   .object({

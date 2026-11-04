@@ -1,3 +1,4 @@
+import { LIMITE } from "@/lib/campos";
 import { formatarDataCurta } from "@/lib/datas";
 import { minutosParaHoras } from "@/lib/horas";
 import type { Identity } from "@/lib/identity";
@@ -126,7 +127,7 @@ confirmacao={{ titulo: "Rescindir o estágio?", descricao: "A rescisão é defin
                   obrigatorio: true,
                   opcoes: Object.entries(SOLICITANTE).map(([valor, rotulo]) => ({ valor, rotulo })),
                 },
-                { nome: "motivo", rotulo: "Motivo", tipo: "textarea", obrigatorio: true, ajuda: "Lançamentos depois da data são cancelados; a rescisão não se desfaz." },
+                { nome: "motivo", max: LIMITE.motivoRescisao, rotulo: "Motivo", tipo: "textarea", obrigatorio: true, ajuda: "Lançamentos depois da data são cancelados; a rescisão não se desfaz." },
               ]}
             />
           </Painel>

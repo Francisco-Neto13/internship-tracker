@@ -113,6 +113,13 @@
       "when": 1793537958387,
       "tag": "0015_declaracao",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793829549165,
+      "tag": "0016_recuperacao_senha",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,5 @@
+import { dataSchema } from "@/lib/campos";
+import { LIMITE } from "@/lib/campos";
 import { z } from "zod";
 import { horasParaMinutos, horasSchema } from "@/lib/horas";
 
@@ -10,12 +12,12 @@ const camposTce = {
   concedente_id: z.uuid(),
   convenio_id: z.uuid(),
   tipo: z.enum(["OBRIGATORIO", "NAO_OBRIGATORIO"]),
-  data_inicio: z.iso.date(),
-  data_fim_pactuada: z.iso.date(),
+  data_inicio: dataSchema,
+  data_fim_pactuada: dataSchema,
   carga_horas_diaria: horasSchema({ min: 1 / 60, max: 24 }),
   carga_horas_semanal: horasSchema({ min: 1 / 60, max: 168 }),
   carga_horas_total: horasSchema({ min: 1 / 60, max: 100_000 }),
-  condicoes_pactuadas: z.string().trim().min(1).max(5000),
+  condicoes_pactuadas: z.string().trim().min(1).max(LIMITE.condicoes),
   bolsa_valor: valor,
   auxilio_transporte_valor: valor,
   seguro_exigido: z.boolean().default(true),
@@ -88,30 +90,30 @@ export const listEstagiosQuerySchema = z.object({
   tipo: z.enum(["OBRIGATORIO", "NAO_OBRIGATORIO"]).optional(),
   curso_id: z.uuid().optional(),
   concedente_id: z.uuid().optional(),
-  busca: z.string().trim().min(1).max(100).optional(),
+  busca: z.string().trim().min(1).max(LIMITE.busca).optional(),
   ordem: z.enum(["estudante", "-estudante", "concedente", "-concedente", "inicio", "-inicio", "fim", "-fim", "situacao", "-situacao"]).optional(),
   estudante_id: z.uuid().optional(),
 });
 
-export const justificativaBodySchema = z.object({ justificativa: z.string().trim().min(1).max(2000) });
+export const justificativaBodySchema = z.object({ justificativa: z.string().trim().min(1).max(LIMITE.justificativaEstagio) });
 export const motivoBodySchema = z.object({ motivo: z.string().trim().min(1).max(2000) });
-export const parecerBodySchema = z.object({ parecer: z.string().trim().min(1).max(5000) });
+export const parecerBodySchema = z.object({ parecer: z.string().trim().min(1).max(LIMITE.parecerPlano) });
 export const dispensaBodySchema = z.object({ documento_id: z.uuid().nullable() });
 
 export const planoBodySchema = z.object({
-  atividades_previstas: z.string().trim().min(1).max(20_000),
-  justificativa_compatibilidade: z.string().trim().min(1).max(10_000),
+  atividades_previstas: z.string().trim().min(1).max(LIMITE.atividadesPrevistas),
+  justificativa_compatibilidade: z.string().trim().min(1).max(LIMITE.compatibilidade),
 });
 
 export const responsavelBodySchema = z.object({ papel: z.enum(["ORIENTADOR", "SUPERVISOR"]), usuario_id: z.uuid() });
 export const substituicaoOrientadorBodySchema = z.object({ usuario_id: z.uuid(), motivo: z.string().trim().min(1).max(2000) });
 
 export const apoliceBodySchema = z.object({
-  seguradora: z.string().trim().min(1).max(200),
-  numero_apolice: z.string().trim().min(1).max(100),
+  seguradora: z.string().trim().min(1).max(LIMITE.seguradora),
+  numero_apolice: z.string().trim().min(1).max(LIMITE.numeroApolice),
   contratante: z.enum(["CONCEDENTE", "INSTITUICAO"]),
-  vigencia_inicio: z.iso.date(),
-  vigencia_fim: z.iso.date(),
+  vigencia_inicio: dataSchema,
+  vigencia_fim: dataSchema,
   substitui_apolice_id: z.uuid().nullish(),
   documento_id: z.uuid().nullish(),
 });
@@ -119,7 +121,7 @@ export const apoliceBodySchema = z.object({
 export const assinaturaBodySchema = z.object({ parte: z.enum(["ESTUDANTE", "INSTITUICAO", "CONCEDENTE"]) });
 
 export const aditivoBodySchema = z.discriminatedUnion("tipo", [
-  z.object({ tipo: z.literal("PRORROGACAO"), justificativa: z.string().trim().min(1).max(2000), nova_data_fim_pactuada: z.iso.date() }),
+  z.object({ tipo: z.literal("PRORROGACAO"), justificativa: z.string().trim().min(1).max(LIMITE.justificativaEstagio), nova_data_fim_pactuada: dataSchema }),
   z
     .object({
       tipo: z.literal("ALTERACAO_CARGA_HORARIA"),
@@ -152,9 +154,9 @@ export function toNovoAditivo(body: z.infer<typeof aditivoBodySchema>) {
 export const afastamentoBodySchema = z
   .object({
     tipo: z.enum(["LICENCA", "ATESTADO_MEDICO", "OUTRO"]),
-    descricao: z.string().trim().min(1).max(2000).nullable().default(null),
-    data_inicio: z.iso.date(),
-    data_fim: z.iso.date(),
+    descricao: z.string().trim().min(1).max(LIMITE.descricaoAfastamento).nullable().default(null),
+    data_inicio: dataSchema,
+    data_fim: dataSchema,
     documento_id: z.uuid(),
   })
   .refine((body) => body.data_fim >= body.data_inicio, { message: "data_fim antes de data_inicio", path: ["data_fim"] })
@@ -168,9 +170,9 @@ export function toNovoAfastamento(body: z.infer<typeof afastamentoBodySchema>) {
 
 // RF063, RN-27: rescission requested by one of the parties, recorded by the coordination
 export const rescisaoBodySchema = z.object({
-  data_rescisao: z.iso.date(),
+  data_rescisao: dataSchema,
   solicitante: z.enum(["ESTUDANTE", "CONCEDENTE", "INSTITUICAO"]),
-  motivo: z.string().trim().min(1).max(2000),
+  motivo: z.string().trim().min(1).max(LIMITE.motivoRescisao),
   documento_id: z.uuid().nullable().default(null),
 });
 

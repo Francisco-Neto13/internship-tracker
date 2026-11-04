@@ -1,3 +1,4 @@
+import { LIMITE, UFS } from "@/lib/campos";
 import { Plus } from "lucide-react";
 import { redirect } from "next/navigation";
 import { comConsulta, lerConsulta, lerPaginacao, opcao, type SearchParamsBrutos } from "@/lib/consulta";
@@ -71,21 +72,21 @@ export default async function ConcedentesPage({ searchParams }: { searchParams: 
               redirecionarPara="/administracao/concedentes/:id"
               embutido
               campos={[
-                { nome: "razao_social", rotulo: "Razão social" },
-                { nome: "nome_fantasia", rotulo: "Nome fantasia" },
-                { nome: "cnpj", rotulo: "CNPJ", ajuda: "Numérico ou alfanumérico, sem pontuação." },
-                { nome: "area_atuacao", rotulo: "Área de atuação" },
-                { nome: "logradouro", rotulo: "Logradouro" },
-                { nome: "numero_endereco", rotulo: "Número" },
-                { nome: "complemento", rotulo: "Complemento" },
-                { nome: "bairro", rotulo: "Bairro" },
-                { nome: "municipio", rotulo: "Município" },
-                { nome: "uf", rotulo: "UF" },
-                { nome: "cep", rotulo: "CEP" },
-                { nome: "email_contato", rotulo: "E-mail de contato", tipo: "email" },
-                { nome: "telefone_contato", rotulo: "Telefone" },
-                { nome: "representante_legal_nome", rotulo: "Representante legal" },
-                { nome: "representante_legal_cargo", rotulo: "Cargo do representante" },
+                { nome: "razao_social", max: LIMITE.razaoSocial, rotulo: "Razão social" },
+                { nome: "nome_fantasia", max: LIMITE.nomeFantasia, rotulo: "Nome fantasia" },
+                { nome: "cnpj", max: LIMITE.cnpj, mascara: "cnpj", rotulo: "CNPJ", ajuda: "Números e, no CNPJ alfanumérico, letras nos 12 primeiros caracteres." },
+                { nome: "area_atuacao", max: LIMITE.areaAtuacao, rotulo: "Área de atuação" },
+                { nome: "logradouro", max: LIMITE.logradouro, rotulo: "Logradouro" },
+                { nome: "numero_endereco", max: LIMITE.numeroEndereco, rotulo: "Número" },
+                { nome: "complemento", max: LIMITE.complemento, rotulo: "Complemento" },
+                { nome: "bairro", max: LIMITE.bairro, rotulo: "Bairro" },
+                { nome: "municipio", max: LIMITE.municipio, rotulo: "Município" },
+                { nome: "uf", rotulo: "UF", tipo: "select", opcoes: UFS.map((uf) => ({ valor: uf, rotulo: uf })) },
+                { nome: "cep", max: LIMITE.cep, mascara: "cep", rotulo: "CEP" },
+                { nome: "email_contato", max: LIMITE.email, rotulo: "E-mail de contato", tipo: "email" },
+                { nome: "telefone_contato", max: LIMITE.telefone, mascara: "telefone", rotulo: "Telefone" },
+                { nome: "representante_legal_nome", max: LIMITE.representante, rotulo: "Representante legal" },
+                { nome: "representante_legal_cargo", max: LIMITE.cargo, rotulo: "Cargo do representante" },
               ]}
             />
           </Dialogo>

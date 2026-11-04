@@ -11,6 +11,8 @@ export function CampoSenha({ className, ...props }: Omit<ComponentProps<typeof I
   const [visivel, setVisivel] = useState(false);
   return (
     <div className="relative">
+      {/* No maxLength: a pasted password would be cut without warning (issue #97); the forms check it */}
+      {/* eslint-disable-next-line no-restricted-syntax */}
       <Input {...props} type={visivel ? "text" : "password"} className={cn("pr-11", className)} />
       <Button
         type="button"

@@ -1,5 +1,6 @@
 "use client";
 
+import { LIMITE } from "@/lib/campos";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
@@ -57,11 +58,11 @@ export function NovaAtividade({ estudanteId, categorias }: { estudanteId: string
       </div>
       <div className="flex flex-col gap-1.5 sm:col-span-2">
         <Label htmlFor="atividade-descricao">Descrição</Label>
-        <Input id="atividade-descricao" name="descricao" />
+        <Input id="atividade-descricao" name="descricao" maxLength={LIMITE.descricaoAtividade} />
       </div>
       <div className="flex flex-col gap-1.5 sm:col-span-2">
         <Label htmlFor="atividade-instituicao">Instituição promotora</Label>
-        <Input id="atividade-instituicao" name="instituicao_promotora" />
+        <Input id="atividade-instituicao" name="instituicao_promotora" maxLength={LIMITE.instituicao} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="atividade-inicio">Início</Label>

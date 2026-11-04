@@ -1,5 +1,6 @@
 "use client";
 
+import { LIMITE } from "@/lib/campos";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
@@ -65,7 +66,7 @@ export function NovoAfastamento({ estagioId }: { estagioId: string }) {
       </div>
       <div className="flex flex-col gap-1.5 sm:col-span-3">
         <Label htmlFor="afastamento-descricao">Descrição (obrigatória no tipo Outro; dado sensível)</Label>
-        <Input id="afastamento-descricao" name="descricao" />
+        <Input id="afastamento-descricao" name="descricao" maxLength={LIMITE.descricaoAfastamento} />
       </div>
       <div className="sm:col-span-3">
         <EnvioDocumento tipo="ATESTADO_AFASTAMENTO" escopo={{ estagio_id: estagioId }} rotulo="Atestado (PDF, JPEG ou PNG, até 10 MiB)" aoConcluir={setDocumento} />

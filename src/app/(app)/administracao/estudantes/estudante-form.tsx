@@ -1,5 +1,6 @@
 "use client";
 
+import { LIMITE } from "@/lib/campos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -66,7 +67,7 @@ function EscolhaDeConta({ onEscolher }: { onEscolher: (conta: Conta | null) => v
     <div className="flex flex-col gap-2">
       <div className="relative">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-navy-900/40" aria-hidden />
-        <Input id="estudante-conta" value={busca} onChange={(evento) => setBusca(evento.target.value)} placeholder="Nome ou e-mail da conta" className="pl-9" autoComplete="off" />
+        <Input id="estudante-conta" maxLength={LIMITE.busca} value={busca} onChange={(evento) => setBusca(evento.target.value)} placeholder="Nome ou e-mail da conta" className="pl-9" autoComplete="off" />
       </div>
       {busca.trim().length >= 2 && contas && (
         <ul className="max-h-56 overflow-y-auto rounded-lg border border-navy-900/10" role="listbox" aria-label="Contas encontradas">
@@ -141,7 +142,7 @@ export function EstudanteForm({ cursos }: { cursos: { id: string; nome: string }
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="estudante-matricula">Matrícula</Label>
-        <Input id="estudante-matricula" aria-invalid={Boolean(errors.matricula)} {...register("matricula")} />
+        <Input id="estudante-matricula" maxLength={LIMITE.matricula} aria-invalid={Boolean(errors.matricula)} {...register("matricula")} />
         {errors.matricula && <p className="text-sm text-status-danger-text">{errors.matricula.message}</p>}
       </div>
       <div className="flex flex-col gap-1.5">

@@ -1,10 +1,11 @@
+import { LIMITE } from "@/lib/campos";
 import { z } from "zod";
 import { situacaoAcademica } from "@/db/schema";
 
 // Payload contracts for /api/v1/estudantes (RF005). JSON fields are snake_case;
 // services receive camelCase.
 
-const matricula = z.string().trim().min(1).max(30);
+const matricula = z.string().trim().min(1).max(LIMITE.matricula);
 const periodo = z.number().int().min(1).max(20);
 
 export const listEstudantesQuerySchema = z.object({
@@ -12,7 +13,7 @@ export const listEstudantesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   curso_id: z.uuid().optional(),
   situacao: z.enum(situacaoAcademica.enumValues).optional(),
-  busca: z.string().trim().min(1).max(100).optional(),
+  busca: z.string().trim().min(1).max(LIMITE.busca).optional(),
   ordem: z.enum(["nome", "-nome", "matricula", "-matricula", "periodo", "-periodo", "situacao", "-situacao", "curso", "-curso"]).optional(),
 });
 

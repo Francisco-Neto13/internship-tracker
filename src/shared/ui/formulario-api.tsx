@@ -1,5 +1,7 @@
 "use client";
 
+import { AreaTexto } from "./area-texto";
+import { aplicarMascara, TECLADO, type Mascara } from "@/lib/mascaras";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "./button";
@@ -10,11 +12,9 @@ import { Label } from "./label";
 // Generic form that sends JSON to an /api/v1 route and shows the API error envelope. The
 // API validates everything again; this only converts the inputs to the contract types.
 
-export type Campo = {
+type CampoBase = {
   nome: string;
   rotulo: string;
-  tipo?: "text" | "number" | "date" | "email" | "textarea" | "select" | "checkbox";
-  opcoes?: { valor: string; rotulo: string }[];
   valorInicial?: string | number | boolean | null;
   obrigatorio?: boolean;
   /** Empty input is sent as null instead of being left out (clears an optional field). */
@@ -23,6 +23,15 @@ export type Campo = {
   /** Uma linha de ajuda abaixo do campo (formato, consequência). */
   ajuda?: string;
 };
+
+// Issue #97: text without a limit does not compile. The value comes from LIMITE (src/lib/campos.ts),
+// the same one the API schema reads.
+export type Campo = CampoBase &
+  (
+    | { tipo?: "text" | "email" | "textarea"; max: number; mascara?: Mascara; opcoes?: undefined }
+    | { tipo: "number" | "date" | "checkbox"; max?: undefined; mascara?: undefined; opcoes?: undefined }
+    | { tipo: "select"; opcoes: { valor: string; rotulo: string }[]; max?: undefined; mascara?: undefined }
+  );
 
 export const selectClass =
   "h-11 w-full rounded-md border border-navy-900/20 bg-white px-3 text-sm text-navy-900 outline-none transition-colors focus:border-azul-500 focus:ring-2 focus:ring-azul-500/25";
@@ -134,23 +143,32 @@ export function FormularioApi({
                 {campo.tipo === "select" ? (
                   <select id={id} name={campo.nome} defaultValue={String(inicial)} className={selectClass} aria-describedby={ajuda}>
                     {!campo.obrigatorio && <option value="">—</option>}
-                    {campo.opcoes?.map((opcao) => (
+                    {campo.opcoes.map((opcao) => (
                       <option key={opcao.valor} value={opcao.valor}>
                         {opcao.rotulo}
                       </option>
                     ))}
                   </select>
                 ) : campo.tipo === "textarea" ? (
-                  <textarea
+                  <AreaTexto id={id} name={campo.nome} defaultValue={String(inicial)} rows={4} aria-describedby={ajuda} maxLength={campo.max ?? 0} />
+                ) : (
+                  <Input
                     id={id}
                     name={campo.nome}
+                    type={campo.tipo ?? "text"}
+                    step={campo.passo}
                     defaultValue={String(inicial)}
-                    rows={4}
                     aria-describedby={ajuda}
-                    className="w-full rounded-md border border-navy-900/20 bg-white p-3 text-sm text-navy-900 transition-colors focus-visible:border-azul-500 focus-visible:ring-2 focus-visible:ring-azul-500/25 focus-visible:outline-none"
+                    maxLength={campo.max}
+                    inputMode={campo.mascara ? TECLADO[campo.mascara] : undefined}
+                    onInput={
+                      campo.mascara
+                        ? (evento) => {
+                            evento.currentTarget.value = aplicarMascara(campo.mascara!, evento.currentTarget.value);
+                          }
+                        : undefined
+                    }
                   />
-                ) : (
-                  <Input id={id} name={campo.nome} type={campo.tipo ?? "text"} step={campo.passo} defaultValue={String(inicial)} aria-describedby={ajuda} />
                 )}
                 {campo.ajuda && (
                   <p id={ajuda} className="text-xs text-navy-900/65">

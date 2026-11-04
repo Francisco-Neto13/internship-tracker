@@ -1,5 +1,6 @@
 "use client";
 
+import { LIMITE } from "@/lib/campos";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
@@ -37,7 +38,7 @@ export function NovoConvenio({ concedenteId }: { concedenteId: string }) {
     <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-3" noValidate>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="convenio-numero">Número</Label>
-        <Input id="convenio-numero" name="numero" />
+        <Input id="convenio-numero" name="numero" maxLength={LIMITE.numeroConvenio} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="convenio-inicio">Início da vigência</Label>

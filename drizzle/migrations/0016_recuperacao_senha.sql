@@ -1,0 +1,1 @@
+ALTER TYPE "public"."tipo_notificacao" ADD VALUE 'RECUPERACAO_SENHA';

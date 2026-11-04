@@ -1,3 +1,5 @@
+import { dataSchema } from "@/lib/campos";
+import { LIMITE } from "@/lib/campos";
 import { z } from "zod";
 
 // Contracts of evaluation (RF042, RF043), criteria (RF042) and follow-up (RF033)
@@ -32,8 +34,8 @@ export const criteriosQuerySchema = z
 export const avaliacaoBodySchema = z
   .object({
     momento: z.enum(["PERIODICA", "FINAL"]),
-    periodo_inicio: z.iso.date().nullish(),
-    periodo_fim: z.iso.date().nullish(),
+    periodo_inicio: dataSchema.nullish(),
+    periodo_fim: dataSchema.nullish(),
     observacoes: texto(4000).nullish(),
     respostas: z
       .array(z.object({ criterio_id: z.uuid(), nota: z.number().int(), comentario: texto(1000).nullish() }))
@@ -51,15 +53,15 @@ export const avaliacaoBodySchema = z
 const tipoAcompanhamento = z.enum(["VISITA", "CONTATO", "REUNIAO"]);
 
 export const acompanhamentoBodySchema = z
-  .object({ tipo: tipoAcompanhamento, data_ocorrencia: z.iso.date(), participantes: texto(1000), observacoes: texto(10_000) })
+  .object({ tipo: tipoAcompanhamento, data_ocorrencia: dataSchema, participantes: texto(LIMITE.participantes), observacoes: texto(LIMITE.observacoesAcompanhamento) })
   .transform((body) => ({ tipo: body.tipo, dataOcorrencia: body.data_ocorrencia, participantes: body.participantes, observacoes: body.observacoes }));
 
 export const alterarAcompanhamentoBodySchema = z
   .object({
     tipo: tipoAcompanhamento.optional(),
-    data_ocorrencia: z.iso.date().optional(),
-    participantes: texto(1000).optional(),
-    observacoes: texto(10_000).optional(),
+    data_ocorrencia: dataSchema.optional(),
+    participantes: texto(LIMITE.participantes).optional(),
+    observacoes: texto(LIMITE.observacoesAcompanhamento).optional(),
   })
   .refine((body) => Object.values(body).some((valor) => valor !== undefined), { message: "Informe ao menos um campo para alterar" })
   .transform((body) => ({ tipo: body.tipo, dataOcorrencia: body.data_ocorrencia, participantes: body.participantes, observacoes: body.observacoes }));

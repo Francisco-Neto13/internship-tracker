@@ -1,5 +1,6 @@
 "use client";
 
+import { SENHA_MAXIMO, SENHA_MINIMO } from "@/lib/campos";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
@@ -8,7 +9,6 @@ import { CampoSenha } from "@/shared/ui/campo-senha";
 import { Label } from "@/shared/ui/label";
 
 // The API validates again (src/modules/acesso/schemas/senha.ts); these checks only spare a round trip
-const MINIMO = 15;
 
 export function TrocarSenhaForm({
   obrigatoria,
@@ -30,7 +30,9 @@ export function TrocarSenhaForm({
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setErro(null);
-    if (nova.length < MINIMO) return setErro(`A nova senha precisa ter ao menos ${MINIMO} caracteres.`);
+    if (nova.length < SENHA_MINIMO) return setErro(`A nova senha precisa ter ao menos ${SENHA_MINIMO} caracteres.`);
+    if (nova.length > SENHA_MAXIMO) return setErro(`A nova senha pode ter no máximo ${SENHA_MAXIMO} caracteres.`);
+    if (atual.length > SENHA_MAXIMO) return setErro("A senha atual está incorreta.");
     if (nova !== confirmacao) return setErro("A confirmação não confere com a nova senha.");
 
     setEnviando(true);
@@ -81,7 +83,7 @@ export function TrocarSenhaForm({
         />
         {/* NIST SP 800-63B-4 3.1.1.2: the verifier SHALL offer guidance to choose a strong password */}
         <p className="text-xs text-navy-900/65">
-          Ao menos {MINIMO} caracteres; espaços e acentos valem. Prefira uma frase só sua, fácil de lembrar. Não use o seu
+          De {SENHA_MINIMO} a {SENHA_MAXIMO} caracteres; espaços e acentos valem. Prefira uma frase só sua, fácil de lembrar. Não use o seu
           nome, o seu e-mail, o nome do sistema nem uma senha que você já usa em outro lugar: senhas que aparecem em
           vazamentos de dados são recusadas.
         </p>

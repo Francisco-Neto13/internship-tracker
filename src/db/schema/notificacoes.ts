@@ -17,6 +17,7 @@ export const tipoNotificacao = pgEnum("tipo_notificacao", [
   "DURACAO_MAXIMA_ATINGIDA",
   "RELATORIO_ANALISADO",
   "ATIVIDADE_ANALISADA",
+  "RECUPERACAO_SENHA",
 ]);
 
 export const notificacao = pgTable(

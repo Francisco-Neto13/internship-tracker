@@ -1,3 +1,4 @@
+import { HORAS_CURSO_MAXIMO, LIMITE } from "@/lib/campos";
 import { z } from "zod";
 
 // Payload contracts for /api/v1/cursos (RF004). Durations are minutes in the database
@@ -8,10 +9,10 @@ export const listCursosQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 
-const codigo = z.string().trim().min(1).max(20);
-const nome = z.string().trim().min(1).max(200);
-const cargaMinimaEstagio = z.number().int().min(1);
-const cargaComplementares = z.number().int().min(0);
+const codigo = z.string().trim().min(1).max(LIMITE.codigoCurso);
+const nome = z.string().trim().min(1).max(LIMITE.nomeCurso);
+const cargaMinimaEstagio = z.number().int().min(1).max(HORAS_CURSO_MAXIMO);
+const cargaComplementares = z.number().int().min(0).max(HORAS_CURSO_MAXIMO);
 
 export const createCursoBodySchema = z.object({
   codigo,

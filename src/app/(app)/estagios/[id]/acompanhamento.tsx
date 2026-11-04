@@ -1,3 +1,4 @@
+import { LIMITE } from "@/lib/campos";
 import { AlertTriangle } from "lucide-react";
 import { formatarData, formatarDataCurta } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
@@ -133,7 +134,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
                             rotulo="Cancelar"
                             variante="ghost"
                             tamanho="sm"
-                            pedirMotivo={{ campo: "justificativa", pergunta: "Motivo do cancelamento" }}
+                            pedirMotivo={{ campo: "justificativa", pergunta: "Motivo do cancelamento", max: LIMITE.motivoCancelamento }}
                           />
                         )}
                       </td>
@@ -155,7 +156,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
               campos={[
                 { nome: "data", rotulo: "Dia", tipo: "date" },
                 { nome: "horas", rotulo: "Horas no dia", tipo: "number", passo: "0.25" },
-                { nome: "observacao", rotulo: "Observação", tipo: "textarea", obrigatorio: false, vazioComoNulo: true },
+                { nome: "observacao", max: LIMITE.observacaoFrequencia, rotulo: "Observação", tipo: "textarea", obrigatorio: false, vazioComoNulo: true },
               ]}
             />
           </Painel>
@@ -169,7 +170,7 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
               campos={[
                 { nome: "periodo_inicio", rotulo: "De", tipo: "date" },
                 { nome: "periodo_fim", rotulo: "Até", tipo: "date" },
-                { nome: "observacao", rotulo: "Parecer", tipo: "textarea", obrigatorio: false, vazioComoNulo: true },
+                { nome: "observacao", max: LIMITE.parecerHomologacao, rotulo: "Parecer", tipo: "textarea", obrigatorio: false, vazioComoNulo: true },
               ]}
             />
           </Painel>
@@ -195,7 +196,7 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
                     {relatorio.situacao === "EM_ANALISE" && (
                       <>
                         <BotaoAcao url={`/api/v1/relatorios/${relatorio.id}/aprovacao`} rotulo="Aprovar" confirmacao={{ titulo: "Aprovar o relatório?", descricao: "A aprovação é definitiva: o relatório não volta para análise e passa a contar para a conclusão do estágio.", confirmar: "Aprovar" }} variante="default" tamanho="sm" sucesso="Relatório aprovado" />
-                        <BotaoAcao url={`/api/v1/relatorios/${relatorio.id}/devolucao`} rotulo="Devolver" tamanho="sm" pedirMotivo={{ campo: "parecer", pergunta: "Parecer da devolução" }} />
+                        <BotaoAcao url={`/api/v1/relatorios/${relatorio.id}/devolucao`} rotulo="Devolver" tamanho="sm" pedirMotivo={{ campo: "parecer", pergunta: "Parecer da devolução", max: LIMITE.parecerRelatorio }} />
                       </>
                     )}
                   </span>
@@ -210,7 +211,7 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
 confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica registrada e vai para a análise, sem poder ser editada. Uma nova versão só pode ser enviada se o relatório for devolvido.", confirmar: "Enviar relatório" }}
                         embutido
                         sucesso="Relatório enviado ao orientador"
-                        campos={[{ nome: "conteudo", rotulo: "Atividades do período", tipo: "textarea" }]}
+                        campos={[{ nome: "conteudo", max: LIMITE.conteudoRelatorio, rotulo: "Atividades do período", tipo: "textarea" }]}
                       />
                     </div>
                   </details>
@@ -252,8 +253,8 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
             campos={[
               { nome: "tipo", rotulo: "Tipo", tipo: "select", obrigatorio: true, opcoes: [{ valor: "VISITA", rotulo: "Visita" }, { valor: "CONTATO", rotulo: "Contato" }, { valor: "REUNIAO", rotulo: "Reunião" }] },
               { nome: "data_ocorrencia", rotulo: "Data", tipo: "date" },
-              { nome: "participantes", rotulo: "Participantes" },
-              { nome: "observacoes", rotulo: "Observações", tipo: "textarea" },
+              { nome: "participantes", max: LIMITE.participantes, rotulo: "Participantes" },
+              { nome: "observacoes", max: LIMITE.observacoesAcompanhamento, rotulo: "Observações", tipo: "textarea" },
             ]}
           />
         </Painel>

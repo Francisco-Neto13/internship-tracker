@@ -2,6 +2,10 @@
 # the upload URLs covers.
 {$APP_DOMAIN} {
 	encode zstd gzip
+	# Issue #97: forms and sign-in are small, and files go straight to the storage domain
+	request_body {
+		max_size 2MB
+	}
 	reverse_proxy app:3000 {
 		# Overwrites what the client sent: the sign-in rate limit trusts this header (RF002)
 		header_up X-Real-IP {remote_host}

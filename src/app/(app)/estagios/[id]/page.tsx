@@ -1,3 +1,4 @@
+import { LIMITE } from "@/lib/campos";
 import { FileDown } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
@@ -167,7 +168,7 @@ confirmacao={{ titulo: "Propor a prorrogação?", descricao: "O aditivo fica reg
                     sucesso="Aditivo proposto: aguarda as três assinaturas"
                     campos={[
                       { nome: "nova_data_fim_pactuada", rotulo: "Novo término", tipo: "date", ajuda: "Respeita o teto de 2 anos na concedente." },
-                      { nome: "justificativa", rotulo: "Justificativa", tipo: "textarea" },
+                      { nome: "justificativa", max: LIMITE.justificativaEstagio, rotulo: "Justificativa", tipo: "textarea" },
                     ]}
                   />
                 </div>

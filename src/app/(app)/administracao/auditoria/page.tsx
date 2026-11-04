@@ -1,3 +1,4 @@
+import { LIMITE } from "@/lib/campos";
 import { Download } from "lucide-react";
 import { redirect } from "next/navigation";
 import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
@@ -156,11 +157,11 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="filtro-registro">Código do registro</Label>
-            <Input id="filtro-registro" name="registro_id" defaultValue={registro_id} />
+            <Input id="filtro-registro" name="registro_id" maxLength={LIMITE.registroAuditoria} defaultValue={registro_id} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="filtro-usuario">Código do autor</Label>
-            <Input id="filtro-usuario" name="usuario_id" defaultValue={usuario_id} />
+            <Input id="filtro-usuario" name="usuario_id" maxLength={LIMITE.codigoConta} defaultValue={usuario_id} />
           </div>
           {!consulta.success && (
             <p role="alert" className="text-sm text-status-danger-text sm:col-span-4">

@@ -1,5 +1,6 @@
 "use client";
 
+import { LIMITE } from "@/lib/campos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -53,12 +54,12 @@ export function CursoForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 sm:grid-cols-2" noValidate>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="curso-codigo">Código</Label>
-        <Input id="curso-codigo" aria-invalid={Boolean(errors.codigo)} {...register("codigo")} />
+        <Input id="curso-codigo" maxLength={LIMITE.codigoCurso} aria-invalid={Boolean(errors.codigo)} {...register("codigo")} />
         {errors.codigo && <p className="text-sm text-status-danger-text">{errors.codigo.message}</p>}
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="curso-nome">Nome</Label>
-        <Input id="curso-nome" aria-invalid={Boolean(errors.nome)} {...register("nome")} />
+        <Input id="curso-nome" maxLength={LIMITE.nomeCurso} aria-invalid={Boolean(errors.nome)} {...register("nome")} />
         {errors.nome && <p className="text-sm text-status-danger-text">{errors.nome.message}</p>}
       </div>
       <div className="flex flex-col gap-1.5">

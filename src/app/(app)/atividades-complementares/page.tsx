@@ -1,3 +1,4 @@
+import { LIMITE } from "@/lib/campos";
 import { Building, CalendarRange, Clock } from "lucide-react";
 import { redirect } from "next/navigation";
 import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
@@ -174,14 +175,14 @@ export default async function AtividadesComplementaresPage({ searchParams }: { s
                       url={`/api/v1/atividades-complementares/${atividade.id}/devolucao`}
                       rotulo="Devolver"
                       tamanho="sm"
-                      pedirMotivo={{ campo: "motivo", pergunta: "O que o estudante precisa complementar?" }}
+                      pedirMotivo={{ campo: "motivo", pergunta: "O que o estudante precisa complementar?", max: LIMITE.motivoAtividade }}
                     />
                     <BotaoAcao
                       url={`/api/v1/atividades-complementares/${atividade.id}/recusa`}
                       rotulo="Recusar"
                       variante="destructive"
                       tamanho="sm"
-                      pedirMotivo={{ campo: "motivo", pergunta: "Motivo da recusa" }}
+                      pedirMotivo={{ campo: "motivo", pergunta: "Motivo da recusa", max: LIMITE.motivoAtividade }}
                       confirmacao={{ titulo: "Recusar a atividade?", descricao: "A recusa é final: não há recurso, e o estudante cadastra uma nova atividade se for o caso." }}
                     />
                   </div>

@@ -1,3 +1,4 @@
+import { LIMITE } from "@/lib/campos";
 import { Briefcase, GraduationCap } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
@@ -75,8 +76,8 @@ confirmacao={{ titulo: "Salvar as alterações do curso?", descricao: "Mudar a c
               embutido
               sucesso="Curso atualizado"
               campos={[
-                { nome: "codigo", rotulo: "Código", valorInicial: curso.codigo },
-                { nome: "nome", rotulo: "Nome", valorInicial: curso.nome },
+                { nome: "codigo", max: LIMITE.codigoCurso, rotulo: "Código", valorInicial: curso.codigo },
+                { nome: "nome", max: LIMITE.nomeCurso, rotulo: "Nome", valorInicial: curso.nome },
                 { nome: "carga_minima_estagio_horas", rotulo: "Estágio mínimo (h)", tipo: "number", valorInicial: curso.cargaMinimaEstagioMinutos / 60 },
                 { nome: "carga_atividades_complementares_horas", rotulo: "Atividades complementares (h)", tipo: "number", valorInicial: curso.cargaAtividadesComplementaresMinutos / 60 },
               ]}
