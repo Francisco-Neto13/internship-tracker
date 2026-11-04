@@ -67,8 +67,11 @@ services:
       DATABASE_MIGRATION_URL: postgres://migrator:${MIGRATOR_PASSWORD:?}@postgres:5432/internship_tracker
 
   postgres:
-    image: postgres:17
+    build: ./docker/postgres
+    image: internship-tracker-postgres
     restart: unless-stopped
+    # RNF-12: every change is archived, at most 5 minutes after it happens on a quiet system
+    command: ["postgres", "-c", "archive_mode=on", "-c", "archive_command=pgbackrest --stanza=main archive-push %p", "-c", "archive_timeout=300"]
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
@@ -79,6 +82,8 @@ services:
     volumes:
       - ${DIR_DADOS:?}/postgres:/var/lib/postgresql/data
       - ./docker/postgres/init-prod:/docker-entrypoint-initdb.d:ro
+      - ./docker/postgres/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro
+      - ${DIR_DADOS:?}/backup:/backup
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d internship_tracker"]
       interval: 2s

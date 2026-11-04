@@ -74,7 +74,7 @@ Pontos que antes admitiam mais de uma interpretação, definidos com o professor
 | Recurso contra recusa de atividade complementar | Não existe. O estudante cadastra uma nova atividade |
 | Divergência relevante de carga horária | Percentual parametrizável, padrão de 10% |
 | Hospedagem em território nacional | Sem exigência |
-| Situação acadêmica (RF005) | Transições restritas: matriculado pode trancar, formar ou ser desligado; trancado volta a matriculado ou é desligado; formado e desligado são finais. Pendente de validação com o orientador |
+| Situação acadêmica (RF005) | Transições restritas: matriculado pode trancar, formar ou ser desligado; trancado volta a matriculado ou é desligado; formado e desligado são finais |
 | Recuperação de senha (RF002) | O administrador emite senha provisória de 72 h, entregue fora do sistema, com troca obrigatória no primeiro acesso. Sem e-mail |
 
 ## Requisitos de qualidade
@@ -176,9 +176,9 @@ O `npm install` ativa os hooks versionados em `.githooks` (se não ativar, `npm 
 
 ### Produção (servidor próprio com Docker)
 
-No ar em https://internship.chiconeto.dev. Tudo que chega à `main` é publicado sozinho, depois do CI verde (`.github/workflows/deploy.yml`); se o build falhar, a versão atual continua no ar. Os dados e os segredos ficam num volume criptografado (`scripts/servidor`), e, depois de um reinício do servidor, o sistema só volta quando alguém abre o cofre com `cofre-abrir.sh`. Só o proxy publica porta. **O backup ainda não existe (issue #63): não coloque dados reais antes disso.**
+No ar em https://internship.chiconeto.dev. Tudo que chega à `main` é publicado sozinho, depois do CI verde (`.github/workflows/deploy.yml`); se o build falhar, a versão atual continua no ar. Os dados e os segredos ficam num volume criptografado (`scripts/servidor`), e, depois de um reinício do servidor, o sistema só volta quando alguém abre o cofre com `cofre-abrir.sh`. Só o proxy publica porta. O backup usa pgBackRest, com volta a um horário exato, e uma cópia criptografada fora do servidor; o detalhe está no `AGENTS.md`.
 
-Para montar um servidor novo, copie o código para `/srv/internship-tracker` e rode `cofre-criar.sh`, `publicar.sh <dominio> <dominio-dos-arquivos>` e `configurar-deploy.sh`. O primeiro administrador sai de `npm run db:primeiro-admin -- <e-mail> <nome>`, no serviço `ferramentas` do Compose. Os papéis e as senhas do banco são criados pelo próprio `publicar.sh`; o trecho abaixo só vale para um banco criado de outra forma.
+Para montar um servidor novo, copie o código para `/srv/internship-tracker` e rode `cofre-criar.sh`, `publicar.sh <dominio> <dominio-dos-arquivos>`, `configurar-deploy.sh` e `backup-configurar.sh`. O primeiro administrador sai de `npm run db:primeiro-admin -- <e-mail> <nome>`, no serviço `ferramentas` do Compose. Os papéis e as senhas do banco são criados pelo próprio `publicar.sh`; o trecho abaixo só vale para um banco criado de outra forma.
 
 `DATABASE_MIGRATION_URL` aponta para o dono do banco (`migrator`). Depois da primeira migração, habilite o login dos papéis de runtime com senhas geradas e use-os em `DATABASE_URL` (`app_runtime`) e `DATABASE_AUTH_URL` (`auth_runtime`):
 

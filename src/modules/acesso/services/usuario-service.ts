@@ -14,6 +14,7 @@ import {
 } from "../domain/vinculos";
 import {
   findUsuarioById,
+  findContasEstudante,
   findUsuarios,
   insertUsuario,
   ORDENS_USUARIO,
@@ -127,6 +128,11 @@ export async function listUsuarios(
     });
     return { items: await comPerfis(tx, items), total };
   });
+}
+
+/** RF005, issue #80: coordination and administrator find the account by name when registering a student. */
+export async function buscarContasEstudante(identity: Identity, busca: string) {
+  return withUser(identity, (tx) => findContasEstudante(tx, busca));
 }
 
 export async function getUsuario(identity: Identity, id: string) {

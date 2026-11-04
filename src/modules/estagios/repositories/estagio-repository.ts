@@ -1,7 +1,7 @@
 import { and, asc, count, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import { padraoContendo } from "@/db/like";
-import { alias } from "drizzle-orm/pg-core";
-import { concedente, convenio, curso, estagio, estudante, usuario } from "@/db/schema";
+import { identidadeEstudante } from "@/db/identidade-estudante";
+import { concedente, convenio, curso, estagio, estudante } from "@/db/schema";
 import type { Transaction } from "@/db/with-user";
 
 // No authorization filter: RLS (app.pode_ler_estagio) decides which internships exist for the
@@ -12,8 +12,6 @@ type Situacao = EstagioRow["situacao"];
 type Tipo = EstagioRow["tipo"];
 
 export type EstagioResumo = EstagioRow & { estudanteNome: string | null; matricula: string | null; concedenteRazaoSocial: string | null };
-
-const usuarioEstudante = alias(usuario, "usuario_estudante");
 
 /** Ordenações da listagem (?ordem=campo ou -campo); o padrão são os mais recentes. */
 export const ORDENS_ESTAGIO = ["estudante", "concedente", "inicio", "fim", "situacao"] as const;
@@ -42,11 +40,11 @@ export async function findEstagios(
   if (filtro.estudanteId) condicoes.push(eq(estagio.estudanteId, filtro.estudanteId));
   if (filtro.busca) {
     const padrao = padraoContendo(filtro.busca);
-    condicoes.push(or(ilike(usuarioEstudante.nome, padrao), ilike(estudante.matricula, padrao), ilike(concedente.razaoSocial, padrao))!);
+    condicoes.push(or(ilike(identidadeEstudante.nome, padrao), ilike(identidadeEstudante.matricula, padrao), ilike(concedente.razaoSocial, padrao))!);
   }
   const where = condicoes.length > 0 ? and(...condicoes) : undefined;
   const coluna = {
-    estudante: usuarioEstudante.nome,
+    estudante: identidadeEstudante.nome,
     concedente: concedente.razaoSocial,
     inicio: estagio.dataInicio,
     fim: estagio.dataFimPrevista,
@@ -57,13 +55,12 @@ export async function findEstagios(
   const linhas = await tx
     .select({
       estagio,
-      estudanteNome: usuarioEstudante.nome,
-      matricula: estudante.matricula,
+      estudanteNome: identidadeEstudante.nome,
+      matricula: identidadeEstudante.matricula,
       concedenteRazaoSocial: concedente.razaoSocial,
     })
     .from(estagio)
-    .leftJoin(estudante, eq(estudante.id, estagio.estudanteId))
-    .leftJoin(usuarioEstudante, eq(usuarioEstudante.id, estudante.usuarioId))
+    .leftJoin(identidadeEstudante.juncao, identidadeEstudante.correspondencia)
     .leftJoin(concedente, eq(concedente.id, estagio.concedenteId))
     .where(where)
     .orderBy(...ordenacao)
@@ -73,8 +70,7 @@ export async function findEstagios(
   const [{ total }] = await tx
     .select({ total: count() })
     .from(estagio)
-    .leftJoin(estudante, eq(estudante.id, estagio.estudanteId))
-    .leftJoin(usuarioEstudante, eq(usuarioEstudante.id, estudante.usuarioId))
+    .leftJoin(identidadeEstudante.juncao, identidadeEstudante.correspondencia)
     .leftJoin(concedente, eq(concedente.id, estagio.concedenteId))
     .where(where);
 
@@ -99,16 +95,15 @@ export async function findEstagioById(tx: Transaction, id: string): Promise<Esta
 export async function findIdentificacaoEstagio(tx: Transaction, row: EstagioRow) {
   const [linha] = await tx
     .select({
-      estudanteNome: usuarioEstudante.nome,
-      matricula: estudante.matricula,
+      estudanteNome: identidadeEstudante.nome,
+      matricula: identidadeEstudante.matricula,
       curso: curso.nome,
       concedente: concedente.razaoSocial,
       cnpj: concedente.cnpj,
       convenio: convenio.numero,
     })
     .from(estagio)
-    .leftJoin(estudante, eq(estudante.id, estagio.estudanteId))
-    .leftJoin(usuarioEstudante, eq(usuarioEstudante.id, estudante.usuarioId))
+    .leftJoin(identidadeEstudante.juncao, identidadeEstudante.correspondencia)
     .leftJoin(curso, eq(curso.id, estagio.cursoId))
     .leftJoin(concedente, eq(concedente.id, estagio.concedenteId))
     .leftJoin(convenio, eq(convenio.id, estagio.convenioId))

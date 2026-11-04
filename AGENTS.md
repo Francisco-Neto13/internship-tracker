@@ -200,7 +200,7 @@ drizzle/rollback/        reversão manual de cada migração (*.down.sql)
 drizzle/sql/             roles/, functions/, policies/, triggers/ (aplicados nessa ordem)
 scripts/db/              migrate, seed
 scripts/storage/         init (bucket e CORS) e check do armazenamento
-scripts/servidor/        produção: cofre criptografado, publicação, deploy e rotina diária
+scripts/servidor/        produção: cofre criptografado, publicação, deploy, rotina diária e backup
 src/shared/documentos/   upload direto (D8): token, conteúdo pelos bytes, armazenamento S3 e em memória
 scripts/ci-local.mjs     CI local, espelho do .github/workflows/ci.yml
 .githooks/               pre-push que recusa push direto em develop/main (core.hooksPath)
@@ -239,7 +239,7 @@ Funções auxiliares ficam no schema `app`, em `security definer` com `search_pa
 `app.estagios_legiveis(academico)`, `app.pode_ler_relatorios(estagio_id)`, `app.hoje()` (data em
 America/Sao_Paulo), `app.parametros_em(data)`, `app.travar_estagio(estagio_id)`,
 `app.impedimentos_conclusao(estagio_id)`, `app.registrar_leitura_documento(documento_id)`,
-`app.estudantes_legiveis()`, `app.calcular_integralizacao(estudante_id)`,
+`app.estudantes_legiveis()`, `app.identidades_estudante()`, `app.buscar_contas_estudante(busca)`, `app.calcular_integralizacao(estudante_id)`,
 `app.apurar_integralizacao(estudante_id, gatilho)`, `app.notificar(...)` e `app.rotina_diaria()`,
 `app.periodos_afastamento(estagio_id)`, `app.teto_duracao_estagio(estagio_id)`,
 `app.definir_guarda_estagio(estagio_id, data)`, `app.eliminar_documento(documento_id)`,
@@ -359,7 +359,7 @@ APROVADA | RECUSADA | DEVOLVIDA`, `DEVOLVIDA -> EM_ANALISE`; `RECUSADA` é final
 
 Situação acadêmica (implementada, serviço e gatilho): `MATRICULADO -> TRANCADO | FORMADO |
 DESLIGADO`, `TRANCADO -> MATRICULADO | DESLIGADO`; `FORMADO` e `DESLIGADO` finais.
-Leitura mais restritiva da lei, **pendente de validação com o orientador**.
+Leitura mais restritiva da lei, mantida como decisão final da equipe (2026-11-04).
 
 ## Decisões de negócio já fechadas
 
@@ -376,9 +376,15 @@ alternativa descartada por engano):
 | Recurso contra recusa de atividade complementar | Não existe; cadastra-se nova atividade |
 | Divergência relevante de carga horária | Percentual parametrizável, padrão 10% |
 | Hospedagem em território nacional | Sem exigência |
-| Banco em produção | PostgreSQL 17 em Docker no servidor próprio, sem serviço gerenciado. Backup com restauração a um ponto no tempo (RNF-12) fica a cargo da equipe e ainda precisa ser montado (issue #63) |
-| Arquivos em produção | SeaweedFS em Docker no servidor próprio, sem Cloudflare R2. A ativação pede cartão de crédito ou PayPal mesmo na franquia gratuita, e a equipe decidiu não cadastrar meio de pagamento. Criptografia em repouso, backup dos arquivos e a perda da segunda barreira da guarda ficam a cargo da equipe |
-| Situação acadêmica (RF005) | Transições restritas (acima), validadas no serviço e por gatilho, auditadas. **Pendente de validação com o orientador** |
+| Banco em produção | PostgreSQL 17 em Docker no servidor próprio, sem serviço gerenciado. Backup com restauração a um ponto no tempo (RNF-12) fica a cargo da equipe, com pgBackRest (seção Produção) |
+| Arquivos em produção | SeaweedFS em Docker no servidor próprio, sem Cloudflare R2. A ativação pede cartão de crédito ou PayPal mesmo na franquia gratuita, e a equipe decidiu não cadastrar meio de pagamento. Criptografia em repouso e backup dos arquivos ficam a cargo da equipe (seção Produção); a segunda barreira da guarda foi perdida |
+| Situação acadêmica (RF005) | Transições restritas (acima), validadas no serviço e por gatilho, auditadas. Decisão final da equipe (2026-11-04) |
+| Visto do supervisor nos relatórios (Lei 11.788/2008, art. 3º, §1º) | Não implementado: o supervisor não lê relatórios, conforme DER §4.5. Decisão final da equipe (2026-11-04); o orientador não tem mais ajustes a passar |
+| Redução da jornada em período de avaliações (art. 10, §2º) | Não implementada, porque exige calendário acadêmico. Decisão final da equipe (2026-11-04) |
+| Análise de atividade complementar (RF053) | Só a coordenação do curso; não existe "responsável designado". Decisão final da equipe (2026-11-04) |
+| Identidade do estudante (issue #80) | Orientador, supervisor e concedente leem só nome e matrícula, e só de estudantes dos estágios que acompanham, por `app.identidades_estudante`. As políticas de `usuario` e `estudante` não abrem para eles: abririam e-mail, período e situação acadêmica |
+| Conta ao cadastrar estudante (RF005) | Coordenação e administrador buscam por nome ou e-mail, com `app.buscar_contas_estudante`: só contas ativas com perfil Estudante vigente e ainda sem cadastro acadêmico |
+| Stack e arquitetura | A atual é a definitiva, por decisão da equipe (2026-11-04) |
 | Duração máxima e afastamento (RF060, RF062) | O afastamento estende `data_fim` só até o teto de 2 anos no par estudante–concedente; a exceção do art. 11 (estagiário com deficiência) é marcada no estágio pela coordenação, com documento, nunca no estudante |
 | Frequência (RF023, RF024) | Um lançamento vigente por dia, com intervalo; limite semanal pela semana ISO (segunda a domingo); conclusão bloqueada se houver lançamento pendente de homologação |
 | Relatório e atividade fora do prazo (RF037) | Relatório enviado depois do prazo é aceito e marcado como em atraso |
@@ -452,8 +458,8 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
   senão o `INSERT` falha com 42501 (não com violação de RLS).
 - Em função SQL, subconsulta lateral com chamada cara precisa de `case` e `offset 0` para não ser
   achatada e chamada em toda linha (`relatorio_pendencias_integralizacao`, `DER-LOGICO.MD` §13.1).
-- `e2e/acessibilidade.spec.ts` roda as regras automáticas de WCAG 2.1 AA (axe) em cada perfil, a 1280 e 360 px; teclado e
-  leitor de tela seguem exigindo gente. Texto com opacidade abaixo de `text-navy-900/65` não passa no fundo da página.
+- `e2e/acessibilidade.spec.ts` roda as regras automáticas de WCAG 2.1 AA (axe) em cada perfil, a 1280 e 360 px, e o uso só
+  com teclado (atalho para o conteúdo, foco visível, foco preso no diálogo); leitor de tela segue exigindo gente. Texto com opacidade abaixo de `text-navy-900/65` não passa no fundo da página.
 - Outros navegadores (RNF-13) rodam sob demanda: `E2E_NAVEGADORES=1 npx playwright test --project=firefox` (`webkit`,
   `edge`), com `CI=1` e `AUTH_IP_HEADERS=x-forwarded-for`, no build de produção; no servidor de desenvolvimento o login falha
   por clicar antes da hidratação. O WebKit do Playwright no Windows não é o Safari.
@@ -480,8 +486,8 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
   a contagem dá 0 sem erro. Escrever `"curso"."id"` literal (`findCursos`).
 - Diálogo do Radix aberto sem `Dialog.Trigger` não devolve o foco ao fechar: guardar a origem em
   `onOpenAutoFocus` e restaurar em `onCloseAutoFocus` (`botao-acao.tsx`).
-- A RLS não mostra nome nem matrícula do estudante a orientador, supervisor e concedente (`usuario_leitura`,
-  `estudante_leitura`). A tela usa `identificarEstagio`; a busca por nome não acha nada para esses perfis.
+- Nome e matrícula do estudante em lista de estágio vêm de `identidadeEstudante` (`src/db/identidade-estudante.ts`), não de
+  junção com `usuario` e `estudante`: para orientador, supervisor e concedente, a RLS dessas tabelas devolve vazio sem erro.
 
 ## Produção
 
@@ -499,12 +505,22 @@ dados e os segredos ficam num volume LUKS em `/srv/dados`, com a senha só com a
 A chave do deploy só dispara o deploy: usuário `deploy`, com comando forçado (`configurar-deploy.sh`).
 A chave do host fica fixada no secret `VPS_KNOWN_HOSTS`.
 
-**Ainda não existe backup** (RNF-12, issue #63): não colocar dados reais antes disso.
+### Backup (RNF-12)
+
+| Camada | O que faz | Onde |
+|---|---|---|
+| pgBackRest | Cópia completa aos domingos, diferencial nos outros dias e cada alteração do banco arquivada, no máximo 5 min depois. Permite voltar a um horário exato | `/srv/dados/backup`, no volume criptografado |
+| restic e rclone | A cada hora, envia cópias do banco, arquivos e `.env`, criptografados no servidor | Google Drive, fora da Contabo (`backup-configurar.sh`) |
+| Auto Backup da Contabo | Imagem diária do servidor inteiro, com até 10 cópias. Não volta a horário exato, e a restauração leva o servidor todo | Painel da Contabo |
+
+Provar que abre: `sh scripts/servidor/backup-testar-restauracao.sh ["<horário>"]`, que restaura em contêineres descartáveis, com o sistema no ar. Rodar depois de mudança no banco ou no armazenamento.
+
+A senha do restic fica em `/srv/dados/.backup/senha` e em um cofre de senhas da equipe: sem ela, o backup não abre. Não há aviso automático de falha; confira `/srv/dados/.backup/ultimo-envio` e `systemctl status internship-backup`.
 
 ## Roadmap (fases)
 
 0. Fechamento da documentação (**concluída**).
-1. Fundação técnica (**concluída**): RNFs, DER lógico (proposta), migrações, wrapper de
+1. Fundação técnica (**concluída**): RNFs, DER lógico, migrações, wrapper de
    identidade, papéis e RLS, auditoria, autenticação e CI (lote
    `integration/fase-1-fundacao`); gestão de usuários e perfis, senha provisória, detalhe e
    edição de curso e estudante, consulta e exportação da auditoria (lote
