@@ -1,26 +1,26 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
+import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarData, hojeSaoPaulo, prazoEmPalavras } from "@/lib/datas";
 import { getIdentity } from "@/lib/session";
-import { listRelatoriosPendentes } from "@/modules/acompanhamento/services/relatorio-service";
+import { listRelatoriosPendentesPagina } from "@/modules/acompanhamento/services/relatorio-service";
 import { Avatar } from "@/shared/ui/avatar";
 import { cn } from "@/shared/ui/cn";
 import { DataTable } from "@/shared/ui/data-table";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { PageHeader } from "@/shared/ui/page-header";
+import { Paginacao } from "@/shared/ui/paginacao";
 import { StatusBadge } from "@/shared/ui/status-badge";
 
 // RF040: relatórios que pedem ação nos estágios da pessoa: os que aguardam o orientador e os
 // devidos pelo estudante (período encerrado), com o atraso calculado pelo prazo. O envio e a
 // análise acontecem na página do estágio. Os filtros separam de quem é a vez.
 
-type Relatorio = Awaited<ReturnType<typeof listRelatoriosPendentes>>[number];
 const VISOES = [
-  { chave: "todos", rotulo: "Todos", filtro: () => true },
-  { chave: "orientador", rotulo: "Aguardando o orientador", filtro: (relatorio: Relatorio) => relatorio.pendenteDe === "ORIENTADOR" },
-  { chave: "estudante", rotulo: "Aguardando o estudante", filtro: (relatorio: Relatorio) => relatorio.pendenteDe === "ESTUDANTE" },
-  { chave: "atraso", rotulo: "Em atraso", filtro: (relatorio: Relatorio) => relatorio.emAtraso },
+  { chave: "todos", rotulo: "Todos" },
+  { chave: "orientador", rotulo: "Aguardando o orientador" },
+  { chave: "estudante", rotulo: "Aguardando o estudante" },
+  { chave: "atraso", rotulo: "Em atraso" },
 ] as const;
 
 export default async function RelatoriosPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
@@ -28,16 +28,16 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
   if (!identity) redirect("/login");
   const consulta = lerConsulta(await searchParams);
   const visao = VISOES.find((item) => item.chave === consulta.visao) ?? VISOES[0];
-  const pendentes = await listRelatoriosPendentes(identity);
+  const { pagina, porPagina } = lerPaginacao(consulta);
+  const { items: itens, total, contagens } = await listRelatoriosPendentesPagina(identity, { visao: visao.chave, page: pagina, limit: porPagina });
   const hoje = hojeSaoPaulo();
-  const itens = pendentes.filter(visao.filtro);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Relatórios" description="Relatórios em análise ou com o período encerrado, por prazo de entrega. O envio e a análise acontecem na página de cada estágio (RF036-RF041)." />
       <nav aria-label="Filtrar relatórios" className="flex flex-wrap gap-2">
         {VISOES.map((item) => {
-          const quantidade = pendentes.filter(item.filtro).length;
+          const quantidade = contagens[item.chave];
           const ativa = item.chave === visao.chave;
           return (
             <Link
@@ -55,11 +55,11 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           );
         })}
       </nav>
-      {itens.length === 0 ? (
+      {total === 0 ? (
         <EstadoVazio
-          variante={pendentes.length === 0 ? "vazio" : "sem-resultados"}
-          titulo={pendentes.length === 0 ? "Nenhum relatório pendente" : "Nenhum relatório nesta visão"}
-          descricao={pendentes.length === 0 ? "Nenhum relatório devido ou em análise nos estágios que você acompanha." : "Escolha outra visão para ver os demais."}
+          variante={contagens.todos === 0 ? "vazio" : "sem-resultados"}
+          titulo={contagens.todos === 0 ? "Nenhum relatório pendente" : "Nenhum relatório nesta visão"}
+          descricao={contagens.todos === 0 ? "Nenhum relatório devido ou em análise nos estágios que você acompanha." : "Escolha outra visão para ver os demais."}
         />
       ) : (
         <DataTable
@@ -67,6 +67,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           getRowKey={(relatorio) => relatorio.id}
           getRowHref={(relatorio) => `/estagios/${relatorio.estagioId}?aba=acompanhamento`}
           testId="relatorios-pendentes"
+          rodape={<Paginacao pagina={pagina} porPagina={porPagina} total={total} rotuloItens="relatórios" />}
           columns={[
             {
               chave: "estudante",

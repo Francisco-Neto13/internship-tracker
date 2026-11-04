@@ -2,14 +2,16 @@ import { withUser, type Transaction } from "@/db/with-user";
 import { DomainError } from "@/lib/errors";
 import type { Identity } from "@/lib/identity";
 import { exigirDocumento } from "@/shared/documentos/documento-service";
-import { enviadoComAtraso, pendenteDe, relatorioEmAtraso } from "../domain/relatorio";
+import { enviadoComAtraso, pendenteDe, relatorioEmAtraso, type VisaoRelatorio } from "../domain/relatorio";
 import { hoje } from "../repositories/frequencia-repository";
 import {
   findAnexos,
   findPareceres,
   findRelatorioById,
   findRelatorios,
+  countRelatoriosPendentes,
   findRelatoriosEmAberto,
+  findRelatoriosPendentesPagina,
   findVersoes,
   insertAnexos,
   insertParecer,
@@ -152,5 +154,15 @@ export async function listRelatoriosPendentes(identity: Identity) {
     return (await findRelatoriosEmAberto(tx))
       .filter(({ relatorio }) => relatorio.situacao === "EM_ANALISE" || (relatorio.periodoFim !== null && relatorio.periodoFim < diaAtual))
       .map(({ relatorio, estudanteNome }) => ({ ...comSituacaoExibida(relatorio, diaAtual), estudanteNome }));
+  });
+}
+
+/** RF040, RNF-11: one page of the same list for the screen, with the total of each view. */
+export async function listRelatoriosPendentesPagina(identity: Identity, query: { visao: VisaoRelatorio; page: number; limit: number }) {
+  return withUser(identity, async (tx) => {
+    const diaAtual = await hoje(tx);
+    const linhas = await findRelatoriosPendentesPagina(tx, diaAtual, query.visao, query.limit, (query.page - 1) * query.limit);
+    const contagens = await countRelatoriosPendentes(tx, diaAtual);
+    return { items: linhas.map(({ relatorio, estudanteNome }) => ({ ...comSituacaoExibida(relatorio, diaAtual), estudanteNome })), total: contagens[query.visao], contagens };
   });
 }

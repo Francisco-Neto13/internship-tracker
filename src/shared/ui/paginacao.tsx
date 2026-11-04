@@ -42,12 +42,15 @@ export function Paginacao({
   total,
   rotuloItens = "registros",
   className,
+  chavePagina = "pagina",
 }: {
   pagina: number;
   porPagina: number;
   total: number;
   rotuloItens?: string;
   className?: string;
+  /** Parâmetro da URL; muda só quando a tela tem duas listas paginadas. */
+  chavePagina?: string;
 }) {
   const pathname = usePathname();
   const parametros = useSearchParams();
@@ -62,7 +65,7 @@ export function Paginacao({
   const url = (alteracoes: Record<string, string | number>) => {
     const proximos = new URLSearchParams(parametros.toString());
     for (const [chave, valor] of Object.entries(alteracoes)) proximos.set(chave, String(valor));
-    if (proximos.get("pagina") === "1") proximos.delete("pagina");
+    if (proximos.get(chavePagina) === "1") proximos.delete(chavePagina);
     const consulta = proximos.toString();
     return consulta ? `${pathname}?${consulta}` : pathname;
   };
@@ -70,7 +73,7 @@ export function Paginacao({
   const irPara = (valor: string) => {
     const alvo = Math.trunc(Number(valor));
     setSalto("");
-    if (Number.isFinite(alvo) && alvo >= 1) router.push(url({ pagina: Math.min(totalPaginas, alvo) }));
+    if (Number.isFinite(alvo) && alvo >= 1) router.push(url({ [chavePagina]: Math.min(totalPaginas, alvo) }));
   };
 
   const seta = (alvo: number, rotulo: string, inativo: boolean, children: React.ReactNode) =>
@@ -79,7 +82,7 @@ export function Paginacao({
         {children}
       </span>
     ) : (
-      <Link href={url({ pagina: alvo })} className={botao} aria-label={rotulo} title={rotulo} scroll={false}>
+      <Link href={url({ [chavePagina]: alvo })} className={botao} aria-label={rotulo} title={rotulo} scroll={false}>
         {children}
       </Link>
     );
@@ -109,7 +112,7 @@ export function Paginacao({
           <span>Por página</span>
           <select
             value={porPagina}
-            onChange={(evento) => router.push(url({ por_pagina: evento.target.value, pagina: 1 }))}
+            onChange={(evento) => router.push(url({ por_pagina: evento.target.value, [chavePagina]: 1 }))}
             className="h-8 rounded-md border border-navy-900/15 bg-white px-2 text-sm text-navy-900 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none"
           >
             {TAMANHOS_PAGINA.map((tamanho) => (
@@ -133,7 +136,7 @@ export function Paginacao({
             ) : (
               <Link
                 key={item}
-                href={url({ pagina: item })}
+                href={url({ [chavePagina]: item })}
                 scroll={false}
                 aria-label={`Página ${item}`}
                 aria-current={item === atual ? "page" : undefined}

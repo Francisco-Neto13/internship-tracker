@@ -3,8 +3,9 @@ import { Client } from "pg";
 import type { Identity } from "@/lib/identity";
 import { closeDatabases } from "@/db/client";
 import { getCargaHoraria, listEstagiosDivergentes, listFrequencias } from "@/modules/acompanhamento/services/frequencia-service";
-import { listRelatoriosPendentes } from "@/modules/acompanhamento/services/relatorio-service";
-import { listAtividades, listFilaAnalise } from "@/modules/atividades/services/atividade-service";
+import { VISOES_RELATORIO } from "@/modules/acompanhamento/domain/relatorio";
+import { listRelatoriosPendentes, listRelatoriosPendentesPagina } from "@/modules/acompanhamento/services/relatorio-service";
+import { listAtividades, listAtividadesPagina, listFilaAnalise, listFilaAnalisePagina } from "@/modules/atividades/services/atividade-service";
 import { getIntegralizacao, getMinhaIntegralizacao } from "@/modules/integralizacao/services/integralizacao-service";
 import { gerarRelatorio, exportarRelatorio } from "@/modules/administracao/services/relatorio-gerencial-service";
 import { listDocumentosEmGuarda } from "@/modules/administracao/services/guarda-service";
@@ -266,6 +267,12 @@ async function main() {
     medicoes.push(await medir("GET /atividades-complementares", "estudante", () => listAtividades(aluno, {})));
     medicoes.push(await medir("GET /atividades-complementares", "coordenação (2.400 atividades)", () => listAtividades(coordenacao, {})));
     medicoes.push(await medir("GET /atividades-complementares/pendentes", "coordenação (900 em análise)", () => listFilaAnalise(coordenacao)));
+    medicoes.push(await medir("Tela de atividades: fila, 1 página", "coordenação (900 em análise)", async () => (await listFilaAnalisePagina(coordenacao, { page: 1, limit: 20 })).items));
+    medicoes.push(await medir("Tela de atividades: fila, última página", "coordenação (900 em análise)", async () => (await listFilaAnalisePagina(coordenacao, { page: 45, limit: 20 })).items));
+    medicoes.push(await medir("Tela de atividades: minhas", "estudante", async () => (await listAtividadesPagina(aluno, { estudanteId: alvo[0].estudante }, { page: 1, limit: 20 })).items));
+    for (const visao of VISOES_RELATORIO) {
+      medicoes.push(await medir(`Tela de relatórios: ${visao}`, "coordenação (300 estágios)", async () => (await listRelatoriosPendentesPagina(coordenacao, { visao, page: 1, limit: 20 })).items));
+    }
     medicoes.push(await medir("GET /integralizacao", "estudante", () => getMinhaIntegralizacao(aluno)));
     medicoes.push(await medir("GET /estudantes/{id}/integralizacao", "coordenação", () => getIntegralizacao(coordenacao, alvo[0].estudante)));
     const administrador = await pessoa("admin-carga@carga.local");

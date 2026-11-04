@@ -1,11 +1,12 @@
 import { Building, CalendarRange, Clock } from "lucide-react";
 import { redirect } from "next/navigation";
+import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarDataCurta, haQuantoTempo } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { minutosParaHoras } from "@/lib/horas";
 import { SITUACAO_ATIVIDADE } from "@/lib/rotulos";
 import { getIdentity } from "@/lib/session";
-import { listAtividades, listFilaAnalise } from "@/modules/atividades/services/atividade-service";
+import { listAtividadesPagina, listFilaAnalisePagina } from "@/modules/atividades/services/atividade-service";
 import { getMinhaIntegralizacao } from "@/modules/integralizacao/services/integralizacao-service";
 import { Avatar } from "@/shared/ui/avatar";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
@@ -14,6 +15,7 @@ import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { Progresso } from "@/shared/ui/indicador";
 import { Painel } from "@/shared/ui/painel";
 import { PageHeader } from "@/shared/ui/page-header";
+import { Paginacao } from "@/shared/ui/paginacao";
 import { StatusBadge } from "@/shared/ui/status-badge";
 import { NovaAtividade } from "./nova-atividade";
 
@@ -23,18 +25,22 @@ import { NovaAtividade } from "./nova-atividade";
 
 const h = (minutos: number | null) => (minutos === null ? "—" : `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`);
 
-export default async function AtividadesComplementaresPage() {
+export default async function AtividadesComplementaresPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
   const identity = await getIdentity();
   if (!identity) redirect("/login");
-  const [atividades, fila, integralizacao] = await Promise.all([
-    listAtividades(identity, {}),
-    listFilaAnalise(identity),
+  const consulta = lerConsulta(await searchParams);
+  const paginaMinhas = lerPaginacao(consulta);
+  const paginaFila = lerPaginacao(consulta, 20, "pagina_fila");
+  const [{ items: fila, total: totalFila }, integralizacao] = await Promise.all([
+    listFilaAnalisePagina(identity, { page: paginaFila.pagina, limit: paginaFila.porPagina }),
     getMinhaIntegralizacao(identity).catch((error: unknown) => {
       if (error instanceof DomainError && error.kind === "NOT_FOUND") return null;
       throw error;
     }),
   ]);
-  const minhas = integralizacao ? atividades.filter((atividade) => atividade.estudanteId === integralizacao.estudanteId) : [];
+  const { items: minhas, total: totalMinhas } = integralizacao
+    ? await listAtividadesPagina(identity, { estudanteId: integralizacao.estudanteId }, { page: paginaMinhas.pagina, limit: paginaMinhas.porPagina })
+    : { items: [], total: 0 };
 
   return (
     <div className="flex flex-col gap-6">
@@ -51,7 +57,7 @@ export default async function AtividadesComplementaresPage() {
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
           <div className="flex flex-col gap-4">
             <Painel titulo="Minhas atividades" flush>
-              {minhas.length === 0 ? (
+              {totalMinhas === 0 ? (
                 <div className="p-5">
                   <EstadoVazio compacto titulo="Nenhuma atividade ainda" descricao="Registre a primeira no formulário ao lado." />
                 </div>
@@ -61,6 +67,7 @@ export default async function AtividadesComplementaresPage() {
                   items={minhas}
                   getRowKey={(atividade) => atividade.id}
                   testId="minhas-atividades"
+                  rodape={<Paginacao pagina={paginaMinhas.pagina} porPagina={paginaMinhas.porPagina} total={totalMinhas} rotuloItens="atividades" />}
                   columns={[
                     {
                       chave: "atividade",
@@ -120,8 +127,8 @@ export default async function AtividadesComplementaresPage() {
         </div>
       )}
 
-      {fila.length > 0 && (
-        <Painel titulo="Fila de análise" descricao={`${fila.length} atividade(s) aguardando decisão`} flush>
+      {totalFila > 0 && (
+        <Painel titulo="Fila de análise" descricao={`${totalFila} atividade(s) aguardando decisão`} flush>
           <ul className="divide-y divide-navy-900/[0.07]" data-testid="fila-analise">
             {fila.map(({ atividade, previa }) => (
               <li key={atividade.id} className="grid gap-4 px-5 py-4 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -182,10 +189,11 @@ export default async function AtividadesComplementaresPage() {
               </li>
             ))}
           </ul>
+          <Paginacao pagina={paginaFila.pagina} porPagina={paginaFila.porPagina} total={totalFila} rotuloItens="atividades" chavePagina="pagina_fila" />
         </Painel>
       )}
 
-      {!integralizacao && fila.length === 0 && <EstadoVazio titulo="Nada para analisar" descricao="Nenhuma atividade aguardando análise nos cursos que você coordena." />}
+      {!integralizacao && totalFila === 0 &&<EstadoVazio titulo="Nada para analisar" descricao="Nenhuma atividade aguardando análise nos cursos que você coordena." />}
     </div>
   );
 }

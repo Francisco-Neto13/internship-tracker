@@ -8,6 +8,9 @@ export function relatorioEmAtraso(relatorio: { situacao: SituacaoRelatorio; praz
   return (relatorio.situacao === "PENDENTE" || relatorio.situacao === "DEVOLVIDO") && relatorio.prazoEntrega < hoje;
 }
 
+export const VISOES_RELATORIO = ["todos", "orientador", "estudante", "atraso"] as const;
+export type VisaoRelatorio = (typeof VISOES_RELATORIO)[number];
+
 /** `enviadoEm` is the calendar date of the sending in the institution's time zone. */
 export function enviadoComAtraso(prazoEntrega: string, enviadoEm: string): boolean {
   return enviadoEm > prazoEntrega;

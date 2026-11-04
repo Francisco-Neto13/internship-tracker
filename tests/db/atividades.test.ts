@@ -8,7 +8,9 @@ import {
   decidirAtividade,
   getAtividade,
   listAtividades,
+  listAtividadesPagina,
   listFilaAnalise,
+  listFilaAnalisePagina,
   reenviarAtividade,
 } from "@/modules/atividades/services/atividade-service";
 import {
@@ -58,6 +60,37 @@ async function cadastrar(c: Cenario, horas: number, ajustes: { documentoIds?: st
     origemEstagioId: null,
   });
 }
+
+describe("paginação no servidor (RNF-11)", () => {
+  it("pages the queue oldest first with a preview, and the student's list without repeating", async () => {
+    const c = await cenario();
+    const primeira = await cadastrar(c, 10);
+    const segunda = await cadastrar(c, 20);
+    const terceira = await cadastrar(c, 30);
+
+    const paginaDe = (page: number) => listAtividadesPagina(como(c.aluno), { estudanteId: c.estudante.id }, { page, limit: 2 });
+    const [umaPagina, outraPagina] = [await paginaDe(1), await paginaDe(2)];
+    expect(umaPagina.total).toBe(3);
+    expect(umaPagina.items).toHaveLength(2);
+    expect(outraPagina.items).toHaveLength(1);
+    expect([...umaPagina.items, ...outraPagina.items].map((item) => item.id).sort()).toEqual([primeira.id, segunda.id, terceira.id].sort());
+
+    // Filtered by the scenario's course coordinator, who reads only this queue
+    const fila = await listFilaAnalisePagina(como(c.coordenador), { page: 1, limit: 2 });
+    expect(fila.total).toBe(3);
+    expect(fila.items.map((item) => item.atividade.id)).toEqual([primeira.id, segunda.id]);
+    expect(fila.items[0].previa).toMatchObject({ aproveitadosMinutos: 600 });
+    expect((await listFilaAnalisePagina(como(c.coordenador), { page: 2, limit: 2 })).items.map((item) => item.atividade.id)).toEqual([terceira.id]);
+  });
+
+  it("a page stays inside what RLS shows", async () => {
+    const c = await cenario();
+    await cadastrar(c, 10);
+    const outro = await cenario();
+    expect(await listFilaAnalisePagina(como(outro.coordenador), { page: 1, limit: 10 })).toEqual({ items: [], total: 0 });
+    expect(await listAtividadesPagina(como(outro.aluno), { estudanteId: c.estudante.id }, { page: 1, limit: 10 })).toEqual({ items: [], total: 0 });
+  });
+});
 
 describe("cadastro (RF049, RF050, RF053)", () => {
   it("the student registers with proof; the activity goes straight to analysis", async () => {
