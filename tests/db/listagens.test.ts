@@ -1,9 +1,11 @@
+import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
+import * as schema from "@/db/schema";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { listEstudantes } from "@/modules/academico/services/estudante-service";
 import { listUsuarios } from "@/modules/acesso/services/usuario-service";
 import { listEstagios } from "@/modules/estagios/services/estagio-service";
-import { closeOwnerDatabase, createEstudante, createMundoEstagio, createUsuario, grantPerfil } from "./fixtures";
+import { closeOwnerDatabase, createEstudante, createMundoEstagio, createUsuario, grantPerfil, owner } from "./fixtures";
 import { como, estagioAtivo } from "./estagio-helpers";
 
 // The list screens search, sort and paginate on the server: the total counts the same rows as
@@ -83,5 +85,20 @@ describe("cursos e contas", () => {
     const ultima = await listUsuarios(como(administrador), { page: 1, limit: 2, ordem: "-email" });
     expect(primeira.total).toBe(ultima.total);
     expect(primeira.items[0].email < ultima.items[0].email).toBe(true);
+  });
+
+  it("counts pending password changes beyond the first 100 accounts (dashboard)", async () => {
+    const administrador = await createUsuario();
+    await grantPerfil(administrador.id, "ADMINISTRADOR");
+    const marca = `troca-${randomUUID()}`;
+    const conta = (indice: number, trocaSenhaObrigatoria: boolean) => ({ nome: marca, email: `${marca}-${indice}@teste.local`, situacao: "ATIVO" as const, trocaSenhaObrigatoria });
+    await owner()
+      .insert(schema.usuario)
+      .values([...Array.from({ length: 105 }, (_, indice) => conta(indice, true)), conta(105, false)]);
+    const consulta = { page: 1, limit: 1, situacao: "ATIVO" as const, busca: marca };
+    const pendentes = await listUsuarios(como(administrador), { ...consulta, trocaSenhaPendente: true });
+    expect(pendentes.total).toBe(105);
+    expect(pendentes.items).toHaveLength(1);
+    expect((await listUsuarios(como(administrador), consulta)).total).toBe(106);
   });
 });

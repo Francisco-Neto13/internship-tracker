@@ -111,13 +111,14 @@ async function comPerfis(tx: Transaction, usuarios: UsuarioRow[]): Promise<Usuar
 
 export async function listUsuarios(
   identity: Identity,
-  query: { page: number; limit: number; perfil?: Perfil; situacao?: Situacao; busca?: string; ordem?: string },
+  query: { page: number; limit: number; perfil?: Perfil; situacao?: Situacao; trocaSenhaPendente?: boolean; busca?: string; ordem?: string },
 ): Promise<{ items: UsuarioComPerfis[]; total: number }> {
   const campo = query.ordem?.replace(/^-/, "");
   return withUser(identity, async (tx) => {
     const { items, total } = await findUsuarios(tx, {
       perfil: query.perfil,
       situacao: query.situacao,
+      trocaSenhaPendente: query.trocaSenhaPendente,
       busca: query.busca,
       ordem: (ORDENS_USUARIO as readonly string[]).includes(campo ?? "") ? (campo as OrdemUsuario) : undefined,
       decrescente: query.ordem?.startsWith("-"),

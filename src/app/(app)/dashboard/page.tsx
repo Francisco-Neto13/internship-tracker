@@ -426,7 +426,7 @@ async function BlocoAdministrador({ identity }: { identity: Parameters<typeof da
         <Indicador
           rotulo="Troca de senha pendente"
           valor={dados.trocaSenhaPendente}
-          contexto={dados.trocaSenhaAmostra ? "entre os 100 primeiros ativos" : "senha provisória ainda não trocada"}
+          contexto="senha provisória ainda não trocada"
           href="/administracao/usuarios"
           icone={Hourglass}
           tom="atencao"
