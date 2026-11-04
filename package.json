@@ -18,6 +18,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=.env scripts/db/migrate.ts",
     "db:seed": "tsx --env-file-if-exists=.env scripts/db/seed.ts",
+    "db:primeiro-admin": "tsx --env-file-if-exists=.env scripts/db/primeiro-admin.ts",
     "db:desempenho": "tsx --env-file=.env.test scripts/db/desempenho.ts",
     "storage:init": "tsx --env-file-if-exists=.env scripts/storage/init.ts",
     "storage:check": "tsx --env-file-if-exists=.env scripts/storage/check.ts",
@@ -31,6 +32,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.907.0",
     "@aws-sdk/s3-request-presigner": "^3.907.0",
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource-variable/jetbrains-mono": "5.3.0",
     "@hookform/resolvers": "^5.2.2",
     "@node-rs/argon2": "^2.2.1",
     "@radix-ui/react-dialog": "^1.1.23",

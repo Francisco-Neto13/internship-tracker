@@ -13,6 +13,7 @@ cp .env.example .env                   # preencher BETTER_AUTH_SECRET
 npm install               # também ativa os hooks de .githooks (prepare)
 npm run db:migrate        # tabelas (drizzle/migrations) + segurança (drizzle/sql)
 npm run db:seed           # usuários de desenvolvimento, senha "senha-dev-internship"
+npm run db:primeiro-admin -- <e-mail> <nome>  # primeiro administrador de um banco vazio; o seed recusa banco remoto
 npm run db:desempenho     # carga (600 estágios, ~98 mil lançamentos) e p95 das leituras de M05, só em *_test
 npm run storage:init      # bucket privado e CORS do upload direto (idempotente)
 npm run storage:check     # confere bucket e CORS
@@ -53,8 +54,8 @@ em tabela com dados entra sem quebrá-los: coluna nova anulável ou com padrão,
    os checks ficam verdes, o GitHub mescla sozinho e apaga a branch do lote.
    Assim a `develop` nunca recebe trabalho não testado e o CI dela não quebra.
 5. `develop` vai para `main` só quando estável, por PR aberto manualmente na tela do GitHub
-   (o CI remoto roda de novo). Não há promoção automática nem deploy configurado: a `main`
-   só muda quando alguém decide promover.
+   (o CI remoto roda de novo). Não há promoção automática: a `main` só muda quando alguém decide
+   promover. O que chega à `main` vai para produção sozinho, depois do CI verde (seção Produção).
 
 `main` é a branch padrão do GitHub: um clone novo abre nela. O trabalho nunca começa na
 `main`, e sim no lote: `git switch integration/<lote>` e, dali, `git switch -c feature/<RF-curto>`.
@@ -142,6 +143,9 @@ ferramenta.
 - Erro de negócio é `DomainError` com código estável (`src/lib/errors.ts`); a
   tradução para HTTP fica em `src/lib/api.ts`.
 - Toda decisão técnica cita o RF ou a RN que a motiva.
+- Ação de um clique cujo efeito é caro ou impossível de desfazer pede confirmação dizendo a consequência
+  (`Confirmacao`, ou a prop `confirmacao` de `BotaoAcao` e `FormularioApi`): sair, decisão final, assinatura,
+  rescisão, permissões. Ação reversível não pede: confirmar tudo ensina a clicar sem ler. Cancelar recebe o foco.
 - Estado de listagem mora na URL e é resolvido no servidor: `?busca=&pagina=&por_pagina=&ordem=campo|-campo&<filtros>`
   (`src/lib/consulta.ts`, componentes `Paginacao`, `BarraFiltros`, `DataTable`). Ordem desconhecida cai no padrão.
   O link de volta de um registro leva `?voltar=`, aceito só com o prefixo da própria listagem.
@@ -195,7 +199,8 @@ drizzle/migrations/      SQL de tabelas gerado por drizzle-kit
 drizzle/rollback/        reversão manual de cada migração (*.down.sql)
 drizzle/sql/             roles/, functions/, policies/, triggers/ (aplicados nessa ordem)
 scripts/db/              migrate, seed
-scripts/storage/         init (bucket e CORS) e check do armazenamento local
+scripts/storage/         init (bucket e CORS) e check do armazenamento
+scripts/servidor/        produção: cofre criptografado, publicação, deploy e rotina diária
 src/shared/documentos/   upload direto (D8): token, conteúdo pelos bytes, armazenamento S3 e em memória
 scripts/ci-local.mjs     CI local, espelho do .github/workflows/ci.yml
 .githooks/               pre-push que recusa push direto em develop/main (core.hooksPath)
@@ -406,8 +411,7 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
   antes, senão o passo falha avisando que a porta está ocupada.
 - O bit de execução do hook não sobrevive a um arquivo recém-criado no Windows. Ao adicionar
   ou recriar `.githooks/pre-push`: `git add --chmod=+x .githooks/pre-push`.
-- A produção será um servidor próprio com Docker Compose (aplicação, PostgreSQL, SeaweedFS e
-  proxy com HTTPS); só o armazenamento está pronto (`docker-compose.prod.yml`); o resto entra com a issue #63. `DATABASE_URL` é `app_runtime`,
+- Em produção, `DATABASE_URL` é `app_runtime`,
   `DATABASE_AUTH_URL` é `auth_runtime`, e a migração roda num passo separado com
   `DATABASE_MIGRATION_URL`, nunca no build (o build não depende de banco). Conectar a aplicação
   com o dono do banco **contorna toda a RLS**. O PostgreSQL não publica porta na internet.
@@ -418,6 +422,8 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
   (idem `auth_runtime`). `DATABASE_MIGRATION_URL` usa o dono (`migrator`).
 - O pool de conexões reaproveita a mesma conexão entre requisições. `set_config(..., true)` é
   obrigatório (local à transação); um valor de sessão vazaria a identidade para outra requisição.
+- O Docker ignora o ufw nas portas publicadas: no `docker-compose.prod.yml`, só o proxy publica porta.
+- As fontes vêm de pacotes (`next/font/local`). Com `next/font/google`, o build de produção falhou no servidor.
 - `next build` não pode depender de banco: `getAuth()` e os pools são criados sob
   demanda. Não instanciar nada disso no topo de um módulo.
 - O Next renderiza um anunciador de rota com `role="alert"`. Em Playwright, filtrar
@@ -473,6 +479,24 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
 - A RLS não mostra nome nem matrícula do estudante a orientador, supervisor e concedente (`usuario_leitura`,
   `estudante_leitura`). A tela usa `identificarEstagio`; a busca por nome não acha nada para esses perfis.
 
+## Produção
+
+Sistema em https://internship.chiconeto.dev, numa VPS da Contabo (região EU) com Docker Compose:
+aplicação, PostgreSQL 17, SeaweedFS e Caddy, que emite os certificados. Só o Caddy publica porta. Os
+dados e os segredos ficam num volume LUKS em `/srv/dados`, com a senha só com a equipe.
+
+| Situação | O que fazer |
+|---|---|
+| Publicar | Merge na `main`. Com o CI verde, `.github/workflows/deploy.yml` publica. Se o build falhar, a versão atual continua no ar |
+| Simular | Actions > Deploy > Run workflow > `dry_run` |
+| O servidor reiniciou | O sistema fica fora do ar até alguém rodar `ssh -t root@<servidor> sh /srv/internship-tracker/scripts/servidor/cofre-abrir.sh` e digitar a senha. O Docker não sobe sozinho, de propósito: sem o cofre, os contêineres voltariam sem os dados. O deploy falha com aviso enquanto o cofre estiver fechado |
+| Banco novo | `npm run db:primeiro-admin`, no serviço `ferramentas` do Compose |
+
+A chave do deploy só dispara o deploy: usuário `deploy`, com comando forçado (`configurar-deploy.sh`).
+A chave do host fica fixada no secret `VPS_KNOWN_HOSTS`.
+
+**Ainda não existe backup** (RNF-12, issue #63): não colocar dados reais antes disso.
+
 ## Roadmap (fases)
 
 0. Fechamento da documentação (**concluída**).
@@ -503,7 +527,7 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
    relatórios gerenciais com CSV e PDF, PDFs do TCE, plano e aditivo, declarações com código de
    verificação.
 
-6. Interface (**em revisão**, lote `integration/fase-6-interface`): reformulação das telas sobre os
+6. Interface (**concluída**, lote `integration/fase-6-interface`): reformulação das telas sobre os
    componentes de `src/shared/ui`, painel por perfil, perfil do estudante em abas, listagens com busca,
    ordenação e paginação no servidor, confirmações em diálogo. Sem mudança de schema, política ou permissão.
 

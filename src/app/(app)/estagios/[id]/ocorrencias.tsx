@@ -50,6 +50,7 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
           <BotaoAcao
             url={`/api/v1/estudantes/${estagio.estudanteId}/declaracoes`}
             rotulo="Emitir declaração de conclusão"
+            confirmacao={{ titulo: "Emitir a declaração?", descricao: "A declaração fica registrada com um código de verificação público e não pode ser alterada.", confirmar: "Emitir" }}
             corpo={{ tipo: "CONCLUSAO_ESTAGIO", estagio_id: id }}
             variante="default"
             sucesso="Declaração emitida: veja na integralização do estudante"
@@ -112,6 +113,7 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
             <FormularioApi
               url={`${api}/rescisao`}
               rotuloEnviar="Registrar rescisão"
+confirmacao={{ titulo: "Rescindir o estágio?", descricao: "A rescisão é definitiva: o estágio não volta a ficar ativo, os lançamentos depois da data são cancelados, as horas são consolidadas até ela e orientador e supervisor perdem o acesso.", confirmar: "Rescindir estágio", destrutiva: true }}
               testId="rescisao"
               embutido
               sucesso="Rescisão registrada"

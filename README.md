@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/PostgreSQL_17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white">
   <img src="https://img.shields.io/badge/Drizzle_ORM-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black">
   <img src="https://img.shields.io/badge/Better_Auth-000000?style=for-the-badge&logoColor=white">
-  <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
 </div>
 
 ---
@@ -101,9 +101,9 @@ Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com 
 | Autenticação | Better Auth (e-mail e senha com Argon2id, sessão em banco) |
 | Armazenamento de arquivos | SeaweedFS em Docker (compatível com S3), em todos os ambientes |
 | API | Route Handlers do Next.js, versionada em `/api/v1` |
-| Geração de PDF | React-PDF no servidor |
+| Geração de PDF | pdf-lib no servidor |
 | Testes | Vitest (unidade/integração) e Playwright (e2e) |
-| Rotinas agendadas | Cron do servidor chamando `/api/cron/diaria` |
+| Rotinas agendadas | Timer do servidor chamando `/api/cron/diaria` |
 | Deploy | Servidor próprio com Docker Compose (aplicação, banco e arquivos) |
 
 ## Ambientes
@@ -112,7 +112,7 @@ Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com 
 |---|---|---|---|
 | Desenvolvimento | PostgreSQL 17 em Docker | SeaweedFS em Docker (API S3) | `next dev` local |
 | Integração contínua | PostgreSQL 17 no mesmo `docker compose` | SeaweedFS no mesmo `docker compose` | GitHub Actions |
-| Produção (a montar) | PostgreSQL 17 em Docker Compose | SeaweedFS com criptografia em Docker Compose | Contêiner Docker no servidor próprio |
+| Produção | PostgreSQL 17 em Docker Compose | SeaweedFS com criptografia em Docker Compose | Contêiner Docker no servidor próprio |
 
 O CI usa o mesmo contêiner e o mesmo script de papéis do ambiente local, então um teste de RLS que passa na máquina passa no CI pelas mesmas razões.
 
@@ -176,7 +176,9 @@ O `npm install` ativa os hooks versionados em `.githooks` (se não ativar, `npm 
 
 ### Produção (servidor próprio com Docker)
 
-Ainda não está montada: o `docker-compose.prod.yml` só tem o armazenamento. Faltam o `Dockerfile`, os serviços da aplicação e do banco, o proxy com HTTPS, o cron do servidor, o disco criptografado e o backup do banco e dos arquivos (issue #63). O PostgreSQL não deve publicar porta na internet.
+No ar em https://internship.chiconeto.dev. Tudo que chega à `main` é publicado sozinho, depois do CI verde (`.github/workflows/deploy.yml`); se o build falhar, a versão atual continua no ar. Os dados e os segredos ficam num volume criptografado (`scripts/servidor`), e, depois de um reinício do servidor, o sistema só volta quando alguém abre o cofre com `cofre-abrir.sh`. Só o proxy publica porta. **O backup ainda não existe (issue #63): não coloque dados reais antes disso.**
+
+Para montar um servidor novo, copie o código para `/srv/internship-tracker` e rode `cofre-criar.sh`, `publicar.sh <dominio> <dominio-dos-arquivos>` e `configurar-deploy.sh`. O primeiro administrador sai de `npm run db:primeiro-admin -- <e-mail> <nome>`, no serviço `ferramentas` do Compose. Os papéis e as senhas do banco são criados pelo próprio `publicar.sh`; o trecho abaixo só vale para um banco criado de outra forma.
 
 `DATABASE_MIGRATION_URL` aponta para o dono do banco (`migrator`). Depois da primeira migração, habilite o login dos papéis de runtime com senhas geradas e use-os em `DATABASE_URL` (`app_runtime`) e `DATABASE_AUTH_URL` (`auth_runtime`):
 

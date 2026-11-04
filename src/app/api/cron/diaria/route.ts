@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { executarRotinaDiaria } from "@/db/rotinas";
 import { errorResponse } from "@/lib/api";
 
-// RF012, RF040, RF069: daily routine, called by Vercel Cron (vercel.json) with
+// RF012, RF040, RF069: daily routine, called by the server timer (scripts/servidor/rotina-diaria.sh) with
 // "Authorization: Bearer <CRON_SECRET>". Without a secret of at least 32 characters the route
 // refuses everything, so an unconfigured environment never exposes it.
 

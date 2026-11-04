@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
+import { Confirmacao } from "@/shared/ui/confirmacao";
 import { EnvioDocumento } from "@/shared/ui/envio-documento";
 import { mensagemDaApi, selectClass } from "@/shared/ui/formulario-api";
 import { Input } from "@/shared/ui/input";
@@ -14,23 +15,32 @@ export function NovoAfastamento({ estagioId }: { estagioId: string }) {
   const router = useRouter();
   const [documento, setDocumento] = useState<{ id: string; nome_original: string } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [pendente, setPendente] = useState<Record<string, unknown> | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErro(null);
     if (!documento) return setErro("Envie o atestado ou comprovante do afastamento.");
     const dados = new FormData(event.currentTarget);
+    setPendente({
+      tipo: dados.get("tipo"),
+      descricao: String(dados.get("descricao") ?? "").trim() || null,
+      data_inicio: dados.get("data_inicio"),
+      data_fim: dados.get("data_fim"),
+      documento_id: documento.id,
+    });
+  }
+
+  async function enviar() {
+    setEnviando(true);
     const response = await fetch(`/api/v1/estagios/${estagioId}/afastamentos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tipo: dados.get("tipo"),
-        descricao: String(dados.get("descricao") ?? "").trim() || null,
-        data_inicio: dados.get("data_inicio"),
-        data_fim: dados.get("data_fim"),
-        documento_id: documento.id,
-      }),
+      body: JSON.stringify(pendente),
     });
+    setEnviando(false);
+    setPendente(null);
     if (!response.ok) return setErro(await mensagemDaApi(response, "Não foi possível registrar o afastamento."));
     router.refresh();
   }
@@ -68,6 +78,15 @@ export function NovoAfastamento({ estagioId }: { estagioId: string }) {
       <Button type="submit" className="sm:col-span-3 sm:w-fit">
         Registrar afastamento
       </Button>
+      <Confirmacao
+        aberto={pendente !== null}
+        aoMudarAberto={(aberto) => !aberto && setPendente(null)}
+        titulo="Registrar o afastamento?"
+        descricao="O término do estágio é estendido pelo mesmo número de dias, até o teto de 2 anos. O registro não se edita: para corrigir, é preciso registrar outro que o substitua."
+        rotuloConfirmar="Registrar afastamento"
+        ocupado={enviando}
+        aoConfirmar={enviar}
+      />
     </form>
   );
 }

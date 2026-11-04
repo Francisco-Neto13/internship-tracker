@@ -57,6 +57,24 @@ test("an irreversible action explains itself and can be cancelled", async ({ pag
   await expect(page.getByRole("button", { name: "Suspender" })).toBeFocused();
 });
 
+test("a form with a lasting effect says so before sending, and cancelling sends nothing", async ({ page }) => {
+  await entrar(page, "coordenacao.software@internship.local", 214);
+  await page.goto("/administracao/cursos");
+  await page.getByRole("main").getByRole("link", { name: /Engenharia de Software/ }).first().click();
+  let enviou = false;
+  page.on("request", (pedido) => {
+    if (pedido.method() === "PATCH" && pedido.url().includes("/api/v1/cursos/")) enviou = true;
+  });
+  await page.getByRole("button", { name: "Salvar curso" }).click();
+  const confirmacao = page.getByRole("alertdialog");
+  await expect(confirmacao).toContainText("recalcula a integralização");
+  // Enter on an open dialog must not perform the action
+  await expect(confirmacao.getByRole("button", { name: "Cancelar" })).toBeFocused();
+  await confirmacao.getByRole("button", { name: "Cancelar" }).click();
+  await expect(confirmacao).toHaveCount(0);
+  expect(enviou).toBe(false);
+});
+
 test("no page scrolls sideways on a phone (RNF-09)", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await entrar(page, "coordenacao.software@internship.local", 213);
