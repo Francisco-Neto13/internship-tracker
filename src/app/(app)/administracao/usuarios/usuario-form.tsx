@@ -1,5 +1,6 @@
 "use client";
 
+import { LIMITE } from "@/lib/campos";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
@@ -69,11 +70,11 @@ export function UsuarioForm({
       <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2" noValidate>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="usuario-nome">Nome</Label>
-          <Input id="usuario-nome" value={nome} onChange={(event) => setNome(event.target.value)} required />
+          <Input id="usuario-nome" maxLength={LIMITE.nomeUsuario} value={nome} onChange={(event) => setNome(event.target.value)} required />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="usuario-email">E-mail</Label>
-          <Input id="usuario-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+          <Input id="usuario-email" type="email" maxLength={LIMITE.email} value={email} onChange={(event) => setEmail(event.target.value)} required />
         </div>
         <div className="sm:col-span-2">
           <PerfisCampo catalogo={catalogo} cursos={cursos} concedentes={concedentes} value={perfis} onChange={setPerfis} />

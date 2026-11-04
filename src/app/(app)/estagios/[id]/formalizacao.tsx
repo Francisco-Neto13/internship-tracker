@@ -1,3 +1,4 @@
+import { LIMITE } from "@/lib/campos";
 import { Check } from "lucide-react";
 import { formatarData, formatarDataHora } from "@/lib/datas";
 import type { getEstagioDetalhado } from "@/modules/estagios/services/estagio-service";
@@ -191,6 +192,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                   rotulo="Reabrir TCE"
                   variante="ghost"
                   pedirMotivo={{
+                    max: LIMITE.justificativaEstagio,
                     campo: "justificativa",
                     pergunta: "Justificativa da reabertura",
                   }}
@@ -269,6 +271,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
                     },
                     {
                       nome: "usuario_id",
+                      max: LIMITE.codigoConta,
                       rotulo: "Código da conta",
                       ajuda:
                         "Conta com perfil de orientador ou de supervisor desta concedente.",
@@ -326,8 +329,8 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
                   rotuloEnviar="Registrar apólice"
                   embutido
                   campos={[
-                    { nome: "seguradora", rotulo: "Seguradora" },
-                    { nome: "numero_apolice", rotulo: "Número" },
+                    { nome: "seguradora", max: LIMITE.seguradora, rotulo: "Seguradora" },
+                    { nome: "numero_apolice", max: LIMITE.numeroApolice, rotulo: "Número" },
                     {
                       nome: "contratante",
                       rotulo: "Contratante",
@@ -405,6 +408,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
                     url={`${api}/plano-atividades/devolucao`}
                     rotulo="Devolver"
                     pedirMotivo={{
+                      max: LIMITE.parecerPlano,
                       campo: "parecer",
                       pergunta: "Parecer da devolução",
                     }}
@@ -440,6 +444,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
                 campos={[
                   {
                     nome: "atividades_previstas",
+                    max: LIMITE.atividadesPrevistas,
                     rotulo: "Atividades previstas",
                     tipo: "textarea",
                     valorInicial:
@@ -449,6 +454,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
                   },
                   {
                     nome: "justificativa_compatibilidade",
+                    max: LIMITE.compatibilidade,
                     rotulo: "Compatibilidade com o curso",
                     tipo: "textarea",
                     valorInicial:

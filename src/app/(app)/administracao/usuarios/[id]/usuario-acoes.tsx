@@ -1,5 +1,6 @@
 "use client";
 
+import { LIMITE } from "@/lib/campos";
 import * as Dialog from "@radix-ui/react-dialog";
 import { KeyRound, UserCheck, UserX } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -76,11 +77,11 @@ export function DadosConta({ usuario }: { usuario: { id: string; nome: string; e
     >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="usuario-nome">Nome</Label>
-        <Input id="usuario-nome" value={nome} onChange={(event) => setNome(event.target.value)} />
+        <Input id="usuario-nome" maxLength={LIMITE.nomeUsuario} value={nome} onChange={(event) => setNome(event.target.value)} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="usuario-email">E-mail (login)</Label>
-        <Input id="usuario-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <Input id="usuario-email" type="email" maxLength={LIMITE.email} value={email} onChange={(event) => setEmail(event.target.value)} />
       </div>
       <div className="flex flex-col gap-2 sm:col-span-2">
         {retorno}

@@ -34,7 +34,18 @@ export default defineConfig([
   ...nextTs,
   {
     files: ["src/**/*.{ts,tsx}"],
-    rules: { "no-restricted-imports": restrictedImports() },
+    rules: {
+      "no-restricted-imports": restrictedImports(),
+      // Issue #97: a field that takes text declares its limit, from LIMITE (src/lib/campos.ts)
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            'JSXOpeningElement[name.name=/^(input|Input|textarea)$/]:not(:has(JSXAttribute[name.name="maxLength"])):not(:has(JSXAttribute[name.name="type"][value.value=/^(checkbox|radio|file|hidden|date|number)$/]))',
+          message: "Campo de texto sem limite: declare maxLength com um valor de LIMITE (src/lib/campos.ts).",
+        },
+      ],
+    },
   },
   // AGENTS.md: modules talk through services, never through another module's repositories
   ...MODULES.map((module) => ({

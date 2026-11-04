@@ -1,5 +1,6 @@
 "use client";
 
+import { LIMITE, SENHA_MAXIMO } from "@/lib/campos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -29,6 +30,8 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginValues) {
     setErro(null);
+    // Nothing this long can be right; same answer as a wrong password
+    if (values.senha.length > SENHA_MAXIMO) return setErro("E-mail ou senha incorretos.");
     const { error } = await authClient.signIn.email({ email: values.email, password: values.senha });
     if (error) {
       // Same message for unknown e-mail and wrong password, so accounts cannot be enumerated.
@@ -54,6 +57,7 @@ export function LoginForm() {
         <Input
           id="login-email"
           type="email"
+          maxLength={LIMITE.email}
           autoComplete="username"
           aria-invalid={Boolean(errors.email)}
           {...register("email")}

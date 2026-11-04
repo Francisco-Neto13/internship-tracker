@@ -151,6 +151,7 @@ export function Paginacao({
           {totalPaginas > 7 && (
             <input
               value={salto}
+              maxLength={7}
               inputMode="numeric"
               onChange={(evento) => setSalto(evento.target.value.replace(/\D/g, ""))}
               onKeyDown={(evento) => evento.key === "Enter" && irPara(salto)}

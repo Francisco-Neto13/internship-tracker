@@ -1,3 +1,4 @@
+import { LIMITE } from "@/lib/campos";
 import { Briefcase, FileSignature, Percent } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
@@ -68,7 +69,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
               url={`/api/v1/concedentes/${id}/suspensao`}
               rotulo="Suspender"
               variante="destructive"
-              pedirMotivo={{ campo: "motivo", pergunta: "Motivo da suspensão" }}
+              pedirMotivo={{ campo: "motivo", pergunta: "Motivo da suspensão", max: LIMITE.motivoSuspensao }}
               confirmacao={{
                 titulo: "Suspender a concedente?",
                 descricao: "Estágios novos desta organização não poderão ser criados nem ativados. Os estágios em andamento continuam válidos.",
@@ -144,12 +145,12 @@ export default async function ConcedentePage({ params, searchParams }: { params:
                   embutido
                   sucesso="Dados atualizados"
                   campos={[
-                    { nome: "razao_social", rotulo: "Razão social", valorInicial: concedente.razaoSocial },
-                    { nome: "nome_fantasia", rotulo: "Nome fantasia", valorInicial: concedente.nomeFantasia, vazioComoNulo: true },
-                    { nome: "email_contato", rotulo: "E-mail de contato", tipo: "email", valorInicial: concedente.emailContato },
-                    { nome: "telefone_contato", rotulo: "Telefone", valorInicial: concedente.telefoneContato, vazioComoNulo: true },
-                    { nome: "representante_legal_nome", rotulo: "Representante legal", valorInicial: concedente.representanteLegalNome },
-                    { nome: "area_atuacao", rotulo: "Área de atuação", valorInicial: concedente.areaAtuacao },
+                    { nome: "razao_social", max: LIMITE.razaoSocial, rotulo: "Razão social", valorInicial: concedente.razaoSocial },
+                    { nome: "nome_fantasia", max: LIMITE.nomeFantasia, rotulo: "Nome fantasia", valorInicial: concedente.nomeFantasia, vazioComoNulo: true },
+                    { nome: "email_contato", max: LIMITE.email, rotulo: "E-mail de contato", tipo: "email", valorInicial: concedente.emailContato },
+                    { nome: "telefone_contato", max: LIMITE.telefone, mascara: "telefone", rotulo: "Telefone", valorInicial: concedente.telefoneContato, vazioComoNulo: true },
+                    { nome: "representante_legal_nome", max: LIMITE.representante, rotulo: "Representante legal", valorInicial: concedente.representanteLegalNome },
+                    { nome: "area_atuacao", max: LIMITE.areaAtuacao, rotulo: "Área de atuação", valorInicial: concedente.areaAtuacao },
                   ]}
                 />
               </div>

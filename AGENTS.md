@@ -143,6 +143,7 @@ ferramenta.
 - Erro de negócio é `DomainError` com código estável (`src/lib/errors.ts`); a
   tradução para HTTP fica em `src/lib/api.ts`.
 - Toda decisão técnica cita o RF ou a RN que a motiva.
+- Limite e formato de campo saem de `src/lib/campos.ts`, lido pelo schema Zod e pela tela (issue #97): a tela só ajuda, o servidor decide. Campo de texto sem limite não passa no lint nem compila em `FormularioApi`. Senha não usa `maxLength`, porque colar cortaria sem avisar: o formulário confere. CNPJ aceita letras nos 12 primeiros caracteres (IN RFB 2.229/2024).
 - Ação de um clique cujo efeito é caro ou impossível de desfazer pede confirmação dizendo a consequência
   (`Confirmacao`, ou a prop `confirmacao` de `BotaoAcao` e `FormularioApi`): sair, decisão final, assinatura,
   rescisão, permissões. Ação reversível não pede: confirmar tudo ensina a clicar sem ler. Cancelar recebe o foco.

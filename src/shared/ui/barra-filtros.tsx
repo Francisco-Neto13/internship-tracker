@@ -1,5 +1,6 @@
 "use client";
 
+import { LIMITE } from "@/lib/campos";
 import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -70,6 +71,7 @@ export function BarraFiltros({
             <input
               type="search"
               value={texto}
+              maxLength={LIMITE.busca}
               onChange={(evento) => setTexto(evento.target.value)}
               placeholder={busca}
               className={cn(campo, "w-full pr-3 pl-9")}
