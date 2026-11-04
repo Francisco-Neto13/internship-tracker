@@ -13,7 +13,7 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Dialo
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        "fixed inset-0 z-50 bg-navy-900/40 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-50 bg-navy-900/40 data-[state=closed]:animate-overlay-out data-[state=open]:animate-overlay-in",
         className,
       )}
       {...props}
@@ -22,11 +22,11 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Dialo
 }
 
 const sheetVariants = cva(
-  "fixed z-50 flex flex-col gap-4 bg-sidebar-background text-sidebar-foreground shadow-lg transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=open]:animate-in data-[state=open]:duration-300",
+  "fixed z-50 flex flex-col gap-4 bg-sidebar-background text-sidebar-foreground shadow-lg data-[state=closed]:animate-gaveta-out data-[state=open]:animate-gaveta-in",
   {
     variants: {
       side: {
-        left: "inset-y-0 left-0 h-full w-72 border-r border-sidebar-border data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+        left: "inset-y-0 left-0 h-full w-72 border-r border-sidebar-border ",
       },
     },
     defaultVariants: { side: "left" },

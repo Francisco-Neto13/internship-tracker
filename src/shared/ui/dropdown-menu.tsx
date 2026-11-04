@@ -18,9 +18,7 @@ function DropdownMenuContent({
         sideOffset={sideOffset}
         className={cn(
           "z-50 min-w-48 overflow-hidden rounded-md border border-navy-900/10 bg-white p-1 text-navy-900 shadow-md",
-          "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
-          "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
-          "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
+          "origin-[var(--radix-dropdown-menu-content-transform-origin)] data-[state=closed]:animate-menu-out data-[state=open]:animate-menu-in",
           className,
         )}
         {...props}
@@ -37,7 +35,7 @@ function DropdownMenuItem({
   return (
     <DropdownMenuPrimitive.Item
       className={cn(
-        "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none",
+        "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors duration-[var(--duracao-rapida)] select-none",
         "focus:bg-nevoa-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         variant === "destructive" && "text-status-danger-text focus:bg-status-danger-bg",
         className,
