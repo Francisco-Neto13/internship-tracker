@@ -163,6 +163,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
             <FormularioApi
               url={`/api/v1/estagios/${estagioId}/frequencias/homologacao`}
               rotuloEnviar="Homologar período"
+confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do período passam a contar na carga do estágio. Depois disso, só a coordenação consegue substituir um lançamento homologado.", confirmar: "Homologar" }}
               embutido
               sucesso="Período homologado"
               campos={[
@@ -193,7 +194,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
                     {relatorio.emAtraso && <StatusBadge tone="danger">Em atraso</StatusBadge>}
                     {relatorio.situacao === "EM_ANALISE" && (
                       <>
-                        <BotaoAcao url={`/api/v1/relatorios/${relatorio.id}/aprovacao`} rotulo="Aprovar" variante="default" tamanho="sm" sucesso="Relatório aprovado" />
+                        <BotaoAcao url={`/api/v1/relatorios/${relatorio.id}/aprovacao`} rotulo="Aprovar" confirmacao={{ titulo: "Aprovar o relatório?", descricao: "A aprovação é definitiva: o relatório não volta para análise e passa a contar para a conclusão do estágio.", confirmar: "Aprovar" }} variante="default" tamanho="sm" sucesso="Relatório aprovado" />
                         <BotaoAcao url={`/api/v1/relatorios/${relatorio.id}/devolucao`} rotulo="Devolver" tamanho="sm" pedirMotivo={{ campo: "parecer", pergunta: "Parecer da devolução" }} />
                       </>
                     )}
@@ -206,6 +207,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
                       <FormularioApi
                         url={`/api/v1/relatorios/${relatorio.id}/versoes`}
                         rotuloEnviar="Enviar relatório"
+confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica registrada e vai para a análise, sem poder ser editada. Uma nova versão só pode ser enviada se o relatório for devolvido.", confirmar: "Enviar relatório" }}
                         embutido
                         sucesso="Relatório enviado ao orientador"
                         campos={[{ nome: "conteudo", rotulo: "Atividades do período", tipo: "textarea" }]}

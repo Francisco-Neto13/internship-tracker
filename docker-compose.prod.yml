@@ -1,15 +1,93 @@
-# Production services. For now only the private file storage (D8, RNF-06): the application,
-# PostgreSQL and the HTTPS proxy join this file with the deploy (issue #63).
-#   docker compose -f docker-compose.prod.yml up -d --wait
-# Requires R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY with generated values.
+# Production on the own server (issue #63). Everything lives in the encrypted volume at
+# DIR_DADOS, secrets included, so nothing starts until scripts/servidor/cofre-abrir.sh opens it.
+#   docker compose --env-file /srv/dados/.env -f docker-compose.prod.yml up -d --wait
+# Only the proxy publishes ports. Docker bypasses ufw for published ports: never add one here.
 name: internship-tracker-prod
 
 services:
+  proxy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?}
+      STORAGE_DOMAIN: ${STORAGE_DOMAIN:?}
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${DIR_DADOS:?}/caddy:/data
+    networks:
+      default:
+        # The application reaches the storage by its public name, which the signature covers
+        aliases:
+          - ${STORAGE_DOMAIN:?}
+
+  app:
+    build: .
+    image: internship-tracker-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+    # No migration URL here: the running application never holds the owner role (RF003)
+    environment: &ambiente-app
+      DATABASE_URL: postgres://app_runtime:${APP_RUNTIME_PASSWORD:?}@postgres:5432/internship_tracker
+      DATABASE_AUTH_URL: postgres://auth_runtime:${AUTH_RUNTIME_PASSWORD:?}@postgres:5432/internship_tracker
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?}
+      BETTER_AUTH_URL: https://${APP_DOMAIN:?}
+      # The proxy overwrites this header, and the application has no other way in
+      AUTH_IP_HEADERS: x-real-ip
+      R2_ENDPOINT: https://${STORAGE_DOMAIN:?}
+      R2_FORCE_PATH_STYLE: "true"
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?}
+      R2_BUCKET: internship-tracker
+      CRON_SECRET: ${CRON_SECRET:?}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # Runs on demand: migration, bucket and first administrator
+  ferramentas:
+    image: internship-tracker-app
+    profiles: [ferramentas]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *ambiente-app
+      DATABASE_MIGRATION_URL: postgres://migrator:${MIGRATOR_PASSWORD:?}@postgres:5432/internship_tracker
+
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: postgres
+      MIGRATOR_PASSWORD: ${MIGRATOR_PASSWORD:?}
+      APP_RUNTIME_PASSWORD: ${APP_RUNTIME_PASSWORD:?}
+      AUTH_RUNTIME_PASSWORD: ${AUTH_RUNTIME_PASSWORD:?}
+    volumes:
+      - ${DIR_DADOS:?}/postgres:/var/lib/postgresql/data
+      - ./docker/postgres/init-prod:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d internship_tracker"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
   # SeaweedFS replaced Cloudflare R2, whose activation asks for a card or PayPal even in the
   # free tier (decision of 2026-11-03). Tag pinned: change it on purpose, after running
   # npm run storage:check. Data is encrypted before reaching the volume (RN-38, RNF-05).
-  # No published port: only the proxy reaches it, because the browser uploads straight to
-  # signed URLs, and the proxy must keep the Host header or the signature fails.
   storage:
     image: chrislusf/seaweedfs:4.06
     command: >-
@@ -17,15 +95,12 @@ services:
       -filer.encryptVolumeData -s3.encryptVolumeData
     restart: unless-stopped
     environment:
-      AWS_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?generate a key for the storage}
-      AWS_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?generate a secret for the storage}
+      AWS_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?}
+      AWS_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?}
     volumes:
-      - storage_data:/data
+      - ${DIR_DADOS:?}/armazenamento:/data
     healthcheck:
       test: ["CMD", "nc", "-z", "127.0.0.1", "8333"]
       interval: 5s
       timeout: 3s
       retries: 30
-
-volumes:
-  storage_data:

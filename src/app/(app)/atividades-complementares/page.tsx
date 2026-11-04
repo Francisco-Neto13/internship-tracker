@@ -162,7 +162,7 @@ export default async function AtividadesComplementaresPage() {
                     )}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <BotaoAcao url={`/api/v1/atividades-complementares/${atividade.id}/aprovacao`} rotulo="Aprovar" variante="default" tamanho="sm" sucesso="Aprovada" />
+                    <BotaoAcao url={`/api/v1/atividades-complementares/${atividade.id}/aprovacao`} rotulo="Aprovar" confirmacao={{ titulo: "Aprovar a atividade?", descricao: "A aprovação é definitiva: as horas são calculadas dentro dos limites da categoria e do curso e entram na integralização do estudante.", confirmar: "Aprovar" }} variante="default" tamanho="sm" sucesso="Aprovada" />
                     <BotaoAcao
                       url={`/api/v1/atividades-complementares/${atividade.id}/devolucao`}
                       rotulo="Devolver"

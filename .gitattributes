@@ -2,3 +2,4 @@
 *.sh text eol=lf
 # Hooks have no extension; with CRLF, Git's sh on Windows fails with "not found"
 .githooks/* text eol=lf
+docker/caddy/Caddyfile text eol=lf

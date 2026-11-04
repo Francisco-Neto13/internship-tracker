@@ -62,10 +62,35 @@ test("a user created by the administrator must replace the temporary password fi
   const novaSenha = "minha frase de acesso e2e";
   await novo.getByLabel("Senha provisória", { exact: true }).fill(data.senha_provisoria);
   await novo.getByLabel("Nova senha", { exact: true }).fill(novaSenha);
+  // Each password field shows what was typed on request, one at a time
+  await novo.getByRole("button", { name: "Exibir caracteres digitados" }).nth(1).click();
+  await expect(novo.getByLabel("Nova senha", { exact: true })).toHaveAttribute("type", "text");
+  await expect(novo.getByLabel("Senha provisória", { exact: true })).toHaveAttribute("type", "password");
   await novo.getByLabel("Confirme a nova senha").fill(novaSenha);
   await novo.getByRole("button", { name: "Salvar nova senha" }).click();
 
   await expect(novo).toHaveURL(/\/dashboard$/);
   expect((await novo.request.get("/api/v1/estudantes")).status()).toBe(200);
+
+  // A voluntary change opens over the page, keeps the URL and returns focus to the menu
+  await novo.getByTestId("usuario-autenticado").click();
+  await novo.getByRole("menuitem", { name: "Trocar senha" }).click();
+  const modal = novo.getByTestId("modal-trocar-senha");
+  await expect(modal).toBeVisible();
+  await expect(novo).toHaveURL(/\/dashboard$/);
+  await modal.getByRole("button", { name: "Cancelar" }).click();
+  await expect(modal).toHaveCount(0);
+  await expect(novo.locator('button:has([data-testid="usuario-autenticado"])')).toBeFocused();
+
+  await novo.getByTestId("usuario-autenticado").click();
+  await novo.getByRole("menuitem", { name: "Trocar senha" }).click();
+  await modal.getByLabel("Senha atual", { exact: true }).fill(novaSenha);
+  await modal.getByLabel("Nova senha", { exact: true }).fill("outra frase de acesso e2e");
+  await modal.getByLabel("Confirme a nova senha").fill("outra frase de acesso e2e");
+  await modal.getByRole("button", { name: "Salvar nova senha" }).click();
+  await expect(modal.getByText("Senha alterada")).toBeVisible();
+  await modal.getByRole("button", { name: "Fechar" }).last().click();
+  await expect(modal).toHaveCount(0);
+  await expect(novo).toHaveURL(/\/dashboard$/);
   await contexto.close();
 });

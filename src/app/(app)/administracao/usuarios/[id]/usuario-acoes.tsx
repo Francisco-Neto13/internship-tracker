@@ -5,6 +5,7 @@ import { KeyRound, UserCheck, UserX } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/shared/ui/button";
+import { Confirmacao } from "@/shared/ui/confirmacao";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { mensagemDeErro, PerfisCampo, type OpcaoPerfil, type VinculoEscolhido } from "../perfis-campo";
@@ -105,6 +106,7 @@ export function PerfisConta({
   concedentes: { id: string; nome: string }[];
 }) {
   const [perfis, setPerfis] = useState(iniciais);
+  const [confirmando, setConfirmando] = useState(false);
   const { enviar, enviando, retorno } = useEnvio(usuarioId);
   return (
     <form
@@ -112,7 +114,7 @@ export function PerfisConta({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        void enviar("/perfis", "PUT", { perfis }, "Perfis atualizados. Valem a partir da próxima requisição do usuário.");
+        setConfirmando(true);
       }}
     >
       <PerfisCampo catalogo={catalogo} cursos={cursos} concedentes={concedentes} value={perfis} onChange={setPerfis} />
@@ -120,6 +122,17 @@ export function PerfisConta({
       <Button type="submit" variant="outline" disabled={enviando} className="w-fit">
         Salvar perfis
       </Button>
+      <Confirmacao
+        aberto={confirmando}
+        aoMudarAberto={setConfirmando}
+        titulo="Salvar os perfis desta conta?"
+        descricao="O que a pessoa pode ver e fazer muda já na próxima requisição. Perfis removidos têm a vigência encerrada, e o histórico é mantido."
+        rotuloConfirmar="Salvar perfis"
+        ocupado={enviando}
+        aoConfirmar={() => {
+          void enviar("/perfis", "PUT", { perfis }, "Perfis atualizados. Valem a partir da próxima requisição do usuário.").then(() => setConfirmando(false));
+        }}
+      />
     </form>
   );
 }
@@ -148,7 +161,7 @@ function Confirmar({
   return (
     <Dialog.Root open={aberto} onOpenChange={aoMudar}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-navy-900/40" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-navy-900/40 data-[state=closed]:animate-overlay-out data-[state=open]:animate-overlay-in" />
         <Dialog.Content
           onOpenAutoFocus={() => {
             origemDoFoco.current = document.activeElement as HTMLElement | null;
@@ -157,7 +170,7 @@ function Confirmar({
             evento.preventDefault();
             origemDoFoco.current?.focus();
           }}
-          className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-navy-900/10 bg-white p-6 shadow-elevated focus:outline-none"
+          className="data-[state=closed]:animate-modal-out data-[state=open]:animate-modal-in fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-navy-900/10 bg-white p-6 shadow-elevated focus:outline-none"
         >
           <Dialog.Title className="text-base font-semibold text-navy-900">{titulo}</Dialog.Title>
           <Dialog.Description className="mt-1.5 text-sm text-navy-900/65">{descricao}</Dialog.Description>
@@ -177,7 +190,7 @@ function Confirmar({
 
 export function SegurancaConta({ usuario }: { usuario: { id: string; nome: string; situacao: "ATIVO" | "INATIVO" } }) {
   const { enviar, enviando, retorno } = useEnvio(usuario.id);
-  const [confirmando, setConfirmando] = useState<"senha" | "inativar" | null>(null);
+  const [confirmando, setConfirmando] = useState<"senha" | "inativar" | "reativar" | null>(null);
   const ativo = usuario.situacao === "ATIVO";
 
   return (
@@ -209,7 +222,7 @@ export function SegurancaConta({ usuario }: { usuario: { id: string; nome: strin
             Inativar conta
           </Button>
         ) : (
-          <Button disabled={enviando} onClick={() => void enviar("/reativacao", "POST", undefined, "Conta reativada.")} className="w-fit">
+          <Button disabled={enviando} onClick={() => setConfirmando("reativar")} className="w-fit">
             Reativar conta
           </Button>
         )}
@@ -236,6 +249,15 @@ export function SegurancaConta({ usuario }: { usuario: { id: string; nome: strin
         destrutivo
         enviando={enviando}
         aoConfirmar={() => void enviar("/inativacao", "POST", undefined, "Conta inativada e sessões encerradas.").then(() => setConfirmando(null))}
+      />
+      <Confirmar
+        aberto={confirmando === "reativar"}
+        aoMudar={(aberto) => !aberto && setConfirmando(null)}
+        titulo={`Reativar a conta de ${usuario.nome}?`}
+        descricao="A pessoa volta a entrar com a senha que já tinha e recupera o acesso dos perfis vigentes."
+        confirmar="Reativar conta"
+        enviando={enviando}
+        aoConfirmar={() => void enviar("/reativacao", "POST", undefined, "Conta reativada.").then(() => setConfirmando(null))}
       />
     </div>
   );

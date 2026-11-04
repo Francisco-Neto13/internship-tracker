@@ -22,6 +22,7 @@ export async function DeclaracoesEstudante({ identity, estudanteId, atividadesCu
           <BotaoAcao
             url={`/api/v1/estudantes/${estudanteId}/declaracoes`}
             rotulo="Emitir declaração de atividades"
+            confirmacao={{ titulo: "Emitir a declaração?", descricao: "A declaração fica registrada com um código de verificação público e não pode ser alterada.", confirmar: "Emitir" }}
             corpo={{ tipo: "INTEGRALIZACAO_ATIVIDADES" }}
             tamanho="sm"
             sucesso="Declaração emitida"

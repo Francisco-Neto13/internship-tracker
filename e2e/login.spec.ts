@@ -40,6 +40,15 @@ test("signs in, shows the profiles in force and signs out (RF002, RF003)", async
 
   await page.getByRole("button", { name: COORDENACAO.nome }).click();
   await page.getByRole("menuitem", { name: "Sair" }).click();
+  // Ending the session asks first, and cancelling keeps it
+  const confirmacao = page.getByRole("alertdialog");
+  await expect(confirmacao).toContainText("Sair da conta?");
+  await confirmacao.getByRole("button", { name: "Cancelar" }).click();
+  await expect(confirmacao).toHaveCount(0);
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await page.getByTestId("usuario-autenticado").click();
+  await page.getByRole("menuitem", { name: "Sair" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Sair da conta" }).click();
   await expect(page).toHaveURL(/\/login$/);
 
   const depois = await page.request.get("/api/v1/estudantes");

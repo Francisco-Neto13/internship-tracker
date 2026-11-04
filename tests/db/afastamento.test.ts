@@ -72,7 +72,9 @@ describe("registro (RF059, RF060)", () => {
 
   it("days inside the leave take no hours and are not expected work (RF030)", async () => {
     const mundo = await createMundoEstagio();
-    const id = await estagioAtivo(mundo);
+    // Above what the period can reach: with the usual 400 h, the expected hours stop at the total
+    // as the calendar advances and the difference shrinks (RF028)
+    const id = await estagioAtivo(mundo, { cargaTotalMinutos: 2000 * 60 });
     const antes = await getCargaHoraria(como(mundo.orientador), id);
     await registrarAfastamento(como(mundo.coordenador), id, await afastamento(mundo, id));
     await expect(registrarFrequencia(como(mundo.aluno), id, { data: "2026-09-08", duracaoMinutos: 360, observacao: null })).rejects.toMatchObject({

@@ -76,7 +76,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
               }}
             />
           ) : (
-            <BotaoAcao url={`/api/v1/concedentes/${id}/reativacao`} rotulo="Reativar" variante="default" sucesso="Concedente reativada" />
+            <BotaoAcao url={`/api/v1/concedentes/${id}/reativacao`} rotulo="Reativar" confirmacao={{ titulo: "Reativar a concedente?", descricao: "Ela volta a poder receber novos estágios. A reativação fica registrada no histórico da concedente.", confirmar: "Reativar" }} variante="default" sucesso="Concedente reativada" />
           )
         }
       />

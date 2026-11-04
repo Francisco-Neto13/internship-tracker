@@ -83,6 +83,7 @@ export default async function ParametrosPage() {
             url="/api/v1/parametros"
             metodo="PUT"
             rotuloEnviar="Registrar versão"
+confirmacao={{ titulo: "Registrar esta versão dos parâmetros?", descricao: "Parâmetros não se editam: esta versão vale a partir da data de início para todos os cursos, e a anterior fica no histórico. Para corrigir, é preciso registrar outra versão.", confirmar: "Registrar versão" }}
             embutido
             sucesso="Versão registrada"
             campos={[

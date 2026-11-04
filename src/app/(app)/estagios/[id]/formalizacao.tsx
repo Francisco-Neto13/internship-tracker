@@ -182,6 +182,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                     url={`${api}/assinaturas`}
                     rotulo={`Assinar como ${PARTE[parte] ?? parte}`}
                     corpo={{ parte }}
+                    confirmacao={{ titulo: "Assinar o TCE?", descricao: "Sua identificação, a data, a hora e o hash deste TCE ficam registrados. Se o TCE for reaberto depois, as assinaturas perdem a validade e precisam ser feitas de novo.", confirmar: "Assinar" }}
                     sucesso="Assinatura registrada"
                   />
                 ))}
@@ -253,6 +254,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                 <FormularioApi
                   url={`${api}/responsaveis`}
                   rotuloEnviar="Vincular responsável"
+confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa a ter acesso ao estágio. Se já houver um responsável nessa função, a substituição fica registrada e não apaga o anterior.", confirmar: "Vincular" }}
                   embutido
                   campos={[
                     {
@@ -387,6 +389,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                 <BotaoAcao
                   url={`${api}/plano-atividades/envio`}
                   rotulo="Enviar ao orientador"
+                  confirmacao={{ titulo: "Enviar o plano ao orientador?", descricao: "O plano vai para a aprovação do orientador. Mudanças depois disso só por devolução ou por uma nova versão.", confirmar: "Enviar" }}
                 />
               )}
               {planoAtual.situacao === "AGUARDANDO_APROVACAO" && (
@@ -394,6 +397,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                   <BotaoAcao
                     url={`${api}/plano-atividades/aprovacao`}
                     rotulo="Aprovar plano"
+                    confirmacao={{ titulo: "Aprovar o plano de atividades?", descricao: "O plano aprovado passa a valer para a ativação do estágio. Mudanças depois disso só por uma nova versão.", confirmar: "Aprovar" }}
                     variante="default"
                     sucesso="Plano aprovado"
                   />

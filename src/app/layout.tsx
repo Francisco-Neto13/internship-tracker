@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 // Identidade visual "Navy Confiança" (documentation/design/internship-tracker-identidade-visual.pdf).
@@ -8,15 +8,19 @@ import "./globals.css";
 // os tres projetos de referencia usam. Variavel: um arquivo cobre todos os pesos.
 // JetBrains Mono continua nos codigos (RF/RN/M0x, matricula, codigo de curso), onde o
 // espacamento fixo alinha coluna de tabela — nao e escolha de marca, e funcao.
-const inter = Inter({
+//
+// Arquivos no pacote, nao baixados do Google na compilacao: o build de producao nao depende de
+// servico externo, e nenhuma requisicao de fonte sai do navegador de quem usa.
+const inter = localFont({
   variable: "--font-inter",
-  subsets: ["latin"],
+  src: "../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
+  weight: "100 900",
 });
 
-const jetBrainsMono = JetBrains_Mono({
+const jetBrainsMono = localFont({
   variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  src: "../../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2",
+  weight: "100 800",
 });
 
 export const metadata: Metadata = {
