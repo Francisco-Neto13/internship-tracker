@@ -160,7 +160,8 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
                 <summary className="cursor-pointer text-sm font-medium text-azul-500 hover:text-navy-700">Propor prorrogação</summary>
                 <div className="mt-4">
                   <FormularioApi
-                    url={`${api}/aditivos`}
+                    validacao="aditivo"
+                  url={`${api}/aditivos`}
                     rotuloEnviar="Propor prorrogação"
 confirmacao={{ titulo: "Propor a prorrogação?", descricao: "O aditivo fica registrado e segue para assinatura das partes. Ele não apaga o termo original.", confirmar: "Propor prorrogação" }}
                     extras={{ tipo: "PRORROGACAO" }}

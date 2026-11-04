@@ -1,5 +1,7 @@
 "use client";
 
+import { cadastroAtividadeBodySchema } from "@/modules/atividades/schemas/atividade";
+import { ErroCampo, useValidacao } from "@/shared/ui/use-validacao";
 import { LIMITE } from "@/lib/campos";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -16,10 +18,24 @@ export function NovaAtividade({ estudanteId, categorias }: { estudanteId: string
   const [documento, setDocumento] = useState<{ id: string; nome_original: string } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
+  const { erros, aoInteragir, conferir } = useValidacao(cadastroAtividadeBodySchema, (formulario) => {
+    const dados = new FormData(formulario);
+    return {
+      categoria_id: dados.get("categoria_id"),
+      descricao: dados.get("descricao"),
+      instituicao_promotora: dados.get("instituicao_promotora"),
+      data_inicio: dados.get("data_inicio"),
+      data_fim: dados.get("data_fim"),
+      horas_declaradas: Number(dados.get("horas_declaradas")),
+    };
+  });
+
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErro(null);
+    const camposOk = conferir(event.currentTarget);
     if (!documento) return setErro("Envie o comprovante (certificado ou declaração).");
+    if (!camposOk) return;
     const dados = new FormData(event.currentTarget);
     const response = await fetch("/api/v1/atividades-complementares", {
       method: "POST",
@@ -41,7 +57,7 @@ export function NovaAtividade({ estudanteId, categorias }: { estudanteId: string
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2" noValidate data-testid="nova-atividade">
+    <form onSubmit={onSubmit} {...aoInteragir} className="grid grid-cols-1 gap-4 sm:grid-cols-2" noValidate data-testid="nova-atividade">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="atividade-categoria">Categoria</Label>
         <select id="atividade-categoria" name="categoria_id" className={selectClass} required>
@@ -54,23 +70,28 @@ export function NovaAtividade({ estudanteId, categorias }: { estudanteId: string
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="atividade-horas">Carga horária (h)</Label>
-        <Input id="atividade-horas" name="horas_declaradas" type="number" step="0.25" min="0.25" />
+        <Input id="atividade-horas" name="horas_declaradas" type="number" step="0.25" min="0.25" aria-invalid={Boolean(erros.horas_declaradas)} aria-describedby="atividade-horas-erro" />
+        <ErroCampo id="atividade-horas-erro" mensagem={erros.horas_declaradas} />
       </div>
       <div className="flex flex-col gap-1.5 sm:col-span-2">
         <Label htmlFor="atividade-descricao">Descrição</Label>
-        <Input id="atividade-descricao" name="descricao" maxLength={LIMITE.descricaoAtividade} />
+        <Input id="atividade-descricao" name="descricao" maxLength={LIMITE.descricaoAtividade} aria-invalid={Boolean(erros.descricao)} aria-describedby="atividade-descricao-erro" />
+        <ErroCampo id="atividade-descricao-erro" mensagem={erros.descricao} />
       </div>
       <div className="flex flex-col gap-1.5 sm:col-span-2">
         <Label htmlFor="atividade-instituicao">Instituição promotora</Label>
-        <Input id="atividade-instituicao" name="instituicao_promotora" maxLength={LIMITE.instituicao} />
+        <Input id="atividade-instituicao" name="instituicao_promotora" maxLength={LIMITE.instituicao} aria-invalid={Boolean(erros.instituicao_promotora)} aria-describedby="atividade-instituicao-erro" />
+        <ErroCampo id="atividade-instituicao-erro" mensagem={erros.instituicao_promotora} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="atividade-inicio">Início</Label>
-        <Input id="atividade-inicio" name="data_inicio" type="date" />
+        <Input id="atividade-inicio" name="data_inicio" type="date" aria-invalid={Boolean(erros.data_inicio)} aria-describedby="atividade-inicio-erro" />
+        <ErroCampo id="atividade-inicio-erro" mensagem={erros.data_inicio} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="atividade-fim">Fim</Label>
-        <Input id="atividade-fim" name="data_fim" type="date" />
+        <Input id="atividade-fim" name="data_fim" type="date" aria-invalid={Boolean(erros.data_fim)} aria-describedby="atividade-fim-erro" />
+        <ErroCampo id="atividade-fim-erro" mensagem={erros.data_fim} />
       </div>
       <div className="sm:col-span-2">
         <EnvioDocumento

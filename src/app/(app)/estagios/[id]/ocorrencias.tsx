@@ -112,7 +112,8 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
           </Painel>
           <Painel titulo="Rescindir estágio" descricao="Encerramento antecipado a pedido de uma das partes; as horas até a data são consolidadas (RF063, RF064).">
             <FormularioApi
-              url={`${api}/rescisao`}
+              validacao="rescisao"
+                  url={`${api}/rescisao`}
               rotuloEnviar="Registrar rescisão"
 confirmacao={{ titulo: "Rescindir o estágio?", descricao: "A rescisão é definitiva: o estágio não volta a ficar ativo, os lançamentos depois da data são cancelados, as horas são consolidadas até ela e orientador e supervisor perdem o acesso.", confirmar: "Rescindir estágio", destrutiva: true }}
               testId="rescisao"

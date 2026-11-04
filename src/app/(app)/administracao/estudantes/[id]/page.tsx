@@ -300,7 +300,8 @@ async function DadosAcademicos({ id, estudante, identity }: { id: string; estuda
       descricao="A situação oferece só as transições permitidas: trancado volta a matriculado; formado e desligado são finais. Toda alteração fica na auditoria."
     >
       <FormularioApi
-        url={`/api/v1/estudantes/${id}`}
+        validacao="estudanteEdicao"
+                  url={`/api/v1/estudantes/${id}`}
         metodo="PATCH"
         rotuloEnviar="Salvar alterações"
 confirmacao={{ titulo: "Salvar as alterações do estudante?", descricao: "Se a situação acadêmica mudar, a transição fica registrada na auditoria. As situações Formado e Desligado são finais e não podem ser revertidas.", confirmar: "Salvar alterações" }}

@@ -68,7 +68,8 @@ export default async function CursoPage({ params }: { params: Promise<{ id: stri
         <div className="flex flex-col gap-4">
           <Painel titulo="Dados e exigências" descricao="Mudar uma carga reapura a integralização de todos os estudantes do curso, na mesma hora.">
             <FormularioApi
-              url={`/api/v1/cursos/${id}`}
+              validacao="cursoEdicao"
+                  url={`/api/v1/cursos/${id}`}
               metodo="PATCH"
               rotuloEnviar="Salvar curso"
 confirmacao={{ titulo: "Salvar as alterações do curso?", descricao: "Mudar a carga exigida recalcula a integralização de todos os estudantes do curso.", confirmar: "Salvar curso" }}
@@ -105,7 +106,8 @@ confirmacao={{ titulo: "Salvar as alterações do curso?", descricao: "Mudar a c
                 <summary className="cursor-pointer text-sm font-medium text-azul-500 hover:text-navy-700">Definir limite de uma categoria</summary>
                 <div className="mt-4">
                   <FormularioApi
-                    url={`/api/v1/cursos/${id}/exigencias`}
+                    validacao="exigenciaCurso"
+                  url={`/api/v1/cursos/${id}/exigencias`}
                     metodo="PUT"
                     envolverEmLista="exigencias"
                     rotuloEnviar="Definir limite"

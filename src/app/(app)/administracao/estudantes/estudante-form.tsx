@@ -107,6 +107,7 @@ export function EstudanteForm({ cursos }: { cursos: { id: string; nome: string }
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<EstudanteInput, unknown, EstudanteOutput>({
+    mode: "onTouched",
     resolver: zodResolver(estudanteSchema),
     defaultValues: { curso_id: cursos.length === 1 ? cursos[0].id : "" },
   });

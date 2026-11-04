@@ -31,7 +31,7 @@ export function CursoForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<CursoInput, unknown, CursoOutput>({ resolver: zodResolver(cursoSchema) });
+  } = useForm<CursoInput, unknown, CursoOutput>({ mode: "onTouched", resolver: zodResolver(cursoSchema) });
 
   async function onSubmit(values: CursoOutput) {
     setErro(null);
