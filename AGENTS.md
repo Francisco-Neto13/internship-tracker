@@ -513,7 +513,9 @@ A chave do host fica fixada no secret `VPS_KNOWN_HOSTS`.
 | restic e rclone | A cada hora, envia cópias do banco, arquivos e `.env`, criptografados no servidor | Google Drive, fora da Contabo (`backup-configurar.sh`) |
 | Auto Backup da Contabo | Imagem diária do servidor inteiro, com até 10 cópias. Não volta a horário exato, e a restauração leva o servidor todo | Painel da Contabo |
 
-Provar que abre: `sh scripts/servidor/backup-testar-restauracao.sh ["<horário>"]`, que restaura em contêineres descartáveis, com o sistema no ar. Rodar depois de mudança no banco ou no armazenamento.
+Provar que abre: `sh scripts/servidor/backup-testar-restauracao.sh ["<horário>"]`, que restaura em contêineres descartáveis, com o sistema no ar. Rodar depois de mudança no banco ou no armazenamento. Sem documentos no banco, o script exige `ARQUIVO_MARCADOR` e `SHA_MARCADOR`, porque resultado vazio não comprova os arquivos.
+
+Teste feito em 2026-11-04, depois da implantação (o RNF-12 pedia antes), baixando do Drive: o banco voltou ao horário pedido, sem a linha posterior, e um arquivo de teste voltou igual pelo SHA-256, em 98 s. O banco de produção tinha 1 conta e nenhum documento, então o volume testado foi pequeno. O acesso ao Drive usa a cota do rclone, dividida com outros usuários: a primeira configuração e um envio tiveram recusas por cota; se elas se repetirem, criar uma chave própria no Google Cloud. A restauração real, por cima do diretório de produção, não foi executada.
 
 A senha do restic fica em `/srv/dados/.backup/senha` e em um cofre de senhas da equipe: sem ela, o backup não abre. Não há aviso automático de falha; confira `/srv/dados/.backup/ultimo-envio` e `systemctl status internship-backup`.
 

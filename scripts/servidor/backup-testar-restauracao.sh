@@ -7,6 +7,7 @@
 # Without a moment, it restores up to the latest change in the backup. Extra checks:
 #   CONSULTA_EXTRA  query printed from the restored server, e.g. to look at a marker
 #   BANCO_EXTRA     database for that query (default: internship_tracker)
+#   ARQUIVO_MARCADOR, SHA_MARCADOR  object in the bucket and its SHA-256, compared after the restore
 set -eu
 
 MOMENTO=${1:-}
@@ -107,11 +108,23 @@ done < "$LISTA"
 echo "Documentos conferidos pelo SHA-256: $CERTOS certos, $ERRADOS errados"
 
 if [ -n "${ARQUIVO_MARCADOR:-}" ]; then
-  echo "SHA-256 do marcador: $(docker exec "$ARQUIVOS" sh -c "wget -qO- 'http://armazenamento:8888/buckets/internship-tracker/$ARQUIVO_MARCADOR' | sha256sum | cut -d' ' -f1")"
+  LIDO=$(docker exec "$ARQUIVOS" sh -c "wget -qO- 'http://armazenamento:8888/buckets/internship-tracker/$ARQUIVO_MARCADOR' | sha256sum | cut -d' ' -f1" || true)
+  if [ "$LIDO" = "${SHA_MARCADOR:-}" ]; then
+    CERTOS=$((CERTOS + 1))
+    echo "Marcador igual ao original."
+  else
+    ERRADOS=$((ERRADOS + 1))
+    echo "Marcador diferente do original: $LIDO" >&2
+  fi
 fi
 
 if [ "$ERRADOS" -gt 0 ]; then
-  echo "FALHA: há documentos que não voltaram iguais." >&2
+  echo "FALHA: há arquivos que não voltaram iguais." >&2
+  exit 1
+fi
+# With nothing compared, the files were not proven: an empty result is not a success
+if [ "$CERTOS" -eq 0 ]; then
+  echo "FALHA: nenhum arquivo foi conferido. Sem documentos no banco, informe ARQUIVO_MARCADOR e SHA_MARCADOR." >&2
   exit 1
 fi
 echo "Restauração conferida. A cópia temporária será apagada."
