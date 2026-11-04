@@ -87,3 +87,33 @@ test("the password screen states its limits and refuses more than the ceiling be
   });
   expect(resposta.status()).toBe(401);
 });
+
+test("a field says what is wrong when the person leaves it, before saving", async ({ page }) => {
+  await entrar(page, "coordenacao.software@internship.local", 226);
+  await page.goto("/administracao/concedentes");
+  await page.getByRole("button", { name: /concedente/i }).first().click();
+  let enviou = false;
+  page.on("request", (pedido) => {
+    if (pedido.method() === "POST" && pedido.url().endsWith("/api/v1/concedentes")) enviou = true;
+  });
+
+  const cnpj = page.getByLabel("CNPJ");
+  await cnpj.pressSequentially("AAAAAAAAAAAA");
+  // Nothing while the person is still typing
+  await expect(page.getByText("CNPJ inválido")).toHaveCount(0);
+  await cnpj.blur();
+  await expect(page.getByText("CNPJ inválido")).toBeVisible();
+  await expect(cnpj).toHaveAttribute("aria-invalid", "true");
+
+  // It goes away as soon as it is fixed
+  await cnpj.fill("");
+  await cnpj.pressSequentially("11222333000181");
+  await expect(page.getByText("CNPJ inválido")).toHaveCount(0);
+  await expect(cnpj).toHaveAttribute("aria-invalid", "false");
+
+  // Saving checks everything, sends nothing and goes to the first problem
+  await page.getByRole("button", { name: "Cadastrar concedente" }).click();
+  await expect(page.getByLabel("Razão social")).toBeFocused();
+  await expect(page.getByText("Preencha este campo").first()).toBeVisible();
+  expect(enviou).toBe(false);
+});

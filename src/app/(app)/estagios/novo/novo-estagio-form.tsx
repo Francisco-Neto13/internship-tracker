@@ -1,5 +1,7 @@
 "use client";
 
+import { createEstagioBodySchema } from "@/modules/estagios/schemas/estagio";
+import { ErroCampo, useValidacao } from "@/shared/ui/use-validacao";
 import { AreaTexto } from "@/shared/ui/area-texto";
 import { LIMITE } from "@/lib/campos";
 import { useRouter } from "next/navigation";
@@ -46,10 +48,8 @@ export function NovoEstagioForm({ estudantes, convenios }: { estudantes: Opcao[]
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  async function onSubmit(evento: React.FormEvent<HTMLFormElement>) {
-    evento.preventDefault();
-    setErro(null);
-    const dados = new FormData(evento.currentTarget);
+  function montarCorpo(formulario: HTMLFormElement) {
+    const dados = new FormData(formulario);
     const texto = (chave: string) => String(dados.get(chave) ?? "").trim();
     const numero = (chave: string) => (texto(chave) === "" ? undefined : Number(texto(chave).replace(",", ".")));
     const convenio = convenios.find((item) => item.id === texto("convenio_id"));
@@ -68,6 +68,16 @@ export function NovoEstagioForm({ estudantes, convenios }: { estudantes: Opcao[]
       seguro_exigido: dados.get("seguro_exigido") === "on",
       condicoes_pactuadas: texto("condicoes_pactuadas"),
     };
+    return corpo;
+  }
+
+  const { erros, aoInteragir, conferir } = useValidacao(createEstagioBodySchema, montarCorpo);
+
+  async function onSubmit(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    setErro(null);
+    if (!conferir(evento.currentTarget)) return;
+    const corpo = montarCorpo(evento.currentTarget);
     setEnviando(true);
     try {
       const resposta = await fetch("/api/v1/estagios", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) });
@@ -80,7 +90,7 @@ export function NovoEstagioForm({ estudantes, convenios }: { estudantes: Opcao[]
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="surface-card flex flex-col gap-5 p-5 md:p-6">
+    <form onSubmit={onSubmit} {...aoInteragir} noValidate className="surface-card flex flex-col gap-5 p-5 md:p-6">
       <Secao titulo="Partes" descricao="Estudante matriculado e o convênio vigente com a concedente.">
         <Campo id="novo-estudante" rotulo="Estudante" largo>
           <select id="novo-estudante" name="estudante_id" className={selectClass} defaultValue="" required>
@@ -127,19 +137,24 @@ export function NovoEstagioForm({ estudantes, convenios }: { estudantes: Opcao[]
 
       <Secao titulo="Período e jornada" descricao="Até 6 h por dia e 30 h por semana (Lei 11.788/2008, art. 10), no máximo 2 anos na mesma concedente.">
         <Campo id="novo-inicio" rotulo="Início">
-          <Input id="novo-inicio" name="data_inicio" type="date" required />
+          <Input id="novo-inicio" name="data_inicio" type="date" required aria-invalid={Boolean(erros.data_inicio)} aria-describedby="novo-inicio-erro" />
+          <ErroCampo id="novo-inicio-erro" mensagem={erros.data_inicio} />
         </Campo>
         <Campo id="novo-fim" rotulo="Término pactuado">
-          <Input id="novo-fim" name="data_fim_pactuada" type="date" required />
+          <Input id="novo-fim" name="data_fim_pactuada" type="date" required aria-invalid={Boolean(erros.data_fim_pactuada)} aria-describedby="novo-fim-erro" />
+          <ErroCampo id="novo-fim-erro" mensagem={erros.data_fim_pactuada} />
         </Campo>
         <Campo id="novo-diaria" rotulo="Jornada diária (h)">
-          <Input id="novo-diaria" name="carga_horas_diaria" type="number" step="0.25" min="0" inputMode="decimal" required />
+          <Input id="novo-diaria" name="carga_horas_diaria" type="number" step="0.25" min="0" inputMode="decimal" required aria-invalid={Boolean(erros.carga_horas_diaria)} aria-describedby="novo-diaria-erro" />
+          <ErroCampo id="novo-diaria-erro" mensagem={erros.carga_horas_diaria} />
         </Campo>
         <Campo id="novo-semanal" rotulo="Jornada semanal (h)">
-          <Input id="novo-semanal" name="carga_horas_semanal" type="number" step="0.25" min="0" inputMode="decimal" required />
+          <Input id="novo-semanal" name="carga_horas_semanal" type="number" step="0.25" min="0" inputMode="decimal" required aria-invalid={Boolean(erros.carga_horas_semanal)} aria-describedby="novo-semanal-erro" />
+          <ErroCampo id="novo-semanal-erro" mensagem={erros.carga_horas_semanal} />
         </Campo>
         <Campo id="novo-total" rotulo="Carga horária total (h)">
-          <Input id="novo-total" name="carga_horas_total" type="number" step="0.25" min="0" inputMode="decimal" required />
+          <Input id="novo-total" name="carga_horas_total" type="number" step="0.25" min="0" inputMode="decimal" required aria-invalid={Boolean(erros.carga_horas_total)} aria-describedby="novo-total-erro" />
+          <ErroCampo id="novo-total-erro" mensagem={erros.carga_horas_total} />
         </Campo>
       </Secao>
 
@@ -173,7 +188,10 @@ export function NovoEstagioForm({ estudantes, convenios }: { estudantes: Opcao[]
             rows={5}
             required
             maxLength={LIMITE.condicoes}
+            aria-invalid={Boolean(erros.condicoes_pactuadas)}
+            aria-describedby="novo-condicoes-erro"
           />
+          <ErroCampo id="novo-condicoes-erro" mensagem={erros.condicoes_pactuadas} />
         </div>
       </Secao>
 

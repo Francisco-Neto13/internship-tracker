@@ -26,7 +26,7 @@ export function LoginForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginValues>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginValues>({ mode: "onTouched", resolver: zodResolver(loginSchema) });
 
   async function onSubmit(values: LoginValues) {
     setErro(null);

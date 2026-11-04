@@ -1,5 +1,7 @@
 "use client";
 
+import { createConvenioBodySchema } from "@/modules/concedentes/schemas/convenio";
+import { ErroCampo, useValidacao } from "@/shared/ui/use-validacao";
 import { LIMITE } from "@/lib/campos";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,10 +17,17 @@ export function NovoConvenio({ concedenteId }: { concedenteId: string }) {
   const [documento, setDocumento] = useState<{ id: string; nome_original: string } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
+  const { erros, aoInteragir, conferir } = useValidacao(createConvenioBodySchema, (formulario) => {
+    const dados = new FormData(formulario);
+    return { numero: dados.get("numero"), vigencia_inicio: dados.get("vigencia_inicio"), vigencia_fim: dados.get("vigencia_fim") };
+  });
+
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErro(null);
+    const camposOk = conferir(event.currentTarget);
     if (!documento) return setErro("Envie o PDF do convênio assinado.");
+    if (!camposOk) return;
     const dados = new FormData(event.currentTarget);
     const response = await fetch(`/api/v1/concedentes/${concedenteId}/convenios`, {
       method: "POST",
@@ -35,18 +44,21 @@ export function NovoConvenio({ concedenteId }: { concedenteId: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-3" noValidate>
+    <form onSubmit={onSubmit} {...aoInteragir} className="grid grid-cols-1 gap-4 sm:grid-cols-3" noValidate>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="convenio-numero">Número</Label>
-        <Input id="convenio-numero" name="numero" maxLength={LIMITE.numeroConvenio} />
+        <Input id="convenio-numero" name="numero" maxLength={LIMITE.numeroConvenio} aria-invalid={Boolean(erros.numero)} aria-describedby="convenio-numero-erro" />
+        <ErroCampo id="convenio-numero-erro" mensagem={erros.numero} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="convenio-inicio">Início da vigência</Label>
-        <Input id="convenio-inicio" name="vigencia_inicio" type="date" />
+        <Input id="convenio-inicio" name="vigencia_inicio" type="date" aria-invalid={Boolean(erros.vigencia_inicio)} aria-describedby="convenio-inicio-erro" />
+        <ErroCampo id="convenio-inicio-erro" mensagem={erros.vigencia_inicio} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="convenio-fim">Fim da vigência</Label>
-        <Input id="convenio-fim" name="vigencia_fim" type="date" />
+        <Input id="convenio-fim" name="vigencia_fim" type="date" aria-invalid={Boolean(erros.vigencia_fim)} aria-describedby="convenio-fim-erro" />
+        <ErroCampo id="convenio-fim-erro" mensagem={erros.vigencia_fim} />
       </div>
       <div className="sm:col-span-3">
         <EnvioDocumento tipo="CONVENIO" escopo={{ concedente_id: concedenteId }} rotulo="Convênio assinado (PDF, JPEG ou PNG, até 10 MiB)" aoConcluir={setDocumento} />
