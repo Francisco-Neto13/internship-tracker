@@ -1,3 +1,5 @@
+import { dataSchema } from "@/lib/campos";
+import { LIMITE } from "@/lib/campos";
 import { z } from "zod";
 import { horasParaMinutos, horasSchema } from "@/lib/horas";
 import type { DiaInformado } from "../services/frequencia-service";
@@ -17,7 +19,7 @@ const diaSchema = z
     hora_saida: horario.optional(),
     intervalo_horas: horasSchema({ min: 0, max: 24 }).optional(),
     horas: horasSchema({ min: 1 / 60, max: 24 }).optional(),
-    observacao: texto(1000).nullish(),
+    observacao: texto(LIMITE.observacaoFrequencia).nullish(),
   })
   .refine((dia) => (dia.hora_entrada === undefined) === (dia.hora_saida === undefined), {
     message: "Informe entrada e saída juntas",
@@ -45,24 +47,24 @@ function paraDia(body: Dia): Omit<DiaInformado, "data"> {
   };
 }
 
-export const frequenciaBodySchema = diaSchema.and(z.object({ data: z.iso.date() })).transform((body) => ({ ...paraDia(body), data: body.data }));
+export const frequenciaBodySchema = diaSchema.and(z.object({ data: dataSchema })).transform((body) => ({ ...paraDia(body), data: body.data }));
 
 export const ajusteBodySchema = diaSchema
   .and(z.object({ justificativa: texto(1000) }))
   .transform((body) => ({ ...paraDia(body), justificativa: body.justificativa }));
 
-export const cancelamentoBodySchema = z.object({ justificativa: texto(1000) });
+export const cancelamentoBodySchema = z.object({ justificativa: texto(LIMITE.motivoCancelamento) });
 
 export const frequenciasQuerySchema = z
   .object({
-    data_inicio: z.iso.date().optional(),
-    data_fim: z.iso.date().optional(),
+    data_inicio: dataSchema.optional(),
+    data_fim: dataSchema.optional(),
     situacao: z.enum(["REGISTRADO", "SINALIZADO", "HOMOLOGADO", "SUBSTITUIDO", "CANCELADO"]).optional(),
   })
   .transform((query) => ({ dataInicio: query.data_inicio, dataFim: query.data_fim, situacao: query.situacao }));
 
 export const homologacaoBodySchema = z
-  .object({ periodo_inicio: z.iso.date(), periodo_fim: z.iso.date(), observacao: texto(2000).nullish() })
+  .object({ periodo_inicio: dataSchema, periodo_fim: dataSchema, observacao: texto(LIMITE.parecerHomologacao).nullish() })
   .transform((body) => ({ periodoInicio: body.periodo_inicio, periodoFim: body.periodo_fim, observacao: body.observacao ?? null }));
 
 export const analiseDivergenciaBodySchema = z.object({ parecer: texto(4000) });

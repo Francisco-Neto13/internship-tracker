@@ -1,6 +1,7 @@
+import { LIMITE, SENHA_MAXIMO, SENHA_MINIMO } from "./campos";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { APIError } from "better-auth/api";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { eq } from "drizzle-orm";
 import { getAuthDatabase } from "@/db/client";
@@ -111,14 +112,25 @@ function createAuth() {
       modelName: "limiteRequisicao",
       fields: { key: "chave", count: "contador", lastRequest: "ultimaRequisicao" },
     },
+    hooks: {
+      // Issue #97: sign-in has no length rule of its own, and the password goes to Argon2. Nothing
+      // this long can be right, so it gets the answer of a wrong password without hashing anything.
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== "/sign-in/email") return;
+        const { email, password } = (ctx.body ?? {}) as { email?: unknown; password?: unknown };
+        if (String(email ?? "").length > LIMITE.email || String(password ?? "").length > SENHA_MAXIMO) {
+          throw new APIError("UNAUTHORIZED", { code: "INVALID_EMAIL_OR_PASSWORD", message: "Invalid email or password" });
+        }
+      }),
+    },
     emailAndPassword: {
       enabled: true,
       // RF001: accounts are created by the administrator, never by self sign-up
       disableSignUp: true,
       // NIST SP 800-63B-4, 3.1.1.2: at least 15 characters when the password is the only
       // factor. Sign-in does not check the length, so older 12-character passwords still work.
-      minPasswordLength: 15,
-      maxPasswordLength: 128,
+      minPasswordLength: SENHA_MINIMO,
+      maxPasswordLength: SENHA_MAXIMO,
       password: { hash: hashPassword, verify: verifyPassword },
       revokeSessionsOnPasswordReset: true,
     },

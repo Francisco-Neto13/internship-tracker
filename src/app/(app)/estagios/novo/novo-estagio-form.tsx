@@ -1,5 +1,7 @@
 "use client";
 
+import { AreaTexto } from "@/shared/ui/area-texto";
+import { LIMITE } from "@/lib/campos";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
@@ -165,12 +167,12 @@ export function NovoEstagioForm({ estudantes, convenios }: { estudantes: Opcao[]
           <label htmlFor="novo-condicoes" className="sr-only">
             Condições pactuadas
           </label>
-          <textarea
+          <AreaTexto
             id="novo-condicoes"
             name="condicoes_pactuadas"
             rows={5}
             required
-            className="w-full rounded-md border border-navy-900/20 p-3 text-sm text-navy-900 focus-visible:border-azul-500 focus-visible:ring-2 focus-visible:ring-azul-500/25 focus-visible:outline-none"
+            maxLength={LIMITE.condicoes}
           />
         </div>
       </Secao>

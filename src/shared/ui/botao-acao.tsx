@@ -1,5 +1,6 @@
 "use client";
 
+import { AreaTexto } from "./area-texto";
 import * as Dialog from "@radix-ui/react-dialog";
 import { CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -26,7 +27,7 @@ export function BotaoAcao({
   rotulo: string;
   corpo?: Record<string, unknown>;
   /** Campo e pergunta, para transições que exigem justificativa. */
-  pedirMotivo?: { campo: string; pergunta: string };
+  pedirMotivo?: { campo: string; pergunta: string; max: number };
   /** Explica a consequência antes de agir (ações que não se desfazem). */
   confirmacao?: { titulo: string; descricao: string; confirmar?: string };
   variante?: "default" | "outline" | "destructive" | "ghost";
@@ -120,13 +121,12 @@ export function BotaoAcao({
                   <label htmlFor={idMotivo} className="text-sm font-medium text-navy-900">
                     {confirmacao ? pedirMotivo.pergunta : "Motivo"}
                   </label>
-                  <textarea
+                  <AreaTexto
                     id={idMotivo}
                     value={motivo}
                     onChange={(evento) => setMotivo(evento.target.value)}
                     rows={3}
-                    maxLength={2000}
-                    className="w-full rounded-md border border-navy-900/20 px-3 py-2 text-sm text-navy-900 focus-visible:border-azul-500 focus-visible:ring-2 focus-visible:ring-azul-500/25 focus-visible:outline-none"
+                    maxLength={pedirMotivo.max}
                   />
                 </div>
               )}

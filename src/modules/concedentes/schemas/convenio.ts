@@ -1,15 +1,17 @@
+import { dataSchema } from "@/lib/campos";
+import { LIMITE } from "@/lib/campos";
 import { z } from "zod";
 
 // Contracts of /api/v1/convenios and /concedentes/{id}/convenios (RF009 to RF012)
 
 const periodo = {
-  vigencia_inicio: z.iso.date(),
-  vigencia_fim: z.iso.date(),
+  vigencia_inicio: dataSchema,
+  vigencia_fim: dataSchema,
   documento_id: z.uuid(),
 };
 
 export const createConvenioBodySchema = z.object({
-  numero: z.string().trim().min(1).max(50),
+  numero: z.string().trim().min(1).max(LIMITE.numeroConvenio),
   observacao: z.string().trim().max(2000).nullish(),
   ...periodo,
 });

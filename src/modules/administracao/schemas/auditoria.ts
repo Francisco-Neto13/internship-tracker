@@ -1,3 +1,4 @@
+import { dataSchema } from "@/lib/campos";
 import { z } from "zod";
 
 // Query contract of GET /api/v1/auditoria and /auditoria/exportacao (RF066). Dates are
@@ -9,8 +10,8 @@ const filtros = z
     registro_id: z.string().trim().min(1).max(100).optional(),
     usuario_id: z.uuid().optional(),
     operacao: z.enum(["INSERT", "UPDATE", "DELETE", "LEITURA"]).optional(),
-    de: z.iso.date().optional(),
-    ate: z.iso.date().optional(),
+    de: dataSchema.optional(),
+    ate: dataSchema.optional(),
   })
   .refine((query) => !query.de || !query.ate || query.de <= query.ate, {
     path: ["ate"],

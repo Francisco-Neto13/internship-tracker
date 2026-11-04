@@ -1,13 +1,14 @@
+import { dataSchema } from "@/lib/campos";
 import { z } from "zod";
 import { horasParaMinutos, horasSchema } from "@/lib/horas";
 
 // Contracts of /api/v1/parametros (RF006), /categorias-atividade (RF048) and
 // /cursos/{id}/exigencias (RF004). Hours in the API, minutes in the services.
 
-export const dataQuerySchema = z.object({ data: z.iso.date().optional() });
+export const dataQuerySchema = z.object({ data: dataSchema.optional() });
 
 export const definirParametrosBodySchema = z.object({
-  vigencia_inicio: z.iso.date(),
+  vigencia_inicio: dataSchema,
   limite_horas_diarias_obrigatorio: horasSchema({ min: 1 / 60, max: 24 }),
   limite_horas_diarias_nao_obrigatorio: horasSchema({ min: 1 / 60, max: 24 }),
   limite_horas_semanais: horasSchema({ min: 1 / 60, max: 168 }),

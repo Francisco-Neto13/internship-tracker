@@ -1,3 +1,4 @@
+import { LIMITE } from "@/lib/campos";
 import { ExternalLink, KeyRound } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -308,7 +309,7 @@ confirmacao={{ titulo: "Salvar as alterações do estudante?", descricao: "Se a 
         embutido
         campos={[
           { nome: "curso_id", rotulo: "Curso", tipo: "select", obrigatorio: true, valorInicial: estudante.cursoId, opcoes: cursos.map((curso) => ({ valor: curso.id, rotulo: curso.nome })) },
-          { nome: "matricula", rotulo: "Matrícula", valorInicial: estudante.matricula },
+          { nome: "matricula", max: LIMITE.matricula, rotulo: "Matrícula", valorInicial: estudante.matricula },
           { nome: "periodo", rotulo: "Período", tipo: "number", valorInicial: estudante.periodo },
           {
             nome: "situacao_academica",
