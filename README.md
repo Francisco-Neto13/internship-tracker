@@ -74,7 +74,7 @@ Pontos que antes admitiam mais de uma interpretação, definidos com o professor
 | Recurso contra recusa de atividade complementar | Não existe. O estudante cadastra uma nova atividade |
 | Divergência relevante de carga horária | Percentual parametrizável, padrão de 10% |
 | Hospedagem em território nacional | Sem exigência |
-| Situação acadêmica (RF005) | Transições restritas: matriculado pode trancar, formar ou ser desligado; trancado volta a matriculado ou é desligado; formado e desligado são finais. Pendente de validação com o orientador |
+| Situação acadêmica (RF005) | Transições restritas: matriculado pode trancar, formar ou ser desligado; trancado volta a matriculado ou é desligado; formado e desligado são finais |
 | Recuperação de senha (RF002) | O administrador emite senha provisória de 72 h, entregue fora do sistema, com troca obrigatória no primeiro acesso. Sem e-mail |
 
 ## Requisitos de qualidade
