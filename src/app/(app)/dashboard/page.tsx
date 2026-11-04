@@ -94,11 +94,11 @@ async function BlocoCoordenacao({ identity }: { identity: Parameters<typeof dado
             <div className="grid grid-cols-2 gap-3">
               <Link href="/administracao/estudantes?situacao=MATRICULADO" className="rounded-lg bg-nevoa-50 p-3 transition-colors hover:bg-nevoa-100">
                 <p className="text-xs text-navy-900/65">Matriculados</p>
-                <p className="text-xl font-semibold text-navy-900 tabular-nums">{dados.estudantesMatriculados?.toLocaleString("pt-BR") ?? "—"}</p>
+                <p className="text-xl font-semibold text-navy-900 tabular-nums">{dados.estudantesMatriculados?.toLocaleString("pt-BR") ?? "Sem dado"}</p>
               </Link>
               <Link href="/administracao/relatorios-gerenciais?tipo=pendencias-integralizacao" className="rounded-lg bg-nevoa-50 p-3 transition-colors hover:bg-nevoa-100">
                 <p className="text-xs text-navy-900/65">Com integralização pendente</p>
-                <p className="text-xl font-semibold text-navy-900 tabular-nums">{dados.pendenciasIntegralizacao?.toLocaleString("pt-BR") ?? "—"}</p>
+                <p className="text-xl font-semibold text-navy-900 tabular-nums">{dados.pendenciasIntegralizacao?.toLocaleString("pt-BR") ?? "Sem dado"}</p>
               </Link>
             </div>
             <div className="border-t border-navy-900/[0.07] pt-4">

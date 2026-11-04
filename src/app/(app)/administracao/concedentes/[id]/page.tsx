@@ -167,7 +167,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
                       <span className="text-xs text-navy-900/65">{formatarDataHora(item.criadoEm)}</span>
                     </span>
                     <span className="text-navy-900/75">
-                      {item.decididoPorNome ?? "—"}
+                      {item.decididoPorNome ?? "Sem registro"}
                       {item.motivo && ` · ${item.motivo}`}
                     </span>
                   </li>

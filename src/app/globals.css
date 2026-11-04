@@ -22,14 +22,14 @@
 
   /* Familia isolada do resto do tema: a sidebar fica sempre no navy da marca,
      independente do que o restante da interface fizer (padrao observado nos
-     tres CRMs mapeados — a sidebar nunca "pisca" clara). */
+     tres CRMs mapeados: a sidebar nunca "pisca" clara). */
   --color-sidebar-background: #0f1b3d; /* navy-900 */
   --color-sidebar-foreground: #e8edf3; /* nevoa-100 */
   --color-sidebar-primary: #1e3a5f; /* navy-700 */
   --color-sidebar-primary-foreground: #ffffff;
   /* O item ativo precisa mudar de matiz, nao so de claridade: navy-700 sobre navy-900
      da ~1.5:1 e some. Azul 500 e o tom de destaque da identidade e le como selecao. */
-  --color-sidebar-accent: #3b6fa0; /* azul-500 — fundo do item ativo */
+  --color-sidebar-accent: #3b6fa0; /* azul-500, fundo do item ativo */
   --color-sidebar-accent-foreground: #ffffff;
   --color-sidebar-border: rgba(255, 255, 255, 0.14);
   --color-sidebar-ring: #3b6fa0; /* azul-500 */

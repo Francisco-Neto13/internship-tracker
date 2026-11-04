@@ -152,7 +152,7 @@ ferramenta.
   (`src/lib/consulta.ts`, componentes `Paginacao`, `BarraFiltros`, `DataTable`). Ordem desconhecida cai no padrão.
   O link de volta de um registro leva `?voltar=`, aceito só com o prefixo da própria listagem.
 - Nome e tom de situação ficam em `src/lib/rotulos.ts`; datas em `src/lib/datas.ts`. Tela não exibe código cru.
-- Indicador sem dado é `null` e aparece como travessão com o motivo, nunca como zero. O painel só mostra número
+- Indicador sem dado é `null` e aparece como "Sem dado" com o motivo, nunca como zero. A interface não usa travessão: em texto, ponto, vírgula ou dois-pontos; em valor vazio, uma palavra que diga o que falta ("Sem data", "Não informado"). O painel só mostra número
   que vem do banco; não há tendência porque não há série histórica.
 
 ## Módulos de domínio

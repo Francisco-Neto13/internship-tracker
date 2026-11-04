@@ -37,7 +37,7 @@ describe("consulta", () => {
 describe("datas", () => {
   it("formats calendar dates and counts days between them", () => {
     expect(formatarData("2026-08-03")).toBe("03/08/2026");
-    expect(formatarData(null)).toBe("—");
+    expect(formatarData(null)).toBe("Sem data");
     expect(diasEntre("2026-08-03", "2026-08-10")).toBe(7);
     expect(diasEntre("2026-03-01", "2026-02-28")).toBe(-1);
   });

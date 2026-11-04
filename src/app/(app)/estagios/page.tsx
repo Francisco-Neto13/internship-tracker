@@ -27,7 +27,7 @@ const TIPOS = ["OBRIGATORIO", "NAO_OBRIGATORIO"] as const;
 
 /** Quanto do período já passou, para ler de relance quem está no começo ou perto do fim. */
 function Andamento({ estagio, hoje }: { estagio: Estagio; hoje: string }) {
-  if (estagio.situacao !== "ATIVO") return <span className="text-xs text-navy-900/65">—</span>;
+  if (estagio.situacao !== "ATIVO") return <span className="text-xs text-navy-900/65">Não se aplica</span>;
   const paraComecar = diasEntre(hoje, estagio.dataInicio);
   if (paraComecar > 0) return <span className="text-xs text-navy-900/65">{paraComecar === 1 ? "Começa amanhã" : `Começa em ${paraComecar} dias`}</span>;
   const total = Math.max(1, diasEntre(estagio.dataInicio, estagio.dataFimPrevista));
@@ -90,7 +90,7 @@ export default async function EstagiosPage({ searchParams }: { searchParams: Pro
       ocultarNoCelular: true,
       celula: (estagio) => (
         <span className="block min-w-0">
-          <span className="block max-w-64 truncate text-navy-900">{estagio.concedenteRazaoSocial ?? "—"}</span>
+          <span className="block max-w-64 truncate text-navy-900">{estagio.concedenteRazaoSocial ?? "Não informada"}</span>
           <span className="block text-xs text-navy-900/65">{TIPO_ESTAGIO[estagio.tipo]}</span>
         </span>
       ),

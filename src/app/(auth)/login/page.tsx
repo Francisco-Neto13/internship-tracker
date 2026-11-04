@@ -41,7 +41,7 @@ export default async function LoginPage() {
             className="h-auto w-full max-w-md"
           />
           <p className="mt-10 max-w-md text-base leading-relaxed text-white/55">
-            Estágio e atividades complementares formalizados em um só lugar — do termo de
+            Estágio e atividades complementares formalizados em um só lugar, do termo de
             compromisso à integralização curricular.
           </p>
         </div>
@@ -105,7 +105,7 @@ export default async function LoginPage() {
             <div className="divider-rule my-6" />
 
             <p className="text-center text-xs text-navy-900/65">
-              Estudante, orientador, supervisor, coordenação, concedente ou administrador — o
+              Estudante, orientador, supervisor, coordenação, concedente ou administrador: o
               sistema reconhece o seu perfil ao entrar.
             </p>
           </div>

@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "./cn";
 
 // Indicador do painel. Três regras do benchmark (pamela_crm, Indicador.tsx) e do pedido:
-// - `null` é "não sei", não zero: vira travessão com o motivo escrito, nunca um 0 que pareça
+// - `null` é "não sei", não zero: vira "Sem dado" com o motivo escrito, nunca um 0 que pareça
 //   operação parada;
 // - todo número diz de quando é (contexto) e leva ao que conta (href);
 // - o tom só muda quando o número pede ação (atencao), não para enfeitar.
@@ -41,7 +41,7 @@ export function Indicador({
       </div>
       {valor === null ? (
         <p className="mt-2 text-2xl font-semibold text-navy-900/65" title={motivoSemValor}>
-          —<span className="sr-only">{motivoSemValor ?? "sem dado"}</span>
+          Sem dado
         </p>
       ) : (
         <p className={cn("mt-2 text-[1.75rem] leading-none font-semibold tabular-nums", atencao ? "text-status-pending-text" : "text-navy-900")}>

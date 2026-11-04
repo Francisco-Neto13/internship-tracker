@@ -27,15 +27,15 @@ type Registro = Awaited<ReturnType<typeof listRegistros>>["items"][number];
 const TOM: Record<string, StatusTone> = { INSERT: "ok", UPDATE: "pending", DELETE: "danger", LEITURA: "neutral" };
 
 function valor(dados: unknown, campo: string) {
-  if (!dados || typeof dados !== "object") return "—";
+  if (!dados || typeof dados !== "object") return "Não informado";
   const bruto = (dados as Record<string, unknown>)[campo];
-  if (bruto === null || bruto === undefined) return "—";
+  if (bruto === null || bruto === undefined) return "Não informado";
   return typeof bruto === "object" ? JSON.stringify(bruto) : String(bruto);
 }
 
 function Alteracao({ registro }: { registro: Registro }) {
   const campos = registro.camposAlterados ?? (registro.operacao === "INSERT" ? Object.keys((registro.dadosNovos as object) ?? {}) : []);
-  if (campos.length === 0) return <span className="text-xs text-navy-900/65">—</span>;
+  if (campos.length === 0) return <span className="text-xs text-navy-900/65">Sem campos</span>;
   return (
     <details className="relative z-10 text-xs">
       <summary className="cursor-pointer text-azul-500 hover:text-navy-700">
@@ -73,7 +73,7 @@ const COLUNAS: DataTableColumn<Registro>[] = [
         <span className="flex min-w-0 items-center gap-2">
           <Avatar nome={registro.autorNome} semente={registro.usuarioId} tamanho="sm" />
           <span className="min-w-0">
-            <span className="block truncate text-navy-900">{registro.autorNome ?? "—"}</span>
+            <span className="block truncate text-navy-900">{registro.autorNome ?? "Sem autor"}</span>
             <span className="block truncate text-xs text-navy-900/65">{registro.autorEmail}</span>
           </span>
         </span>

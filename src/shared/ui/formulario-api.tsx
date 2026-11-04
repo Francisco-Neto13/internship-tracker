@@ -160,7 +160,7 @@ export function FormularioApi({
                 <Label htmlFor={id}>{campo.rotulo}</Label>
                 {campo.tipo === "select" ? (
                   <select id={id} name={campo.nome} defaultValue={String(inicial)} className={selectClass} aria-describedby={ajuda} aria-invalid={Boolean(mensagem)}>
-                    {!campo.obrigatorio && <option value="">—</option>}
+                    {!campo.obrigatorio && <option value="">Nenhum</option>}
                     {campo.opcoes.map((opcao) => (
                       <option key={opcao.valor} value={opcao.valor}>
                         {opcao.rotulo}

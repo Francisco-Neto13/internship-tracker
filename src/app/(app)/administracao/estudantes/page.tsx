@@ -56,13 +56,13 @@ export default async function EstudantesPage({ searchParams }: { searchParams: P
           <Avatar nome={estudante.nome} semente={estudante.id} tamanho="sm" />
           <span className="min-w-0">
             <span className="block truncate font-medium text-navy-900">{estudante.nome ?? "Nome não disponível"}</span>
-            <span className="block truncate text-xs text-navy-900/65">{estudante.email ?? "—"}</span>
+            <span className="block truncate text-xs text-navy-900/65">{estudante.email ?? "Não informado"}</span>
           </span>
         </span>
       ),
     },
     { chave: "matricula", cabecalho: "Matrícula", ordenavel: "matricula", celula: (estudante) => <span className="font-mono text-[13px] text-navy-900/80">{estudante.matricula}</span> },
-    { chave: "curso", cabecalho: "Curso", ordenavel: "curso", ocultarNoCelular: true, celula: (estudante) => <span className="text-navy-900/80">{estudante.cursoNome ?? "—"}</span> },
+    { chave: "curso", cabecalho: "Curso", ordenavel: "curso", ocultarNoCelular: true, celula: (estudante) => <span className="text-navy-900/80">{estudante.cursoNome ?? "Sem curso"}</span> },
     { chave: "periodo", cabecalho: "Período", ordenavel: "periodo", alinhar: "direita", ocultarNoCelular: true, celula: (estudante) => <span className="text-navy-900/80">{estudante.periodo}º</span> },
     {
       chave: "situacao",

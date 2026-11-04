@@ -59,7 +59,7 @@ export function Painel({
   );
 }
 
-/** Lista de pares rótulo/valor (dados de um registro). Valor vazio vira travessão, não some. */
+/** Lista de pares rótulo/valor (dados de um registro). Valor vazio vira "Não informado", não some. */
 export function ListaDefinicao({
   itens,
   colunas = 2,
@@ -82,7 +82,7 @@ export function ListaDefinicao({
         <div key={item.rotulo} className={cn("min-w-0", item.largo && "sm:col-span-full")}>
           <dt className="text-xs font-medium text-navy-900/65">{item.rotulo}</dt>
           <dd className="mt-0.5 text-sm break-words text-navy-900">
-            {item.valor === null || item.valor === undefined || item.valor === "" ? <span className="text-navy-900/65">—</span> : item.valor}
+            {item.valor === null || item.valor === undefined || item.valor === "" ? <span className="text-navy-900/65">Não informado</span> : item.valor}
           </dd>
         </div>
       ))}
