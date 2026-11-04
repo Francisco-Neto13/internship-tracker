@@ -90,6 +90,7 @@ services:
       timeout: 3s
       retries: 30
 
+  # Each bucket reserves 7 volumes × this limit on the disk: 896 MB here, 7 GB with the default.
   # Tag pinned: change it on purpose, after running
   # npm run storage:check. Data is encrypted before reaching the volume (RN-38, RNF-05).
   storage:
@@ -97,6 +98,7 @@ services:
     command: >-
       server -dir=/data -ip=storage -filer -s3 -s3.port=8333
       -filer.encryptVolumeData -s3.encryptVolumeData
+      -master.volumeSizeLimitMB=128
     restart: unless-stopped
     environment:
       AWS_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?}

@@ -43,6 +43,17 @@ mkdir -p "$PONTO/postgres" "$PONTO/armazenamento" "$PONTO/caddy" "$PONTO/backup/
 chown -R 999:999 "$PONTO/backup/pgbackrest" "$PONTO/backup/log"
 
 cd "$CODIGO"
+sh scripts/servidor/configurar-vps.sh
+# The build needs room, and a full disk stops the database along with it
+LIVRE_GB=$(df -BG --output=avail /srv | tail -1 | tr -dc 0-9)
+if [ "$LIVRE_GB" -lt 8 ]; then
+  docker builder prune -af >/dev/null
+  LIVRE_GB=$(df -BG --output=avail /srv | tail -1 | tr -dc 0-9)
+  if [ "$LIVRE_GB" -lt 8 ]; then
+    echo "O disco tem só $LIVRE_GB GB livres, e o build precisa de 8. A versão atual continua no ar. Rode vps-espaco." >&2
+    exit 1
+  fi
+fi
 COMPOSE="docker compose --env-file $AMBIENTE -f docker-compose.prod.yml"
 $COMPOSE build app postgres
 $COMPOSE up -d --wait postgres storage
@@ -116,5 +127,9 @@ systemctl enable --now internship-rotina.timer >/dev/null 2>&1
 systemctl enable --now internship-backup.timer >/dev/null 2>&1
 # The first database copy starts now, without holding the deploy
 systemctl start --no-block internship-backup.service
+
+# Images of older versions are of no use once the new one is up
+docker image prune -f >/dev/null
+docker builder prune -f --reserved-space=3GB >/dev/null
 
 echo "Publicado em https://$APP_DOMAIN"
