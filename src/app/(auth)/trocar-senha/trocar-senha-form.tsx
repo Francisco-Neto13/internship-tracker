@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
+import { CampoSenha } from "@/shared/ui/campo-senha";
 import { Label } from "@/shared/ui/label";
 
 // The API validates again (src/modules/acesso/schemas/senha.ts); these checks only spare a round trip
@@ -54,9 +54,8 @@ export function TrocarSenhaForm({ obrigatoria }: { obrigatoria: boolean }) {
     <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="senha-atual">{obrigatoria ? "Senha provisória" : "Senha atual"}</Label>
-        <Input
+        <CampoSenha
           id="senha-atual"
-          type="password"
           autoComplete="current-password"
           value={atual}
           onChange={(event) => setAtual(event.target.value)}
@@ -64,9 +63,8 @@ export function TrocarSenhaForm({ obrigatoria }: { obrigatoria: boolean }) {
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="senha-nova">Nova senha</Label>
-        <Input
+        <CampoSenha
           id="senha-nova"
-          type="password"
           autoComplete="new-password"
           value={nova}
           onChange={(event) => setNova(event.target.value)}
@@ -80,9 +78,8 @@ export function TrocarSenhaForm({ obrigatoria }: { obrigatoria: boolean }) {
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="senha-confirmacao">Confirme a nova senha</Label>
-        <Input
+        <CampoSenha
           id="senha-confirmacao"
-          type="password"
           autoComplete="new-password"
           value={confirmacao}
           onChange={(event) => setConfirmacao(event.target.value)}

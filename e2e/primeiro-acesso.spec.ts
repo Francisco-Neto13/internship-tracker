@@ -62,6 +62,10 @@ test("a user created by the administrator must replace the temporary password fi
   const novaSenha = "minha frase de acesso e2e";
   await novo.getByLabel("Senha provisória", { exact: true }).fill(data.senha_provisoria);
   await novo.getByLabel("Nova senha", { exact: true }).fill(novaSenha);
+  // Each password field shows what was typed on request, one at a time
+  await novo.getByRole("button", { name: "Exibir caracteres digitados" }).nth(1).click();
+  await expect(novo.getByLabel("Nova senha", { exact: true })).toHaveAttribute("type", "text");
+  await expect(novo.getByLabel("Senha provisória", { exact: true })).toHaveAttribute("type", "password");
   await novo.getByLabel("Confirme a nova senha").fill(novaSenha);
   await novo.getByRole("button", { name: "Salvar nova senha" }).click();
 
