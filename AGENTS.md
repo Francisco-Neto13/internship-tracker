@@ -155,6 +155,35 @@ ferramenta.
 - Indicador sem dado é `null` e aparece como "Sem dado" com o motivo, nunca como zero. A interface não usa travessão: em texto, ponto, vírgula ou dois-pontos; em valor vazio, uma palavra que diga o que falta ("Sem data", "Não informado"). O painel só mostra número
   que vem do banco; não há tendência porque não há série histórica.
 
+## Movimento
+
+Animação serve para explicar o que aconteceu, nunca para enfeitar nem para fazer alguém esperar. Só CSS, com tokens em `src/app/globals.css`, sem biblioteca: o Radix já espera a saída terminar, e o sistema não tem animação de layout que justifique o Motion. Não usar View Transition na navegação: ela congela a tela enquanto troca.
+
+| Token | Valor | Uso |
+|---|---|---|
+| `--duracao-rapida` | 100 ms | Hover, foco, clique |
+| `--duracao-media` | 180 ms | Menu, tooltip, fundo de modal, troca de página, aviso |
+| `--duracao-entrada` | 260 ms | Modal, gaveta, cartão entrando |
+| `--duracao-saida` | 160 ms | Tudo que sai: sair é mais rápido que entrar |
+| `--duracao-progresso` | 500 ms | Barra e número contando, só no painel. É o teto do sistema |
+| `--atraso-sequencia` | 40 ms | Entre itens de um grupo, parando no sexto |
+| `ease-padrao`, `ease-entrada`, `ease-saida` | Curvas produtivas do IBM Carbon | O elemento fica, chega ou sai |
+
+| Componente ou classe | Para quê |
+|---|---|
+| `animate-surgir` | Fade com 6 px de deslocamento: cartão, painel, estado vazio, login |
+| `animate-aparecer` | Só fade: conteúdo de página, por `.conteudo-pagina` (`template.tsx`), e linha de tabela |
+| `animate-aviso` | Mensagem de erro de campo e confirmação de salvo |
+| `animate-tremer` | Só erro de login. Não usar em validação de campo: seria repetitivo |
+| `animate-modal-*`, `animate-overlay-*`, `animate-menu-*`, `animate-gaveta-*` | Abrir e fechar, ligados ao `data-state` do Radix |
+| `animate-crescer-x` | Barra crescendo com `scaleX`, com `origin-left` |
+| `.grupo-em-sequencia`, `.linhas-em-sequencia` | Filhos entrando em sequência curta |
+| `ContadorAnimado` | Número contando; o leitor de tela recebe o valor certo desde o início |
+| `Button carregando` | Mostra o indicador, desabilita e marca `aria-busy` |
+| `Esqueleto`, `loading.tsx` | Forma do conteúdo enquanto a página carrega |
+
+Regras: animar só `transform` e `opacity`, salvo borda e cor em hover e foco. Nada em loop, exceto indicador de carregamento e esqueleto. Quanto mais frequente a ação, mais discreta a animação. `prefers-reduced-motion` zera duração e atraso em tudo (`globals.css`), e o e2e roda assim por padrão (`playwright.config.ts`); `e2e/movimento.spec.ts` liga o movimento onde ele é o assunto. Não animar: digitação, ordenação, paginação, busca, foco, nem texto longo sendo lido.
+
 ## Módulos de domínio
 
 | Módulo | Pasta | Agregados principais | RFs |
