@@ -10,7 +10,16 @@ import { Label } from "@/shared/ui/label";
 // The API validates again (src/modules/acesso/schemas/senha.ts); these checks only spare a round trip
 const MINIMO = 15;
 
-export function TrocarSenhaForm({ obrigatoria }: { obrigatoria: boolean }) {
+export function TrocarSenhaForm({
+  obrigatoria,
+  aoConcluir,
+  aoCancelar,
+}: {
+  obrigatoria: boolean;
+  /** Inside the modal: stays on the page instead of going to the dashboard. */
+  aoConcluir?: () => void;
+  aoCancelar?: () => void;
+}) {
   const router = useRouter();
   const [atual, setAtual] = useState("");
   const [nova, setNova] = useState("");
@@ -37,6 +46,7 @@ export function TrocarSenhaForm({ obrigatoria }: { obrigatoria: boolean }) {
         setErro(detalhe ?? body?.error?.message ?? "Não foi possível trocar a senha.");
         return;
       }
+      if (aoConcluir) return aoConcluir();
       router.replace("/dashboard");
       router.refresh();
     } finally {
@@ -94,8 +104,8 @@ export function TrocarSenhaForm({ obrigatoria }: { obrigatoria: boolean }) {
         <Button type="submit" disabled={enviando}>
           {enviando ? "Salvando..." : "Salvar nova senha"}
         </Button>
-        <Button type="button" variant="ghost" onClick={() => void sair()}>
-          Sair
+        <Button type="button" variant="ghost" onClick={() => (aoCancelar ? aoCancelar() : void sair())}>
+          {aoCancelar ? "Cancelar" : "Sair"}
         </Button>
       </div>
     </form>

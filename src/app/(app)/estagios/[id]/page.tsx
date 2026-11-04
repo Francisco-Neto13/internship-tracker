@@ -148,7 +148,7 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
                     </a>
                     {aditivo.situacao === "AGUARDANDO_ASSINATURAS" &&
                       (["ESTUDANTE", "INSTITUICAO", "CONCEDENTE"] as const).map((parte) => (
-                        <BotaoAcao key={parte} url={`/api/v1/aditivos/${aditivo.id}/assinaturas`} rotulo={`Assinar (${parte.toLowerCase()})`} corpo={{ parte }} tamanho="sm" />
+                        <BotaoAcao key={parte} url={`/api/v1/aditivos/${aditivo.id}/assinaturas`} confirmacao={{ titulo: "Assinar o aditivo?", descricao: "Sua identificação, a data, a hora e o hash deste aditivo ficam registrados.", confirmar: "Assinar" }} rotulo={`Assinar (${parte.toLowerCase()})`} corpo={{ parte }} tamanho="sm" />
                       ))}
                   </div>
                 </li>
@@ -161,6 +161,7 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
                   <FormularioApi
                     url={`${api}/aditivos`}
                     rotuloEnviar="Propor prorrogação"
+confirmacao={{ titulo: "Propor a prorrogação?", descricao: "O aditivo fica registrado e segue para assinatura das partes. Ele não apaga o termo original.", confirmar: "Propor prorrogação" }}
                     extras={{ tipo: "PRORROGACAO" }}
                     embutido
                     sucesso="Aditivo proposto: aguarda as três assinaturas"

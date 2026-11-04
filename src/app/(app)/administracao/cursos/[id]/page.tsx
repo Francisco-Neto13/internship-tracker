@@ -70,6 +70,7 @@ export default async function CursoPage({ params }: { params: Promise<{ id: stri
               url={`/api/v1/cursos/${id}`}
               metodo="PATCH"
               rotuloEnviar="Salvar curso"
+confirmacao={{ titulo: "Salvar as alterações do curso?", descricao: "Mudar a carga exigida recalcula a integralização de todos os estudantes do curso.", confirmar: "Salvar curso" }}
               testId="curso-edicao"
               embutido
               sucesso="Curso atualizado"
@@ -107,6 +108,7 @@ export default async function CursoPage({ params }: { params: Promise<{ id: stri
                     metodo="PUT"
                     envolverEmLista="exigencias"
                     rotuloEnviar="Definir limite"
+confirmacao={{ titulo: "Definir este limite?", descricao: "Mudar o limite da categoria recalcula a integralização de todos os estudantes do curso.", confirmar: "Definir limite" }}
                     embutido
                     sucesso="Limite definido"
                     campos={[

@@ -36,10 +36,10 @@ export function Dialogo({
         </Button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-navy-900/40 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-navy-900/40 data-[state=closed]:animate-overlay-out data-[state=open]:animate-overlay-in" />
         <Dialog.Content
           className={cn(
-            "fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-navy-900/10 bg-white shadow-elevated focus:outline-none",
+            "data-[state=closed]:animate-modal-out data-[state=open]:animate-modal-in fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-navy-900/10 bg-white shadow-elevated focus:outline-none",
             largura === "md" ? "max-w-lg" : "max-w-2xl",
           )}
         >

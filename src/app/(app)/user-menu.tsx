@@ -2,7 +2,7 @@
 
 import { ChevronDown, KeyRound, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import {
   DropdownMenu,
@@ -11,6 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { Confirmacao } from "@/shared/ui/confirmacao";
+import { ModalTrocarSenha } from "./modal-trocar-senha";
 
 function iniciaisDoNome(nome: string) {
   return (
@@ -26,6 +28,9 @@ function iniciaisDoNome(nome: string) {
 export function UserMenu({ nome, perfis }: { nome: string; perfis: string[] }) {
   const router = useRouter();
   const [saindo, setSaindo] = useState(false);
+  const [trocandoSenha, setTrocandoSenha] = useState(false);
+  const [confirmandoSaida, setConfirmandoSaida] = useState(false);
+  const gatilho = useRef<HTMLButtonElement>(null);
 
   async function signOut() {
     setSaindo(true);
@@ -37,8 +42,10 @@ export function UserMenu({ nome, perfis }: { nome: string; perfis: string[] }) {
   const iniciais = iniciaisDoNome(nome);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="group flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1.5 outline-none transition-colors hover:bg-nevoa-100 focus-visible:ring-2 focus-visible:ring-azul-500/40">
+    <>
+    {/* modal={false}: a modal menu would keep the page inert under the dialog it opens */}
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger ref={gatilho} className="group flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1.5 outline-none transition-colors hover:bg-nevoa-100 focus-visible:ring-2 focus-visible:ring-azul-500/40">
         <span className="inline-grid size-8 shrink-0 place-items-center rounded-full bg-navy-700 text-[11px] font-semibold text-white">
           {iniciais}
         </span>
@@ -74,21 +81,34 @@ export function UserMenu({ nome, perfis }: { nome: string; perfis: string[] }) {
         <DropdownMenuSeparator className="m-0" />
 
         <div className="p-1">
-          <DropdownMenuItem onSelect={() => router.push("/trocar-senha")} className="gap-2.5 px-3 py-2 text-sm font-medium">
+          <DropdownMenuItem onSelect={() => setTrocandoSenha(true)} className="gap-2.5 px-3 py-2 text-sm font-medium">
             <KeyRound className="size-4" />
             Trocar senha
           </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
             disabled={saindo}
-            onSelect={signOut}
+            onSelect={() => setConfirmandoSaida(true)}
             className="gap-2.5 px-3 py-2 text-sm font-medium"
           >
             <LogOut className="size-4" />
-            {saindo ? "Saindo…" : "Sair"}
+            Sair
           </DropdownMenuItem>
         </div>
       </DropdownMenuContent>
     </DropdownMenu>
+    <ModalTrocarSenha aberto={trocandoSenha} aoMudarAberto={setTrocandoSenha} origemDoFoco={gatilho} />
+    <Confirmacao
+      aberto={confirmandoSaida}
+      aoMudarAberto={setConfirmandoSaida}
+      titulo="Sair da conta?"
+      descricao="Sua sessão será encerrada neste navegador, e o que não foi salvo nesta página será perdido. Para voltar, é preciso entrar de novo com e-mail e senha."
+      rotuloConfirmar="Sair da conta"
+      destrutiva
+      ocupado={saindo}
+      origemDoFoco={gatilho}
+      aoConfirmar={signOut}
+    />
+    </>
   );
 }

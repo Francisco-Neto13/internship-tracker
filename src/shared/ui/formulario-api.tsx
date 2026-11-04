@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "./button";
+import { Confirmacao } from "./confirmacao";
 import { Input } from "./input";
 import { Label } from "./label";
 
@@ -47,6 +48,7 @@ export function FormularioApi({
   envolverEmLista,
   testId,
   embutido = false,
+  confirmacao,
 }: {
   campos: Campo[];
   url: string;
@@ -62,11 +64,14 @@ export function FormularioApi({
   testId?: string;
   /** Sem superfície própria: o formulário já está dentro de um <Painel>. */
   embutido?: boolean;
+  /** Explains the consequence before sending, when the result cannot be undone. */
+  confirmacao?: { titulo: string; descricao: string; confirmar: string; destrutiva?: boolean };
 }) {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [pendente, setPendente] = useState<Record<string, unknown> | null>(null);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -87,6 +92,11 @@ export function FormularioApi({
       corpo[campo.nome] = campo.tipo === "number" ? Number(bruto.replace(",", ".")) : bruto;
     }
 
+    if (confirmacao) setPendente(corpo);
+    else await enviar(corpo);
+  }
+
+  async function enviar(corpo: Record<string, unknown>) {
     setEnviando(true);
     try {
       const enviado = envolverEmLista ? { [envolverEmLista]: [corpo] } : corpo;
@@ -101,6 +111,7 @@ export function FormularioApi({
       else router.refresh();
     } finally {
       setEnviando(false);
+      setPendente(null);
     }
   }
 
@@ -164,6 +175,18 @@ export function FormularioApi({
       <Button type="submit" disabled={enviando} className="sm:col-span-2 sm:w-fit">
         {enviando ? "Salvando..." : rotuloEnviar}
       </Button>
+      {confirmacao && (
+        <Confirmacao
+          aberto={pendente !== null}
+          aoMudarAberto={(aberto) => !aberto && setPendente(null)}
+          titulo={confirmacao.titulo}
+          descricao={confirmacao.descricao}
+          rotuloConfirmar={confirmacao.confirmar}
+          destrutiva={confirmacao.destrutiva}
+          ocupado={enviando}
+          aoConfirmar={() => (pendente ? enviar(pendente) : undefined)}
+        />
+      )}
     </form>
   );
 }

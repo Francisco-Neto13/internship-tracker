@@ -71,5 +71,26 @@ test("a user created by the administrator must replace the temporary password fi
 
   await expect(novo).toHaveURL(/\/dashboard$/);
   expect((await novo.request.get("/api/v1/estudantes")).status()).toBe(200);
+
+  // A voluntary change opens over the page, keeps the URL and returns focus to the menu
+  await novo.getByTestId("usuario-autenticado").click();
+  await novo.getByRole("menuitem", { name: "Trocar senha" }).click();
+  const modal = novo.getByTestId("modal-trocar-senha");
+  await expect(modal).toBeVisible();
+  await expect(novo).toHaveURL(/\/dashboard$/);
+  await modal.getByRole("button", { name: "Cancelar" }).click();
+  await expect(modal).toHaveCount(0);
+  await expect(novo.locator('button:has([data-testid="usuario-autenticado"])')).toBeFocused();
+
+  await novo.getByTestId("usuario-autenticado").click();
+  await novo.getByRole("menuitem", { name: "Trocar senha" }).click();
+  await modal.getByLabel("Senha atual", { exact: true }).fill(novaSenha);
+  await modal.getByLabel("Nova senha", { exact: true }).fill("outra frase de acesso e2e");
+  await modal.getByLabel("Confirme a nova senha").fill("outra frase de acesso e2e");
+  await modal.getByRole("button", { name: "Salvar nova senha" }).click();
+  await expect(modal.getByText("Senha alterada")).toBeVisible();
+  await modal.getByRole("button", { name: "Fechar" }).last().click();
+  await expect(modal).toHaveCount(0);
+  await expect(novo).toHaveURL(/\/dashboard$/);
   await contexto.close();
 });

@@ -100,7 +100,7 @@ export function BotaoAcao({
       {precisaDialogo && (
         <Dialog.Root open={aberto} onOpenChange={setAberto}>
           <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 z-50 bg-navy-900/40 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+            <Dialog.Overlay className="fixed inset-0 z-50 bg-navy-900/40 data-[state=closed]:animate-overlay-out data-[state=open]:animate-overlay-in" />
             <Dialog.Content
               onOpenAutoFocus={() => {
                 origemDoFoco.current = document.activeElement as HTMLElement | null;
@@ -109,7 +109,7 @@ export function BotaoAcao({
                 evento.preventDefault();
                 origemDoFoco.current?.focus();
               }}
-              className="fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-navy-900/10 bg-white p-6 shadow-elevated focus:outline-none"
+              className="data-[state=closed]:animate-modal-out data-[state=open]:animate-modal-in fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-navy-900/10 bg-white p-6 shadow-elevated focus:outline-none"
             >
               <Dialog.Title className="text-base font-semibold text-navy-900">{confirmacao?.titulo ?? rotulo}</Dialog.Title>
               <Dialog.Description className="mt-1.5 text-sm text-navy-900/65">
