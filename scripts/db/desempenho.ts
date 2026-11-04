@@ -264,6 +264,10 @@ async function main() {
     medicoes.push(await medir("GET /estagios/divergencias", "coordenação (300 estágios)", () => listEstagiosDivergentes(coordenacao)));
     medicoes.push(await medir("GET /relatorios/pendentes", "coordenação (300 estágios)", () => listRelatoriosPendentes(coordenacao)));
     medicoes.push(await medir("GET /estagios?limit=100", "coordenação (300 estágios)", async () => (await listEstagios(coordenacao, { page: 1, limit: 100 })).items));
+    // Issue #80: lists that now read the student through app.identidades_estudante
+    medicoes.push(await medir("GET /estagios?limit=20", "orientador (30 estágios)", async () => (await listEstagios(orientador, { page: 1, limit: 20 })).items));
+    medicoes.push(await medir("GET /estagios?limit=20", "supervisor", async () => (await listEstagios(supervisor, { page: 1, limit: 20 })).items));
+    medicoes.push(await medir("GET /estagios?busca=CARGA", "coordenação (300 estágios)", async () => (await listEstagios(coordenacao, { page: 1, limit: 20, busca: "CARGA" })).items));
     medicoes.push(await medir("GET /atividades-complementares", "estudante", () => listAtividades(aluno, {})));
     medicoes.push(await medir("GET /atividades-complementares", "coordenação (2.400 atividades)", () => listAtividades(coordenacao, {})));
     medicoes.push(await medir("GET /atividades-complementares/pendentes", "coordenação (900 em análise)", () => listFilaAnalise(coordenacao)));

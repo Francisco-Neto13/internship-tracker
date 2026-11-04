@@ -84,7 +84,7 @@ export default async function EstudantesPage({ searchParams }: { searchParams: P
               titulo="Cadastrar estudante"
               descricao="Vincula uma conta existente a um curso, com matrícula e período (RF005)."
             >
-              <EstudanteForm cursos={cursos.map((curso) => ({ id: curso.id, nome: curso.nome }))} buscarContas={administrador} />
+              <EstudanteForm cursos={cursos.map((curso) => ({ id: curso.id, nome: curso.nome }))} />
             </Dialogo>
           )
         }

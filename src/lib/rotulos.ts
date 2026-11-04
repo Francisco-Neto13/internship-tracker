@@ -112,8 +112,8 @@ export function formatarCnpj(cnpj: string): string {
 }
 
 /**
- * Como chamar um estágio numa lista. A RLS não mostra nome nem matrícula do estudante a orientador,
- * supervisor e concedente; aí a data de início separa as linhas, em vez de "Estudante" repetido.
+ * Como chamar um estágio numa lista: o nome do estudante, que quem acompanha o estágio lê
+ * (app.identidades_estudante). Sem nome, a data de início separa as linhas.
  */
 export function identificarEstagio(estagio: { estudanteNome: string | null; dataInicio: string }): string {
   return estagio.estudanteNome ?? `Início em ${formatarDataCurta(estagio.dataInicio)}`;

@@ -25,9 +25,8 @@ type EstudanteOutput = z.output<typeof estudanteSchema>;
 type Conta = { id: string; nome: string; email: string };
 
 /**
- * RF005: o perfil acadêmico nasce sobre uma conta que já existe (RF001). O administrador busca a
- * conta pelo nome entre as que têm perfil Estudante; a coordenação não lê contas fora dos seus
- * estudantes (RLS de usuario), então informa o código da conta que o administrador repassou.
+ * RF005: o perfil acadêmico nasce sobre uma conta que já existe (RF001). Administrador e coordenação
+ * buscam pelo nome entre as contas ativas com perfil Estudante e ainda sem perfil acadêmico.
  */
 function EscolhaDeConta({ onEscolher }: { onEscolher: (conta: Conta | null) => void }) {
   const [busca, setBusca] = useState("");
@@ -38,7 +37,7 @@ function EscolhaDeConta({ onEscolher }: { onEscolher: (conta: Conta | null) => v
     if (busca.trim().length < 2) return;
     const controle = new AbortController();
     const espera = setTimeout(async () => {
-      const resposta = await fetch(`/api/v1/usuarios?perfil=ESTUDANTE&situacao=ATIVO&limit=8&busca=${encodeURIComponent(busca.trim())}`, { signal: controle.signal }).catch(() => null);
+      const resposta = await fetch(`/api/v1/usuarios/contas-estudante?busca=${encodeURIComponent(busca.trim())}`, { signal: controle.signal }).catch(() => null);
       if (!resposta?.ok) return setContas([]);
       setContas(((await resposta.json()).data as Conta[]) ?? []);
     }, 300);
@@ -71,7 +70,7 @@ function EscolhaDeConta({ onEscolher }: { onEscolher: (conta: Conta | null) => v
       </div>
       {busca.trim().length >= 2 && contas && (
         <ul className="max-h-56 overflow-y-auto rounded-lg border border-navy-900/10" role="listbox" aria-label="Contas encontradas">
-          {contas.length === 0 && <li className="px-3 py-3 text-sm text-navy-900/65">Nenhuma conta ativa com perfil Estudante encontrada.</li>}
+          {contas.length === 0 && <li className="px-3 py-3 text-sm text-navy-900/65">Nenhuma conta ativa com perfil Estudante e sem cadastro acadêmico encontrada.</li>}
           {contas.map((conta) => (
             <li key={conta.id} role="option" aria-selected={false}>
               <button
@@ -97,7 +96,7 @@ function EscolhaDeConta({ onEscolher }: { onEscolher: (conta: Conta | null) => v
   );
 }
 
-export function EstudanteForm({ cursos, buscarContas }: { cursos: { id: string; nome: string }[]; buscarContas: boolean }) {
+export function EstudanteForm({ cursos }: { cursos: { id: string; nome: string }[] }) {
   const router = useRouter();
   const fechar = useFecharDialogo();
   const [erro, setErro] = useState<string | null>(null);
@@ -124,17 +123,8 @@ export function EstudanteForm({ cursos, buscarContas }: { cursos: { id: string; 
     <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 sm:grid-cols-2" noValidate>
       <div className="flex flex-col gap-1.5 sm:col-span-2">
         <Label htmlFor="estudante-conta">Conta do estudante</Label>
-        {buscarContas ? (
-          <>
-            <EscolhaDeConta onEscolher={(conta) => setValue("usuario_id", conta?.id ?? "", { shouldValidate: Boolean(conta) })} />
-            <input type="hidden" {...register("usuario_id")} />
-          </>
-        ) : (
-          <>
-            <Input id="estudante-conta" placeholder="Código da conta, informado pelo administrador" aria-invalid={Boolean(errors.usuario_id)} {...register("usuario_id")} />
-            <p className="text-xs text-navy-900/65">A conta é criada pelo administrador com o perfil Estudante; ele repassa o código.</p>
-          </>
-        )}
+        <EscolhaDeConta onEscolher={(conta) => setValue("usuario_id", conta?.id ?? "", { shouldValidate: Boolean(conta) })} />
+        <input type="hidden" {...register("usuario_id")} />
         {errors.usuario_id && <p className="text-sm text-status-danger-text">{errors.usuario_id.message}</p>}
       </div>
       <div className="flex flex-col gap-1.5 sm:col-span-2">

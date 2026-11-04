@@ -128,6 +128,25 @@ as $$
     and v.vigencia_inicio <= now() and (v.vigencia_fim is null or v.vigencia_fim > now())
 $$;
 
+-- Issue #80, RN-37: name and enrolment of the students of the internships the caller follows, and
+-- only those two columns. A wider policy on usuario or estudante would also open e-mail, academic
+-- situation and period to orientador, supervisor and concedente (LGPD art. 6º, III).
+create or replace function app.identidades_estudante()
+returns table (estudante_id uuid, nome text, matricula text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select e.id, u.nome, e.matricula
+  from public.estudante e
+  join public.usuario u on u.id = e.usuario_id
+  where e.id in (select g.estudante_id from public.estagio g where g.id in (select app.estagios_legiveis()))
+$$;
+
+revoke all on function app.identidades_estudante() from public;
+grant execute on function app.identidades_estudante() to app_runtime;
+
 -- RF019: who may sign for each party
 create or replace function app.pode_assinar(p_estagio_id uuid, p_parte public.parte_assinatura)
 returns boolean
