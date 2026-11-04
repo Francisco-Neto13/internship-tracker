@@ -4,15 +4,15 @@ import { CreateBucketCommand, HeadBucketCommand, PutBucketCorsCommand, S3Client 
 // of the application origin to PUT straight to signed URLs (CORS). Idempotent; run once per
 // environment: `npm run storage:init`. Never makes anything public.
 
-const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_ENDPOINT, BETTER_AUTH_URL } = process.env;
-if (!R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET || (!R2_ENDPOINT && !R2_ACCOUNT_ID)) {
-  console.error("Defina R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY e R2_ACCOUNT_ID ou R2_ENDPOINT (veja .env.example)");
+const { R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_ENDPOINT, BETTER_AUTH_URL } = process.env;
+if (!R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET || !R2_ENDPOINT) {
+  console.error("Defina R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY e R2_ENDPOINT (veja .env.example)");
   process.exit(1);
 }
 
 const client = new S3Client({
   region: "auto",
-  endpoint: R2_ENDPOINT || `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  endpoint: R2_ENDPOINT,
   forcePathStyle: process.env.R2_FORCE_PATH_STYLE === "true",
   credentials: { accessKeyId: R2_ACCESS_KEY_ID, secretAccessKey: R2_SECRET_ACCESS_KEY },
 });
@@ -39,7 +39,7 @@ async function main() {
     );
     console.log(`CORS: PUT e GET a partir de ${origem}`);
   } catch (error) {
-    // Some local S3 servers have no bucket CORS API; production (R2) does
+    // Without CORS the browser cannot upload: warn instead of failing, and storage:check tells
     console.warn(`CORS não aplicado (${(error as Error).name}); configure-o no provedor antes de usar em produção`);
   }
 }

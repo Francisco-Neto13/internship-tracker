@@ -1,0 +1,31 @@
+# Production services. For now only the private file storage (D8, RNF-06): the application,
+# PostgreSQL and the HTTPS proxy join this file with the deploy (issue #63).
+#   docker compose -f docker-compose.prod.yml up -d --wait
+# Requires R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY with generated values.
+name: internship-tracker-prod
+
+services:
+  # SeaweedFS replaced Cloudflare R2, whose activation asks for a card or PayPal even in the
+  # free tier (decision of 2026-11-03). Tag pinned: change it on purpose, after running
+  # npm run storage:check. Data is encrypted before reaching the volume (RN-38, RNF-05).
+  # No published port: only the proxy reaches it, because the browser uploads straight to
+  # signed URLs, and the proxy must keep the Host header or the signature fails.
+  storage:
+    image: chrislusf/seaweedfs:4.06
+    command: >-
+      server -dir=/data -ip=storage -filer -s3 -s3.port=8333
+      -filer.encryptVolumeData -s3.encryptVolumeData
+    restart: unless-stopped
+    environment:
+      AWS_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?generate a key for the storage}
+      AWS_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?generate a secret for the storage}
+    volumes:
+      - storage_data:/data
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "8333"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  storage_data:

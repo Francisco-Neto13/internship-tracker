@@ -1,5 +1,5 @@
--- Local and CI bootstrap. Mirrors the role layout expected in Neon (RF003, RN-37):
---   migrator      owns every object, runs migrations; not a superuser, like neondb_owner
+-- Local and CI bootstrap. Same role layout as production (RF003, RN-37):
+--   migrator      owns every object, runs migrations; not a superuser
 --   app_runtime   domain code; never owner, never BYPASSRLS, so RLS always applies
 --   auth_runtime  auth library only; reaches the auth tables and nothing else
 -- Passwords here are for localhost only. Production roles get generated passwords.

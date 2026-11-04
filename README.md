@@ -42,11 +42,11 @@ A filosofia central do projeto prioriza, nessa ordem: **segurança** (seis perfi
 
 ## Modelo de segurança
 
-A autorização não vive na tela: toda tabela tem política de **Row Level Security** no PostgreSQL, resolvida pela interseção de **perfil** e **vínculo** (ex.: um professor só enxerga os estágios em que consta como orientador vigente, não todos os estágios do curso). A identidade do usuário autenticado chega ao banco por um wrapper de transação que executa `set_config('app.usuario_id', ..., true)` local a cada transação, necessário porque o pooler do Neon reaproveita conexões entre requisições diferentes. Uma consulta que escape desse wrapper roda sem identidade e a política devolve zero linhas: falha visível, não silenciosa.
+A autorização não vive na tela: toda tabela tem política de **Row Level Security** no PostgreSQL, resolvida pela interseção de **perfil** e **vínculo** (ex.: um professor só enxerga os estágios em que consta como orientador vigente, não todos os estágios do curso). A identidade do usuário autenticado chega ao banco por um wrapper de transação que executa `set_config('app.usuario_id', ..., true)` local a cada transação, necessário porque o pool de conexões reaproveita a mesma conexão entre requisições diferentes. Uma consulta que escape desse wrapper roda sem identidade e a política devolve zero linhas: falha visível, não silenciosa.
 
 RLS só vale para quem não é dono da tabela, superusuário ou `BYPASSRLS`. Por isso o banco usa três papéis: `migrator` é dono de tudo e só roda migrações; `app_runtime` executa o código de domínio sob RLS, sem permissão de `DELETE`; `auth_runtime` atende apenas a biblioteca de autenticação e é o único que alcança sessões e hashes de senha. A migração aborta se um papel de runtime puder contornar a RLS, e uma suíte de testes verifica essas invariantes contra um Postgres real a cada PR.
 
-Toda operação relevante é registrada por **gatilho de banco**, não por código de aplicação, para que nenhuma rota nova ou script de manutenção consiga contornar a auditoria. Documentos com prazo legal de guarda (RF069) têm duas barreiras independentes contra exclusão: um gatilho `BEFORE DELETE` no banco e o Bucket Locks do Cloudflare R2.
+Toda operação relevante é registrada por **gatilho de banco**, não por código de aplicação, para que nenhuma rota nova ou script de manutenção consiga contornar a auditoria. Documentos com prazo legal de guarda (RF069) são protegidos contra exclusão por um gatilho `BEFORE DELETE` no banco.
 
 ## Máquina de estados do estágio
 
@@ -83,7 +83,7 @@ Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com 
 
 - **Segurança:** RLS sem exceção em qualquer tabela (RNF-01); senha com hash Argon2id, mínimo de 15 caracteres e recusa de senha vazada ou previsível (RNF-02); dado de saúde com acesso por vínculo, criptografia em repouso e cada leitura registrada (RNF-05, RN-38); sessão expira em 30 minutos de inatividade.
 - **Desempenho:** consultas com p95 de até 2 s (RNF-11); alvo da equipe p95 < 800 ms e PDF em até 5 s.
-- **Disponibilidade:** uptime mensal ≥ 99% em horário comercial, dentro do SLA gratuito de Vercel/Neon; cold start do Neon é restrição aceita, não bug.
+- **Disponibilidade:** uptime mensal ≥ 99% em horário comercial, sem redundância: o sistema depende de um único servidor.
 - **Manutenibilidade:** toda regra de negócio nova exige teste automatizado; acesso ao banco fora do wrapper de identidade é bloqueado por lint.
 - **Confiabilidade:** cálculo de carga horária é determinístico; escrita de auditoria nunca é perdida.
 
@@ -96,15 +96,15 @@ Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com 
 | Runtime | Node.js 24 LTS |
 | Interface | React 19, Tailwind CSS 4, shadcn/ui |
 | Formulários e validação | React Hook Form e Zod |
-| Banco de dados | PostgreSQL 17 gerenciado (Neon), com Row Level Security |
+| Banco de dados | PostgreSQL 17 em Docker, com Row Level Security |
 | Acesso a dados | Drizzle ORM, drizzle-kit e driver `pg` |
 | Autenticação | Better Auth (e-mail e senha com Argon2id, sessão em banco) |
-| Armazenamento de arquivos | Cloudflare R2 (compatível com S3); SeaweedFS em desenvolvimento |
+| Armazenamento de arquivos | SeaweedFS em Docker (compatível com S3), em todos os ambientes |
 | API | Route Handlers do Next.js, versionada em `/api/v1` |
 | Geração de PDF | React-PDF no servidor |
 | Testes | Vitest (unidade/integração) e Playwright (e2e) |
-| Rotinas agendadas | Vercel Cron |
-| Deploy | Vercel (aplicação), Neon (banco), R2 (arquivos) |
+| Rotinas agendadas | Cron do servidor chamando `/api/cron/diaria` |
+| Deploy | Servidor próprio com Docker Compose (aplicação, banco e arquivos) |
 
 ## Ambientes
 
@@ -112,11 +112,11 @@ Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com 
 |---|---|---|---|
 | Desenvolvimento | PostgreSQL 17 em Docker | SeaweedFS em Docker (API S3) | `next dev` local |
 | Integração contínua | PostgreSQL 17 no mesmo `docker compose` | SeaweedFS no mesmo `docker compose` | GitHub Actions |
-| Produção | Neon (branch principal) | Cloudflare R2 | Vercel |
+| Produção (a montar) | PostgreSQL 17 em Docker Compose | SeaweedFS com criptografia em Docker Compose | Contêiner Docker no servidor próprio |
 
 O CI usa o mesmo contêiner e o mesmo script de papéis do ambiente local, então um teste de RLS que passa na máquina passa no CI pelas mesmas razões.
 
-O MinIO, previsto antes, deixou de publicar imagens da edição comunitária em 2025; o SeaweedFS expõe a mesma API S3, então o código é o mesmo em desenvolvimento e com o R2. O arquivo nunca passa pela aplicação: o navegador envia direto ao bucket por URL assinada, e o servidor confere tamanho, tipo pelos bytes e SHA-256 antes de aceitar o documento (PDF, JPEG ou PNG até 10 MiB).
+O MinIO, previsto antes, deixou de publicar imagens da edição comunitária em 2025; o SeaweedFS expõe a mesma API S3. O Cloudflare R2, previsto para produção, também saiu: a ativação pede cartão de crédito ou PayPal mesmo na franquia gratuita, e a equipe decidiu não cadastrar meio de pagamento. O código é o mesmo em todos os ambientes; o prefixo `R2_` das variáveis é histórico. O arquivo nunca passa pela aplicação: o navegador envia direto ao bucket por URL assinada, e o servidor confere tamanho, tipo pelos bytes e SHA-256 antes de aceitar o documento (PDF, JPEG ou PNG até 10 MiB).
 
 ## Como rodar localmente
 
@@ -174,23 +174,23 @@ O e2e usa um stub local da API de senhas vazadas (`HIBP_RANGE_URL`), para não d
 
 O `npm install` ativa os hooks versionados em `.githooks` (se não ativar, `npm run hooks`). O `pre-push` recusa push direto para `develop` e `main`; push de `feature/*` e `integration/*` passa direto.
 
-### Produção (Neon)
+### Produção (servidor próprio com Docker)
 
-`DATABASE_MIGRATION_URL` aponta para o dono do banco na conexão direta. Depois da primeira migração, habilite o login dos papéis de runtime com senhas geradas e use-os, pela conexão com pooler, em `DATABASE_URL` (`app_runtime`) e `DATABASE_AUTH_URL` (`auth_runtime`):
+Ainda não está montada: o `docker-compose.prod.yml` só tem o armazenamento. Faltam o `Dockerfile`, os serviços da aplicação e do banco, o proxy com HTTPS, o cron do servidor, o disco criptografado e o backup do banco e dos arquivos (issue #63). O PostgreSQL não deve publicar porta na internet.
+
+`DATABASE_MIGRATION_URL` aponta para o dono do banco (`migrator`). Depois da primeira migração, habilite o login dos papéis de runtime com senhas geradas e use-os em `DATABASE_URL` (`app_runtime`) e `DATABASE_AUTH_URL` (`auth_runtime`):
 
 ```sql
 alter role app_runtime with login password '<senha gerada>';
 alter role auth_runtime with login password '<senha gerada>';
 ```
 
-### Produção (Vercel)
-
-A migração roda num job separado com `DATABASE_MIGRATION_URL`, nunca no build. Variáveis da
+A migração roda num passo separado com `DATABASE_MIGRATION_URL`, nunca no build. Variáveis da
 aplicação: `DATABASE_URL` (`app_runtime`), `DATABASE_AUTH_URL` (`auth_runtime`),
-`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, as `R2_*` do bucket privado e `CRON_SECRET` (32
-caracteres ou mais). O `vercel.json` agenda `/api/cron/diaria` uma vez por dia; a Vercel envia o
-segredo no cabeçalho `Authorization`, e sem ele a rota recusa tudo. Não use a `DATABASE_URL` que
-a integração Neon injeta: é o papel dono e contorna a RLS.
+`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `AUTH_IP_HEADERS`, `AUTH_TRUSTED_PROXIES`, as `R2_*` do
+bucket privado (`R2_ENDPOINT` é o endereço público com HTTPS do armazenamento) e `CRON_SECRET` (32 caracteres ou mais). O cron do servidor chama
+`/api/cron/diaria` uma vez por dia com o segredo no cabeçalho `Authorization`; sem ele a rota
+recusa tudo. Nunca conecte a aplicação com o dono do banco: isso contorna a RLS.
 
 ## Estrutura do código
 

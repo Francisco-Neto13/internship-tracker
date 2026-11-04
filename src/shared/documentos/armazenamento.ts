@@ -8,8 +8,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-// Private object storage (RNF-06): Cloudflare R2 in production, SeaweedFS in development, both
-// through the S3 API. Nothing here is public; every URL is signed and short-lived.
+// Private object storage (RNF-06): SeaweedFS in every environment, through the S3 API. Nothing here is public; every URL is signed and short-lived.
 // Tests replace the implementation with an in-memory one (armazenamento-memoria.ts).
 
 export type Armazenamento = {
@@ -26,17 +25,17 @@ export type Armazenamento = {
 };
 
 function configuracaoS3() {
-  const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_ENDPOINT } = process.env;
-  if (!R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET || (!R2_ENDPOINT && !R2_ACCOUNT_ID)) {
-    throw new Error("Armazenamento não configurado: defina R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY e R2_ACCOUNT_ID ou R2_ENDPOINT");
+  const { R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_ENDPOINT } = process.env;
+  if (!R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET || !R2_ENDPOINT) {
+    throw new Error("Armazenamento não configurado: defina R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY e R2_ENDPOINT");
   }
   return {
     bucket: R2_BUCKET,
     client: new S3Client({
-      // R2 accepts "auto"; SeaweedFS ignores the region
+      // SeaweedFS ignores the region
       region: "auto",
-      endpoint: R2_ENDPOINT || `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-      // SeaweedFS serves buckets by path (localhost:8333/bucket/key), R2 by virtual host
+      endpoint: R2_ENDPOINT,
+      // SeaweedFS serves buckets by path (localhost:8333/bucket/key)
       forcePathStyle: process.env.R2_FORCE_PATH_STYLE === "true",
       credentials: { accessKeyId: R2_ACCESS_KEY_ID, secretAccessKey: R2_SECRET_ACCESS_KEY },
       // Presigned PUTs are signed before the body exists: a default checksum would be the CRC32

@@ -203,6 +203,7 @@ scripts/github/          batch:integrate, batch:pr, github:sync
 tests/db/                testes de integração contra Postgres real
 e2e/                     Playwright; e2e/support/hibp-stub.mjs simula a API de senhas vazadas
 docker/postgres/init/    papéis e bancos criados quando o volume nasce
+docker-compose.prod.yml  serviços de produção; por enquanto, o armazenamento com criptografia
 ```
 
 ## Banco: papéis e RLS
@@ -371,14 +372,16 @@ alternativa descartada por engano):
 | Recurso contra recusa de atividade complementar | Não existe; cadastra-se nova atividade |
 | Divergência relevante de carga horária | Percentual parametrizável, padrão 10% |
 | Hospedagem em território nacional | Sem exigência |
+| Banco em produção | PostgreSQL 17 em Docker no servidor próprio, sem serviço gerenciado. Backup com restauração a um ponto no tempo (RNF-12) fica a cargo da equipe e ainda precisa ser montado (issue #63) |
+| Arquivos em produção | SeaweedFS em Docker no servidor próprio, sem Cloudflare R2. A ativação pede cartão de crédito ou PayPal mesmo na franquia gratuita, e a equipe decidiu não cadastrar meio de pagamento. Criptografia em repouso, backup dos arquivos e a perda da segunda barreira da guarda ficam a cargo da equipe |
 | Situação acadêmica (RF005) | Transições restritas (acima), validadas no serviço e por gatilho, auditadas. **Pendente de validação com o orientador** |
 | Duração máxima e afastamento (RF060, RF062) | O afastamento estende `data_fim` só até o teto de 2 anos no par estudante–concedente; a exceção do art. 11 (estagiário com deficiência) é marcada no estágio pela coordenação, com documento, nunca no estudante |
 | Frequência (RF023, RF024) | Um lançamento vigente por dia, com intervalo; limite semanal pela semana ISO (segunda a domingo); conclusão bloqueada se houver lançamento pendente de homologação |
 | Relatório e atividade fora do prazo (RF037) | Relatório enviado depois do prazo é aceito e marcado como em atraso |
 | Aproveitamento de estágio não obrigatório (RF046) | Concluído ou rescindido, limitado aos minutos homologados, sempre com análise do responsável |
 | Mudança de curso | Estágio mantém o curso de origem; a apuração conta só estágios do curso atual, e os anteriores entram por decisão da coordenação |
-| Upload | PDF, JPEG ou PNG, até 10 MiB, direto ao R2 por URL assinada; o servidor confere tamanho, tipo pelos bytes e SHA-256 antes de aceitar |
-| Dados de saúde (RN-38, RF071–RF073) | Atestado e documento de dispensa são sensíveis: acesso só por vínculo, criptografia em repouso do R2, cada visualização ou download registrado; o administrador não lê o conteúdo |
+| Upload | PDF, JPEG ou PNG, até 10 MiB, direto ao armazenamento por URL assinada; o servidor confere tamanho, tipo pelos bytes e SHA-256 antes de aceitar |
+| Dados de saúde (RN-38, RF071–RF073) | Atestado e documento de dispensa são sensíveis: acesso só por vínculo, criptografia em repouso (SeaweedFS com `-encryptVolumeData` e disco criptografado no servidor), cada visualização ou download registrado; o administrador não lê o conteúdo |
 | Recuperação de senha (RF002) | O administrador emite senha provisória (`POST /usuarios/{id}/senha-provisoria`), entregue fora do sistema; 72 h de validade; troca obrigatória no primeiro acesso. Sem e-mail |
 
 ## Requisitos de qualidade (resumo)
@@ -403,29 +406,29 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
   antes, senão o passo falha avisando que a porta está ocupada.
 - O bit de execução do hook não sobrevive a um arquivo recém-criado no Windows. Ao adicionar
   ou recriar `.githooks/pre-push`: `git add --chmod=+x .githooks/pre-push`.
-- Deploy na Vercel fica para o futuro. Quando entrar: a integração Neon + Vercel injeta
-  `DATABASE_URL` com o papel dono do banco, o que **contorna toda a RLS**. Em produção,
-  `DATABASE_URL` é `app_runtime`, `DATABASE_AUTH_URL` é `auth_runtime`, e a migração roda num
-  job separado com `DATABASE_MIGRATION_URL`, nunca no build da Vercel (o build não depende de
-  banco). Branch Neon por preview esgota o limite de 10 branches do plano gratuito.
+- A produção será um servidor próprio com Docker Compose (aplicação, PostgreSQL, SeaweedFS e
+  proxy com HTTPS); só o armazenamento está pronto (`docker-compose.prod.yml`); o resto entra com a issue #63. `DATABASE_URL` é `app_runtime`,
+  `DATABASE_AUTH_URL` é `auth_runtime`, e a migração roda num passo separado com
+  `DATABASE_MIGRATION_URL`, nunca no build (o build não depende de banco). Conectar a aplicação
+  com o dono do banco **contorna toda a RLS**. O PostgreSQL não publica porta na internet.
 - O init do Postgres (`docker/postgres/init`) só roda quando o volume é criado. Se o
   container já existia antes dos papéis, recriar: `docker compose down -v` e subir de novo.
-- No Neon, a migração cria `app_runtime` e `auth_runtime` sem login. Habilitar uma vez
-  por ambiente com senha gerada: `alter role app_runtime with login password '...'`
-  (idem `auth_runtime`). `DATABASE_MIGRATION_URL` usa o dono (`neondb_owner`) na
-  conexão direta; as outras duas usam a conexão com pooler.
-- O pooler do Neon opera em modo transação. `set_config(..., true)` é obrigatório
-  (local à transação); um valor de sessão vazaria a identidade para outra requisição.
-  O driver `pg` com Drizzle usa statements sem nome e funciona com esse pooler.
+- Fora do init local, a migração cria `app_runtime` e `auth_runtime` sem login. Habilitar uma
+  vez por ambiente com senha gerada: `alter role app_runtime with login password '...'`
+  (idem `auth_runtime`). `DATABASE_MIGRATION_URL` usa o dono (`migrator`).
+- O pool de conexões reaproveita a mesma conexão entre requisições. `set_config(..., true)` é
+  obrigatório (local à transação); um valor de sessão vazaria a identidade para outra requisição.
 - `next build` não pode depender de banco: `getAuth()` e os pools são criados sob
   demanda. Não instanciar nada disso no topo de um módulo.
 - O Next renderiza um anunciador de rota com `role="alert"`. Em Playwright, filtrar
   alertas por texto.
-- Primeira consulta após inatividade no plano gratuito do Neon leva
-  ~0.5s a mais (cold start). Aquecer o banco antes de demonstração ao vivo.
-- Armazenamento local é SeaweedFS (`chrislusf/seaweedfs`, comando `mini`, porta 8333): o
-  MinIO deixou de publicar imagens da edição comunitária. Mesma API S3 do R2; o código só
-  muda por `R2_ENDPOINT` e `R2_FORCE_PATH_STYLE`.
+- Armazenamento é SeaweedFS (`chrislusf/seaweedfs`, porta 8333): `mini` em desenvolvimento e CI,
+  `server` com criptografia em `docker-compose.prod.yml`. O prefixo `R2_` das variáveis é
+  histórico; o código só muda por `R2_ENDPOINT` e pelas chaves.
+- Em produção, as chaves da criptografia do SeaweedFS ficam nos metadados dele, no mesmo volume
+  dos arquivos: sem disco criptografado no servidor, quem levar o disco lê os atestados.
+- O navegador envia direto ao armazenamento: em produção, `R2_ENDPOINT` é um endereço público
+  com HTTPS, e o proxy precisa manter o cabeçalho `Host`, senão a assinatura da URL falha.
 - URL de upload assinada: o SDK v3 assina por padrão um CRC32 do corpo ainda inexistente, e o
   bucket recusa o PUT real. O cliente usa `requestChecksumCalculation: "WHEN_REQUIRED"`.
 - Cabeçalho extra no navegador (por exemplo `extraHTTPHeaders` do Playwright) vai também no PUT
@@ -455,12 +458,11 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
 - Spec de tela que faz login pelo navegador sem `x-forwarded-for` divide com os outros o limite
   de 3 logins em 10 s; use um endereço próprio (`test.use({ extraHTTPHeaders })`), exceto em spec
   que envia arquivo ao bucket (CORS). Specs de API usam `sessoes(faixa)` de `e2e/support/api.ts`.
-- Buckets do Cloudflare R2 são privados; download sempre passa por endpoint
+- O bucket é privado; download sempre passa por endpoint
   que verifica permissão e emite URL assinada de expiração curta, nunca URL
   pública direta.
-- Bucket Locks do R2 não é imutabilidade absoluta: um administrador da conta
-  ainda consegue remover a regra de retenção. É uma segunda barreira, não a
-  única (a primeira é o gatilho `BEFORE DELETE` no banco).
+- A guarda documental tem uma barreira só, o gatilho `BEFORE DELETE` no banco. Sem o Bucket
+  Locks do R2, quem administra o servidor consegue apagar arquivos direto no disco.
 
 - Grid sem coluna base (`grid-cols-1`) estica até a largura do conteúdo e estoura a página no celular. Contêiner
   com rolagem precisa de `relative`, senão o rótulo `sr-only` (absoluto) escapa dele e cria rolagem na página.
@@ -496,7 +498,7 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
    banco, aproveitamento de estágio não obrigatório, vedação de dupla contagem em quatro
    barreiras e apuração de integralização por gatilho.
 5. Ocorrências, conclusão e conformidade (**concluída**, lote `integration/fase-5-conformidade`):
-   notificações no sistema por gatilho e rotina diária (Vercel Cron), afastamento com extensão até
+   notificações no sistema por gatilho e rotina diária (`/api/cron/diaria`), afastamento com extensão até
    o teto, rescisão e conclusão com encerramento comum, guarda documental sem exclusão,
    relatórios gerenciais com CSV e PDF, PDFs do TCE, plano e aditivo, declarações com código de
    verificação.
