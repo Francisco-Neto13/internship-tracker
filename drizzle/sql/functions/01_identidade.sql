@@ -75,6 +75,38 @@ as $$
   )
 $$;
 
+-- RF005, issue #80: the account to link when registering a student. Coordination has no policy on
+-- accounts outside its students, so it finds them here: active, with a current Estudante profile
+-- and no academic record yet, at least two characters typed, the text taken literally.
+create or replace function app.buscar_contas_estudante(p_busca text)
+returns table (id uuid, nome text, email text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select u.id, u.nome, u.email
+  from public.usuario u
+  where (app.tem_perfil_vigente('COORDENACAO') or app.tem_perfil_vigente('ADMINISTRADOR'))
+    and length(trim(p_busca)) >= 2
+    and u.situacao = 'ATIVO'
+    and exists (
+      select 1 from public.vinculo_perfil v
+      where v.usuario_id = u.id and v.perfil = 'ESTUDANTE'
+        and v.vigencia_inicio <= now() and (v.vigencia_fim is null or v.vigencia_fim > now())
+    )
+    and not exists (select 1 from public.estudante e where e.usuario_id = u.id)
+    and (
+      u.nome ilike '%' || replace(replace(replace(trim(p_busca), '\', '\\'), '%', '\%'), '_', '\_') || '%'
+      or u.email ilike '%' || replace(replace(replace(trim(p_busca), '\', '\\'), '%', '\%'), '_', '\_') || '%'
+    )
+  order by u.nome, u.email
+  limit 8
+$$;
+
+revoke all on function app.buscar_contas_estudante(text) from public;
+grant execute on function app.buscar_contas_estudante(text) to app_runtime;
+
 revoke all on function app.usuario_atual_id() from public;
 revoke all on function app.tem_perfil_vigente(public.perfil) from public;
 revoke all on function app.coordena_curso(uuid) from public;

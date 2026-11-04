@@ -17,6 +17,8 @@ export const vinculoBodySchema = z.object({
 
 const perfis = z.array(vinculoBodySchema).min(1).max(20);
 
+export const contasEstudanteQuerySchema = z.object({ busca: z.string().trim().min(2).max(100) });
+
 export const listUsuariosQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),

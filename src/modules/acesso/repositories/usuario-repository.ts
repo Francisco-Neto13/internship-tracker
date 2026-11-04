@@ -73,6 +73,12 @@ export async function findUsuarios(
   return { items, total };
 }
 
+/** RF005: accounts to link to a new student; the function decides who may ask and what returns. */
+export async function findContasEstudante(tx: Transaction, busca: string): Promise<{ id: string; nome: string; email: string }[]> {
+  const { rows } = await tx.execute<{ id: string; nome: string; email: string }>(sql`select id, nome, email from app.buscar_contas_estudante(${busca})`);
+  return rows;
+}
+
 export async function findUsuarioById(tx: Transaction, id: string): Promise<UsuarioRow | undefined> {
   const [row] = await tx.select(colunas).from(usuario).where(eq(usuario.id, id));
   return row;

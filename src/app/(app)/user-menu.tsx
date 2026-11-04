@@ -45,7 +45,7 @@ export function UserMenu({ nome, perfis }: { nome: string; perfis: string[] }) {
     <>
     {/* modal={false}: a modal menu would keep the page inert under the dialog it opens */}
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger ref={gatilho} className="group flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1.5 outline-none transition-colors hover:bg-nevoa-100 focus-visible:ring-2 focus-visible:ring-azul-500/40">
+      <DropdownMenuTrigger ref={gatilho} aria-label={`Conta de ${nome}`} className="group flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1.5 outline-none transition-colors hover:bg-nevoa-100 focus-visible:ring-2 focus-visible:ring-azul-500/40">
         <span className="inline-grid size-8 shrink-0 place-items-center rounded-full bg-navy-700 text-[11px] font-semibold text-white">
           {iniciais}
         </span>
@@ -55,7 +55,7 @@ export function UserMenu({ nome, perfis }: { nome: string; perfis: string[] }) {
         >
           {nome}
         </span>
-        <ChevronDown className="size-3.5 text-navy-900/40 transition-transform group-data-[state=open]:rotate-180" />
+        <ChevronDown className="size-3.5 text-navy-900/40 transition-transform group-data-[state=open]:rotate-180" aria-hidden />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-64 p-0">

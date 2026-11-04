@@ -229,6 +229,7 @@ export const SidebarMenuButton = React.forwardRef<HTMLButtonElement, SidebarMenu
         className={cn(
           "flex w-full items-center gap-2.5 overflow-hidden rounded-lg px-3 py-2 text-left text-sm outline-none transition-colors",
           "hover:bg-white/10 hover:text-sidebar-accent-foreground",
+          "focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-inset",
           "data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[active=true]:shadow-card",
           "group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0",
           "[&>svg]:size-4 [&>svg]:shrink-0",

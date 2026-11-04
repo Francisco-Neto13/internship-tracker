@@ -33,6 +33,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       className="min-h-0 flex-1"
       style={{ "--sidebar-width-icon": "5.125rem" } as CSSProperties}
     >
+      {/* WCAG 2.4.1: first stop of the keyboard, so nobody tabs through the whole menu on every screen */}
+      <a
+        href="#conteudo"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-navy-900 focus:shadow-elevated focus:ring-2 focus:ring-azul-500 focus:outline-none"
+      >
+        Pular para o conteúdo
+      </a>
       <AppSidebar perfis={perfis} naoLidas={naoLidas} />
       <SidebarInset>
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-navy-900/10 bg-white/95 px-4 backdrop-blur md:px-6">
@@ -56,7 +63,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </header>
         {/* Sem bg proprio: o cartao branco so se destaca se a pagina atras for levemente
             tingida (nevoa-50 no body). Tres planos: sidebar navy, pagina tingida, cartao branco. */}
-        <main id="conteudo" className="animate-fade-in w-full min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+        <main id="conteudo" tabIndex={-1} className="animate-fade-in w-full min-w-0 flex-1 px-4 py-6 focus:outline-none md:px-8 md:py-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

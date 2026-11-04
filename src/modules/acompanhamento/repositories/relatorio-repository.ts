@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, inArray, lt, or, sql, type SQL } from "drizzle-orm";
-import { anexoRelatorio, documento, estagio, estudante, parecerRelatorio, relatorio, usuario, versaoRelatorio } from "@/db/schema";
+import { identidadeEstudante } from "@/db/identidade-estudante";
+import { anexoRelatorio, documento, estagio, parecerRelatorio, relatorio, usuario, versaoRelatorio } from "@/db/schema";
 import type { Transaction } from "@/db/with-user";
 import type { VisaoRelatorio } from "../domain/relatorio";
 
@@ -94,12 +95,10 @@ export async function podeLerRelatorios(tx: Transaction, estagioId: string): Pro
  */
 export async function findRelatoriosEmAberto(tx: Transaction) {
   return tx
-    .select({ relatorio, estagioTipo: estagio.tipo, estudanteId: estagio.estudanteId, estudanteNome: usuario.nome })
+    .select({ relatorio, estagioTipo: estagio.tipo, estudanteId: estagio.estudanteId, estudanteNome: identidadeEstudante.nome })
     .from(relatorio)
     .innerJoin(estagio, eq(estagio.id, relatorio.estagioId))
-    // Name for the lists; left join so a student hidden by its own policy keeps the report
-    .leftJoin(estudante, eq(estudante.id, estagio.estudanteId))
-    .leftJoin(usuario, eq(usuario.id, estudante.usuarioId))
+    .leftJoin(identidadeEstudante.juncao, identidadeEstudante.correspondencia)
     .where(and(eq(estagio.situacao, "ATIVO"), inArray(relatorio.situacao, ["PENDENTE", "DEVOLVIDO", "EM_ANALISE"])))
     .orderBy(asc(relatorio.prazoEntrega));
 }
@@ -123,11 +122,10 @@ function naVisao(visao: VisaoRelatorio, diaAtual: string): SQL | undefined {
 
 export async function findRelatoriosPendentesPagina(tx: Transaction, diaAtual: string, visao: VisaoRelatorio, limit: number, offset: number) {
   return tx
-    .select({ relatorio, estudanteNome: usuario.nome })
+    .select({ relatorio, estudanteNome: identidadeEstudante.nome })
     .from(relatorio)
     .innerJoin(estagio, eq(estagio.id, relatorio.estagioId))
-    .leftJoin(estudante, eq(estudante.id, estagio.estudanteId))
-    .leftJoin(usuario, eq(usuario.id, estudante.usuarioId))
+    .leftJoin(identidadeEstudante.juncao, identidadeEstudante.correspondencia)
     .where(and(pendenteAgora(diaAtual), naVisao(visao, diaAtual)))
     .orderBy(asc(relatorio.prazoEntrega), asc(relatorio.id))
     .limit(limit)
