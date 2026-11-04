@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getIdentity } from "@/lib/session";
 import { LoginForm } from "./login-form";
@@ -109,8 +110,10 @@ export default async function LoginPage() {
             </p>
           </div>
 
-          <p className="mt-6 text-center text-[11px] text-navy-900/65">
-            Esqueceu a senha? O administrador do sistema emite uma senha provisória.
+          <p className="mt-6 text-center text-sm">
+            <Link href="/recuperar-senha" className="rounded text-azul-500 hover:text-navy-700 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none">
+              Esqueceu a senha?
+            </Link>
           </p>
         </div>
       </section>

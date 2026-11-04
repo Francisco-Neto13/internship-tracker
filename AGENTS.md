@@ -240,7 +240,7 @@ Funções auxiliares ficam no schema `app`, em `security definer` com `search_pa
 `app.estagios_legiveis(academico)`, `app.pode_ler_relatorios(estagio_id)`, `app.hoje()` (data em
 America/Sao_Paulo), `app.parametros_em(data)`, `app.travar_estagio(estagio_id)`,
 `app.impedimentos_conclusao(estagio_id)`, `app.registrar_leitura_documento(documento_id)`,
-`app.estudantes_legiveis()`, `app.identidades_estudante()`, `app.buscar_contas_estudante(busca)`, `app.calcular_integralizacao(estudante_id)`,
+`app.estudantes_legiveis()`, `app.identidades_estudante()`, `app.buscar_contas_estudante(busca)`, `app.solicitar_recuperacao_senha(email)`, `app.calcular_integralizacao(estudante_id)`,
 `app.apurar_integralizacao(estudante_id, gatilho)`, `app.notificar(...)` e `app.rotina_diaria()`,
 `app.periodos_afastamento(estagio_id)`, `app.teto_duracao_estagio(estagio_id)`,
 `app.definir_guarda_estagio(estagio_id, data)`, `app.eliminar_documento(documento_id)`,
@@ -393,7 +393,7 @@ alternativa descartada por engano):
 | Mudança de curso | Estágio mantém o curso de origem; a apuração conta só estágios do curso atual, e os anteriores entram por decisão da coordenação |
 | Upload | PDF, JPEG ou PNG, até 10 MiB, direto ao armazenamento por URL assinada; o servidor confere tamanho, tipo pelos bytes e SHA-256 antes de aceitar |
 | Dados de saúde (RN-38, RF071–RF073) | Atestado e documento de dispensa são sensíveis: acesso só por vínculo, criptografia em repouso (SeaweedFS com `-encryptVolumeData` e disco criptografado no servidor), cada visualização ou download registrado; o administrador não lê o conteúdo |
-| Recuperação de senha (RF002) | O administrador emite senha provisória (`POST /usuarios/{id}/senha-provisoria`), entregue fora do sistema; 72 h de validade; troca obrigatória no primeiro acesso. Sem e-mail |
+| Recuperação de senha (RF002) | "Esqueceu a senha?" no login avisa os administradores no sistema (`/api/auth/recuperacao-senha`), com a mesma resposta para qualquer e-mail e limite por endereço. O administrador confirma quem pediu e emite a senha provisória (`POST /usuarios/{id}/senha-provisoria`), entregue fora do sistema; 72 h de validade; troca obrigatória no primeiro acesso. Sem e-mail. Administrador único que esquece a senha é recuperado no servidor |
 
 ## Requisitos de qualidade (resumo)
 
