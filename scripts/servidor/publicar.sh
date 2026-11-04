@@ -50,6 +50,11 @@ $COMPOSE up -d --wait postgres storage
 $COMPOSE exec -T -u postgres postgres pgbackrest --stanza=main stanza-create
 $COMPOSE run --rm ferramentas npm run db:migrate
 $COMPOSE up -d --wait
+# Compose does not see a change in a mounted file, and a mount of a single file keeps the old one
+# after git reset. Without this, a new Caddyfile only takes effect when the proxy restarts.
+if ! $COMPOSE exec -T proxy cat /etc/caddy/Caddyfile | cmp -s - docker/caddy/Caddyfile; then
+  $COMPOSE up -d --wait --force-recreate --no-deps proxy
+fi
 
 # The certificates are issued after the proxy starts, and the bucket setup goes through HTTPS
 for tentativa in $(seq 1 60); do
