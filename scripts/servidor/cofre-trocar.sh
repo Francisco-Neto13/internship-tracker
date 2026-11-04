@@ -18,6 +18,10 @@ COMPOSE="docker compose --env-file $PONTO/.env -f $CODIGO/docker-compose.prod.ym
 falha() { echo "FALHA: $1" >&2; exit 1; }
 
 mountpoint -q "$PONTO" || falha "o cofre está fechado: rode cofre-abrir.sh primeiro."
+[ -f "$CODIGO/docker-compose.prod.yml" ] || falha "não achei $CODIGO/docker-compose.prod.yml."
+for temporizador in internship-backup.timer internship-rotina.timer; do
+  systemctl cat "$temporizador" >/dev/null 2>&1 || falha "não achei $temporizador."
+done
 [ ! -e "$ANTIGO" ] || falha "$ANTIGO já existe: confira e apague a troca anterior antes."
 [ ! -e "$NOVO" ] || falha "$NOVO já existe, de uma tentativa interrompida."
 
@@ -61,9 +65,12 @@ voltar() {
     mount /dev/mapper/cofre "$PONTO"
   fi
   systemctl start docker.service
-  $COMPOSE up -d --wait
-  systemctl start internship-backup.timer internship-rotina.timer
-  echo "O sistema voltou no cofre antigo. Nada foi perdido." >&2
+  # Says only what it checked: a message of success after a failed return would hide the problem
+  if $COMPOSE up -d --wait && systemctl start internship-backup.timer internship-rotina.timer; then
+    echo "O sistema voltou no cofre antigo." >&2
+  else
+    echo "ATENÇÃO: a volta não terminou. Confira o sistema com docker ps e os timers. O cofre antigo está em $ATUAL." >&2
+  fi
   exit "$codigo"
 }
 trap voltar EXIT
