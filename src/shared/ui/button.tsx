@@ -1,10 +1,11 @@
+import { Loader2 } from "lucide-react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "./cn";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[background-color,border-color,color,opacity,transform,box-shadow] duration-[var(--duracao-rapida)] ease-padrao active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -31,10 +32,24 @@ function Button({
   variant,
   size,
   asChild = false,
+  carregando = false,
+  disabled,
+  children,
   ...props
-}: React.ComponentProps<"button"> & VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
+}: React.ComponentProps<"button"> & VariantProps<typeof buttonVariants> & { asChild?: boolean; carregando?: boolean }) {
   const Comp = asChild ? Slot : "button";
-  return <Comp data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />;
+  return (
+    <Comp data-slot="button" className={cn(buttonVariants({ variant, size, className }))} disabled={disabled || carregando} aria-busy={carregando || undefined} {...props}>
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {carregando && <Loader2 className="animate-spin" aria-hidden />}
+          {children}
+        </>
+      )}
+    </Comp>
+  );
 }
 
 export { Button, buttonVariants };
