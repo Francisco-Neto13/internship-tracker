@@ -42,6 +42,19 @@ $COMPOSE build app
 $COMPOSE up -d --wait postgres storage
 $COMPOSE run --rm ferramentas npm run db:migrate
 $COMPOSE up -d --wait
+
+# The certificates are issued after the proxy starts, and the bucket setup goes through HTTPS
+for tentativa in $(seq 1 60); do
+  if curl --silent --output /dev/null --max-time 5 "https://$STORAGE_DOMAIN" && curl --silent --output /dev/null --max-time 5 "https://$APP_DOMAIN/login"; then
+    break
+  fi
+  if [ "$tentativa" -eq 60 ]; then
+    echo "Os certificados não saíram em 5 minutos: veja docker compose logs proxy" >&2
+    exit 1
+  fi
+  sleep 5
+done
+
 $COMPOSE run --rm ferramentas npm run storage:init
 $COMPOSE run --rm ferramentas npm run storage:check
 
