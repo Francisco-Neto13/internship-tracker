@@ -95,7 +95,7 @@ export default async function UsuarioPage({ params, searchParams }: { params: Pr
                       <GraduationCap className="size-5 text-navy-700" aria-hidden />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium text-navy-900">{estudante.cursoNome ?? "Curso"}</span>
-                        <span className="block text-xs text-navy-900/60">Matrícula {estudante.matricula}</span>
+                        <span className="block text-xs text-navy-900/65">Matrícula {estudante.matricula}</span>
                       </span>
                       <StatusBadge tone={SITUACAO_ACADEMICA[estudante.situacaoAcademica].tom}>{SITUACAO_ACADEMICA[estudante.situacaoAcademica].rotulo}</StatusBadge>
                     </Link>
@@ -111,9 +111,9 @@ export default async function UsuarioPage({ params, searchParams }: { params: Pr
                   <span className="flex items-center gap-2 text-navy-900">
                     <span className={`size-2 rounded-full ${vinculo.vigenciaFim ? "bg-navy-900/25" : "bg-status-ok-text"}`} aria-hidden />
                     {ROTULO_PERFIL[vinculo.perfil]}
-                    {escopo(vinculo) && <span className="text-navy-900/60">· {escopo(vinculo)}</span>}
+                    {escopo(vinculo) && <span className="text-navy-900/65">· {escopo(vinculo)}</span>}
                   </span>
-                  <span className="pl-4 text-xs text-navy-900/60">
+                  <span className="pl-4 text-xs text-navy-900/65">
                     {formatarDataHora(vinculo.vigenciaInicio)} até {vinculo.vigenciaFim ? formatarDataHora(vinculo.vigenciaFim) : "hoje (vigente)"}
                   </span>
                 </li>

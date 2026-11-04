@@ -58,7 +58,7 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   return (
     <div className={cn(!embutida && "surface-card", "relative overflow-hidden", className)}>
-      <div className="relative overflow-x-auto">
+      <div tabIndex={0} className="relative overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-navy-900/10 bg-nevoa-50">
             <tr>
@@ -72,7 +72,7 @@ export function DataTable<T>({
                     scope="col"
                     aria-sort={ativa ? (ordem?.startsWith("-") ? "descending" : "ascending") : undefined}
                     className={cn(
-                      "px-4 py-2.5 text-xs font-medium whitespace-nowrap text-navy-900/60",
+                      "px-4 py-2.5 text-xs font-medium whitespace-nowrap text-navy-900/65",
                       column.alinhar === "direita" && "text-right",
                       column.ocultarNoCelular && "hidden md:table-cell",
                       column.className,

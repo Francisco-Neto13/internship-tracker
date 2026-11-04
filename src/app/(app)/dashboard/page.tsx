@@ -93,22 +93,22 @@ async function BlocoCoordenacao({ identity }: { identity: Parameters<typeof dado
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
               <Link href="/administracao/estudantes?situacao=MATRICULADO" className="rounded-lg bg-nevoa-50 p-3 transition-colors hover:bg-nevoa-100">
-                <p className="text-xs text-navy-900/60">Matriculados</p>
+                <p className="text-xs text-navy-900/65">Matriculados</p>
                 <p className="text-xl font-semibold text-navy-900 tabular-nums">{dados.estudantesMatriculados?.toLocaleString("pt-BR") ?? "—"}</p>
               </Link>
               <Link href="/administracao/relatorios-gerenciais?tipo=pendencias-integralizacao" className="rounded-lg bg-nevoa-50 p-3 transition-colors hover:bg-nevoa-100">
-                <p className="text-xs text-navy-900/60">Com integralização pendente</p>
+                <p className="text-xs text-navy-900/65">Com integralização pendente</p>
                 <p className="text-xl font-semibold text-navy-900 tabular-nums">{dados.pendenciasIntegralizacao?.toLocaleString("pt-BR") ?? "—"}</p>
               </Link>
             </div>
             <div className="border-t border-navy-900/[0.07] pt-4">
-              <p className="text-xs text-navy-900/60">Taxa de conclusão nos últimos 12 meses</p>
+              <p className="text-xs text-navy-900/65">Taxa de conclusão nos últimos 12 meses</p>
               {taxa === null ? (
-                <p className="mt-1 text-sm text-navy-900/60">Nenhum estágio encerrado no período.</p>
+                <p className="mt-1 text-sm text-navy-900/65">Nenhum estágio encerrado no período.</p>
               ) : (
                 <>
                   <p className="mt-1 text-xl font-semibold text-navy-900 tabular-nums">{taxa.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</p>
-                  <p className="text-xs text-navy-900/60">
+                  <p className="text-xs text-navy-900/65">
                     {encerrados!.concluidos} concluídos, {encerrados!.rescindidos} rescindidos
                   </p>
                 </>
@@ -338,9 +338,9 @@ async function BlocoEstudante({ identity }: { identity: Parameters<typeof dadosE
                 </Link>
               </div>
               <div>
-                <p className="mb-2 text-xs font-medium text-navy-900/60">Próximos relatórios</p>
+                <p className="mb-2 text-xs font-medium text-navy-900/65">Próximos relatórios</p>
                 {proximos.length === 0 ? (
-                  <p className="text-sm text-navy-900/60">Nenhum relatório pendente agora.</p>
+                  <p className="text-sm text-navy-900/65">Nenhum relatório pendente agora.</p>
                 ) : (
                   <ul className="flex flex-col gap-2">
                     {proximos.map((relatorio) => (
@@ -351,7 +351,7 @@ async function BlocoEstudante({ identity }: { identity: Parameters<typeof dadosE
                         ) : relatorio.situacao === "DEVOLVIDO" ? (
                           <StatusBadge tone="pending">Devolvido</StatusBadge>
                         ) : (
-                          <span className="text-xs text-navy-900/60">prazo {prazoEmPalavras(relatorio.prazoEntrega, dados.hoje)}</span>
+                          <span className="text-xs text-navy-900/65">prazo {prazoEmPalavras(relatorio.prazoEntrega, dados.hoje)}</span>
                         )}
                       </li>
                     ))}
@@ -391,7 +391,7 @@ async function BlocoEstudante({ identity }: { identity: Parameters<typeof dadosE
               />
             </div>
           ) : (
-            <p className="text-sm text-navy-900/60">A integralização não pôde ser carregada agora.</p>
+            <p className="text-sm text-navy-900/65">A integralização não pôde ser carregada agora.</p>
           )}
         </Painel>
         <Painel titulo="Atividades complementares" verTodos={{ href: "/atividades-complementares" }}>
@@ -402,7 +402,7 @@ async function BlocoEstudante({ identity }: { identity: Parameters<typeof dadosE
               { rotulo: "Aprovadas", valor: contar("APROVADA") },
             ].map((item) => (
               <div key={item.rotulo} className="rounded-lg bg-nevoa-50 p-3">
-                <p className="text-xs text-navy-900/60">{item.rotulo}</p>
+                <p className="text-xs text-navy-900/65">{item.rotulo}</p>
                 <p className={`text-xl font-semibold tabular-nums ${item.atencao && item.valor > 0 ? "text-status-pending-text" : "text-navy-900"}`}>{item.valor}</p>
               </div>
             ))}
@@ -426,7 +426,7 @@ async function BlocoAdministrador({ identity }: { identity: Parameters<typeof da
         <Indicador
           rotulo="Troca de senha pendente"
           valor={dados.trocaSenhaPendente}
-          contexto={dados.trocaSenhaAmostra ? "entre os 100 primeiros ativos" : "senha provisória ainda não trocada"}
+          contexto="senha provisória ainda não trocada"
           href="/administracao/usuarios"
           icone={Hourglass}
           tom="atencao"
@@ -462,7 +462,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-1">
-        <p className="text-sm text-navy-900/60 first-letter:uppercase">{dataPorExtenso()}</p>
+        <p className="text-sm text-navy-900/65 first-letter:uppercase">{dataPorExtenso()}</p>
         <h1 className="text-[1.65rem] leading-tight font-semibold text-navy-900">
           {saudacao()}
           {primeiroNome ? `, ${primeiroNome}` : ""}

@@ -57,7 +57,7 @@ export function PerfisCampo({
                 onChange={(event) => alternar(opcao, event.target.checked)}
               />
               {opcao.rotulo}
-              {semConcedente && <span className="text-xs text-navy-900/60">(cadastre uma concedente antes)</span>}
+              {semConcedente && <span className="text-xs text-navy-900/65">(cadastre uma concedente antes)</span>}
             </label>
             {vinculo && opcao.exigeCurso && (
               <select

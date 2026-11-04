@@ -31,7 +31,7 @@ export async function DeclaracoesEstudante({ identity, estudanteId, atividadesCu
       }
     >
       {declaracoes.length === 0 ? (
-        <p className="px-5 py-6 text-sm text-navy-900/60">
+        <p className="px-5 py-6 text-sm text-navy-900/65">
           Nenhuma declaração emitida.{" "}
           {atividadesCumpridas
             ? "As atividades complementares estão cumpridas: a declaração já pode ser emitida."
@@ -44,7 +44,7 @@ export async function DeclaracoesEstudante({ identity, estudanteId, atividadesCu
               <FileCheck2 className="size-5 shrink-0 text-navy-700" aria-hidden />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-navy-900">{TIPO[item.tipo]}</p>
-                <p className="text-xs text-navy-900/60">
+                <p className="text-xs text-navy-900/65">
                   Emitida em {formatarDataHora(item.criadoEm)} · código <span className="font-mono text-navy-900">{item.codigoVerificacao}</span>
                 </p>
               </div>

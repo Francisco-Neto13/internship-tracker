@@ -10,6 +10,7 @@ import {
   findAnalises,
   findAtividadeById,
   findAtividades,
+  findAtividadesPagina,
   findComprovantePorHash,
   findComprovantes,
   findSaldos,
@@ -121,6 +122,11 @@ export async function listAtividades(identity: Identity, filtros: FiltrosAtivida
   return withUser(identity, (tx) => findAtividades(tx, filtros));
 }
 
+/** RNF-11: one page for the list screens. */
+export async function listAtividadesPagina(identity: Identity, filtros: FiltrosAtividade, query: { page: number; limit: number }) {
+  return withUser(identity, (tx) => findAtividadesPagina(tx, filtros, { limit: query.limit, offset: (query.page - 1) * query.limit }));
+}
+
 /** RF055: the activity with its proofs and the whole history of analyses. */
 export async function getAtividade(identity: Identity, id: string) {
   return withUser(identity, async (tx) => {
@@ -134,16 +140,25 @@ export async function getAtividade(identity: Identity, id: string) {
  * would count (RF051): the database decides at approval with the same rule.
  */
 export async function listFilaAnalise(identity: Identity) {
+  return withUser(identity, async (tx) => comPrevia(tx, (await findAtividades(tx, { situacao: "EM_ANALISE" })).reverse()));
+}
+
+async function comPrevia(tx: Transaction, fila: AtividadeRow[]) {
+  const saldos = new Map((await findSaldos(tx, fila.map((atividade) => atividade.id))).map((saldo) => [saldo.atividadeId, saldo]));
+  return fila.map((atividade) => {
+    const saldo = saldos.get(atividade.id);
+    return {
+      atividade,
+      previa: saldo ? calcularAproveitamento({ declaradosMinutos: atividade.horasDeclaradasMinutos, ...saldo }) : null,
+    };
+  });
+}
+
+/** RF053, RNF-11: one page of the queue for the screen; the preview is computed only for it. */
+export async function listFilaAnalisePagina(identity: Identity, query: { page: number; limit: number }) {
   return withUser(identity, async (tx) => {
-    const fila = (await findAtividades(tx, { situacao: "EM_ANALISE" })).reverse();
-    const saldos = new Map((await findSaldos(tx, fila.map((atividade) => atividade.id))).map((saldo) => [saldo.atividadeId, saldo]));
-    return fila.map((atividade) => {
-      const saldo = saldos.get(atividade.id);
-      return {
-        atividade,
-        previa: saldo ? calcularAproveitamento({ declaradosMinutos: atividade.horasDeclaradasMinutos, ...saldo }) : null,
-      };
-    });
+    const { items, total } = await findAtividadesPagina(tx, { situacao: "EM_ANALISE" }, { limit: query.limit, offset: (query.page - 1) * query.limit, maisAntigasPrimeiro: true });
+    return { items: await comPrevia(tx, items), total };
   });
 }
 

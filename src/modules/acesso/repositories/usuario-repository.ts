@@ -37,10 +37,11 @@ export type OrdemUsuario = (typeof ORDENS_USUARIO)[number];
 
 export async function findUsuarios(
   tx: Transaction,
-  filter: { perfil?: Perfil; situacao?: Situacao; busca?: string; ordem?: OrdemUsuario; decrescente?: boolean; limit: number; offset: number },
+  filter: { perfil?: Perfil; situacao?: Situacao; trocaSenhaPendente?: boolean; busca?: string; ordem?: OrdemUsuario; decrescente?: boolean; limit: number; offset: number },
 ): Promise<{ items: UsuarioRow[]; total: number }> {
   const condicoes: SQL[] = [];
   if (filter.situacao) condicoes.push(eq(usuario.situacao, filter.situacao));
+  if (filter.trocaSenhaPendente) condicoes.push(eq(usuario.trocaSenhaObrigatoria, true));
   if (filter.busca) {
     const padrao = padraoContendo(filter.busca);
     condicoes.push(or(ilike(usuario.nome, padrao), ilike(usuario.email, padrao))!);

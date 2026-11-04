@@ -20,7 +20,7 @@ function Secao({ titulo, descricao, children }: { titulo: string; descricao: str
       <legend className="contents">
         <span className="block">
           <span className="block text-sm font-semibold text-navy-900">{titulo}</span>
-          <span className="mt-0.5 block text-sm text-navy-900/60">{descricao}</span>
+          <span className="mt-0.5 block text-sm text-navy-900/65">{descricao}</span>
         </span>
       </legend>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
@@ -33,7 +33,7 @@ function Campo({ id, rotulo, ajuda, largo, children }: { id: string; rotulo: str
     <div className={`flex flex-col gap-1.5 ${largo ? "sm:col-span-2" : ""}`}>
       <Label htmlFor={id}>{rotulo}</Label>
       {children}
-      {ajuda && <p className="text-xs text-navy-900/60">{ajuda}</p>}
+      {ajuda && <p className="text-xs text-navy-900/65">{ajuda}</p>}
     </div>
   );
 }
@@ -116,7 +116,7 @@ export function NovoEstagioForm({ estudantes, convenios }: { estudantes: Opcao[]
               >
                 <input type="radio" name="tipo" value={opcao.valor} checked={tipo === opcao.valor} onChange={() => setTipo(opcao.valor)} className="sr-only" />
                 <span className="font-medium text-navy-900">{opcao.rotulo}</span>
-                <span className="text-xs text-navy-900/60">{opcao.detalhe}</span>
+                <span className="text-xs text-navy-900/65">{opcao.detalhe}</span>
               </label>
             ))}
           </div>
@@ -155,7 +155,7 @@ export function NovoEstagioForm({ estudantes, convenios }: { estudantes: Opcao[]
           <input type="checkbox" name="seguro_exigido" defaultChecked className="mt-0.5 size-4 accent-navy-700" />
           <span>
             Seguro contra acidentes pessoais exigido
-            <span className="block text-xs text-navy-900/60">Lei 11.788/2008, art. 9º, IV: a apólice vigente é guarda de ativação.</span>
+            <span className="block text-xs text-navy-900/65">Lei 11.788/2008, art. 9º, IV: a apólice vigente é guarda de ativação.</span>
           </span>
         </label>
       </Secao>

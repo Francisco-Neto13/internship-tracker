@@ -40,7 +40,7 @@ export function Indicador({
         )}
       </div>
       {valor === null ? (
-        <p className="mt-2 text-2xl font-semibold text-navy-900/30" title={motivoSemValor}>
+        <p className="mt-2 text-2xl font-semibold text-navy-900/65" title={motivoSemValor}>
           —<span className="sr-only">{motivoSemValor ?? "sem dado"}</span>
         </p>
       ) : (
@@ -49,7 +49,7 @@ export function Indicador({
         </p>
       )}
       {(contexto || (valor === null && motivoSemValor)) && (
-        <p className="mt-2 text-xs text-navy-900/60">{valor === null ? motivoSemValor : contexto}</p>
+        <p className="mt-2 text-xs text-navy-900/65">{valor === null ? motivoSemValor : contexto}</p>
       )}
     </>
   );
@@ -104,7 +104,7 @@ export function Progresso({
       >
         <div className={cn("h-full rounded-full", completo ? "bg-status-ok-text" : "bg-azul-500")} style={{ width: `${percentual}%` }} />
       </div>
-      {detalhe && <p className="mt-1.5 text-xs text-navy-900/60">{detalhe}</p>}
+      {detalhe && <p className="mt-1.5 text-xs text-navy-900/65">{detalhe}</p>}
     </div>
   );
 }

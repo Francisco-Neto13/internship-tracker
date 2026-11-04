@@ -27,9 +27,7 @@ function cidrValido(entrada: string): boolean {
  * - AUTH_IP_HEADERS: headers set by your proxy, in order (e.g. "x-real-ip").
  * - AUTH_TRUSTED_PROXIES: addresses or CIDR ranges of your proxies; the forwarded chain is
  *   read right to left, skipping them.
- * - On Vercel (VERCEL=1) nothing is needed: the platform overwrites x-forwarded-for and
- *   x-vercel-forwarded-for to prevent spoofing.
- * - Self-hosted production without either variable refuses to start: Better Auth would
+ * - Production without either variable refuses to start: Better Auth would
  *   otherwise trust a client-supplied header or share one bucket among all users.
  */
 export function opcoesEnderecoIp(env: Env): { ipAddressHeaders?: string[]; trustedProxies?: string[] } {
@@ -47,12 +45,11 @@ export function opcoesEnderecoIp(env: Env): { ipAddressHeaders?: string[]; trust
       ...(proxies.length > 0 ? { trustedProxies: proxies } : {}),
     };
   }
-  if (env.VERCEL === "1") return { ipAddressHeaders: ["x-vercel-forwarded-for", "x-forwarded-for"] };
   if (env.NODE_ENV !== "production") return {};
 
   throw new Error(
     "Defina AUTH_IP_HEADERS (e, atrás de proxy, AUTH_TRUSTED_PROXIES): sem isso o limite de tentativas de login " +
-      "confiaria num cabeçalho que o cliente pode falsificar. Na Vercel não é preciso.",
+      "confiaria num cabeçalho que o cliente pode falsificar.",
   );
 }
 

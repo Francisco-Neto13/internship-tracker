@@ -14,8 +14,9 @@ export function lerConsulta(bruto: SearchParamsBrutos): Record<string, string> {
   );
 }
 
-export function lerPaginacao(consulta: Record<string, string>, padrao = 20) {
-  const pagina = Math.max(1, Math.trunc(Number(consulta.pagina)) || 1);
+/** `chavePagina` separa duas listas paginadas na mesma tela. */
+export function lerPaginacao(consulta: Record<string, string>, padrao = 20, chavePagina = "pagina") {
+  const pagina = Math.max(1, Math.trunc(Number(consulta[chavePagina])) || 1);
   const pedido = Math.trunc(Number(consulta.por_pagina));
   const porPagina = TAMANHOS.includes(pedido) ? pedido : padrao;
   return { pagina, porPagina };

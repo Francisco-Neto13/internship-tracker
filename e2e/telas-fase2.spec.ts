@@ -33,7 +33,8 @@ test("coordination opens the Fase 2 screens and registers an agreement with its 
   await expect(page.getByTestId("estudante-edicao")).toBeVisible();
 
   // Concedente page and the agreement upload through the browser
-  await page.goto("/administracao/concedentes");
+  // By name: the database grows between runs and pushes the seeded one off the first page
+  await page.goto("/administracao/concedentes?busca=Empresa%20Exemplo%20de%20Software");
   await page.getByRole("link", { name: "Empresa Exemplo de Software Ltda" }).click();
   await expect(page.getByTestId("convenios")).toContainText("CV-2026-0001");
 

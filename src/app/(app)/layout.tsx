@@ -16,7 +16,7 @@ import { UserMenu } from "./user-menu";
 // Confiança"; a navegacao le do mesmo registro NAVEGACAO usado pelas rotas em construcao, para
 // nunca discordar da tela. Estrutura do shell (sidebar colapsavel, largura de icone, drawer no
 // mobile, topbar de altura fixa alinhada ao cabecalho da sidebar) segue o padrao mapeado nos
-// CRMs de referencia (shadcn "sidebar-07").
+// CRMs de referencia.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/login");

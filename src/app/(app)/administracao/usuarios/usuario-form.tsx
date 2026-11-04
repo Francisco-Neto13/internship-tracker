@@ -60,7 +60,7 @@ export function UsuarioForm({
             Senha provisória de <strong>{emitida.email}</strong>, válida por 72 horas. Ela não será exibida de novo:
           </p>
           <code className="rounded bg-white px-2 py-1 font-mono text-lg break-all text-navy-900 select-all">{emitida.senha}</code>
-          <p className="text-xs text-navy-900/60">No primeiro acesso, o usuário precisa definir uma senha própria. Entregue a senha fora do sistema.</p>
+          <p className="text-xs text-navy-900/65">No primeiro acesso, o usuário precisa definir uma senha própria. Entregue a senha fora do sistema.</p>
           <a href={`/administracao/usuarios/${emitida.id}`} className="w-fit text-sm font-medium text-azul-500 hover:text-navy-700">
             Abrir a conta criada →
           </a>

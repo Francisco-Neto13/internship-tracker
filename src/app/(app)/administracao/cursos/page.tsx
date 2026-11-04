@@ -66,11 +66,11 @@ export default async function CursosPage({ searchParams }: { searchParams: Promi
                     <p className="line-clamp-2 font-semibold text-navy-900 group-hover:text-navy-700">{curso.nome}</p>
                     <dl className="grid grid-cols-2 gap-2 text-sm">
                       <div>
-                        <dt className="text-xs text-navy-900/60">Estágio mínimo</dt>
+                        <dt className="text-xs text-navy-900/65">Estágio mínimo</dt>
                         <dd className="font-medium text-navy-900 tabular-nums">{h(curso.cargaMinimaEstagioMinutos)}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs text-navy-900/60">Ativ. complementares</dt>
+                        <dt className="text-xs text-navy-900/65">Ativ. complementares</dt>
                         <dd className="font-medium text-navy-900 tabular-nums">{h(curso.cargaAtividadesComplementaresMinutos)}</dd>
                       </div>
                     </dl>
