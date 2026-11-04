@@ -9,6 +9,7 @@ import { conta, limiteRequisicao, sessao, usuario, verificacao } from "@/db/sche
 import { senhaProvisoriaExpirada } from "@/modules/acesso/domain/senha-provisoria";
 import { opcoesEnderecoIp, urlRangeSenhasVazadas, verificacaoSenhaVazadaAtiva } from "./auth-options";
 import { hashPassword, verifyPassword } from "./password";
+import { recuperacaoSenha } from "./recuperacao-senha";
 import { senhasVazadas } from "./senhas-vazadas";
 
 // QA: an idle session expires after 30 minutes. Each request older than a minute
@@ -160,6 +161,8 @@ function createAuth() {
       },
     },
     plugins: [
+      // RF002: request for a temporary password, with no e-mail (src/lib/recuperacao-senha.ts)
+      recuperacaoSenha(),
       // NIST SP 800-63B-4 3.1.1.2: new passwords are compared against breach corpora
       // (src/lib/senhas-vazadas.ts). Getters re-read the environment on every check.
       senhasVazadas({

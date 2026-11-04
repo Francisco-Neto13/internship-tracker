@@ -1,4 +1,4 @@
-import { AlertTriangle, Archive, ArrowRightLeft, Bell, CalendarClock, CheckCircle2, FileClock, Hourglass, Scale, type LucideIcon } from "lucide-react";
+import { AlertTriangle, Archive, ArrowRightLeft, Bell, CalendarClock, CheckCircle2, KeyRound, FileClock, Hourglass, Scale, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
@@ -25,6 +25,7 @@ const ICONE: Record<string, LucideIcon> = {
   DURACAO_MAXIMA_ATINGIDA: Hourglass,
   RELATORIO_ANALISADO: CheckCircle2,
   ATIVIDADE_ANALISADA: CheckCircle2,
+  RECUPERACAO_SENHA: KeyRound,
 };
 
 const LINK: Record<string, (id: string) => string> = {
@@ -32,6 +33,7 @@ const LINK: Record<string, (id: string) => string> = {
   convenio: () => "/administracao/convenios",
   atividade_complementar: () => "/atividades-complementares",
   documento: () => "/administracao/guarda-documental",
+  usuario: (id) => `/administracao/usuarios/${id}`,
 };
 
 function rotuloDoDia(dia: string, hoje: string) {

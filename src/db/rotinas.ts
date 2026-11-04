@@ -5,13 +5,19 @@ import { getAppDatabase } from "./client";
 // SECURITY DEFINER functions of drizzle/sql. These are the only calls into the pool outside
 // withUser, and they reach nothing else:
 // - the daily routine (RF012, RF040, RF069), behind CRON_SECRET (src/app/api/cron/diaria);
-// - the public check of a declaration by its verification code (RF058).
+// - the public check of a declaration by its verification code (RF058);
+// - the request for a temporary password from the sign-in screen (RF002).
 
 export type ResultadoRotina = Record<string, number>;
 
 export async function executarRotinaDiaria(): Promise<ResultadoRotina> {
   const { rows } = await getAppDatabase().execute<{ resultado: ResultadoRotina }>(sql`select app.rotina_diaria() as resultado`);
   return rows[0].resultado;
+}
+
+/** RF002: warns the administrators. Says nothing back, whether the account exists or not. */
+export async function solicitarRecuperacaoSenha(email: string): Promise<void> {
+  await getAppDatabase().execute(sql`select app.solicitar_recuperacao_senha(${email})`);
 }
 
 export type DeclaracaoVerificada = { tipo: string; estudante: string; curso: string; emitida_em: string; sha256: string };

@@ -26,6 +26,36 @@ as $$
   on conflict (chave_deduplicacao) do nothing
 $$;
 
+-- RF002: "esqueceu a senha" without e-mail. Called without identity from the sign-in screen: it
+-- returns nothing, so the answer cannot tell which accounts exist, and it changes nothing in the
+-- account. It only warns the administrators, once an hour per account, who confirm who is asking.
+create or replace function app.solicitar_recuperacao_senha(p_email text)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  select app.notificar(
+    v.usuario_id,
+    'RECUPERACAO_SENHA',
+    'Pedido de senha provisória',
+    u.nome || ' (' || u.email || ') pediu uma senha provisória na tela de login. Confirme que é a própria pessoa antes de entregar.',
+    'usuario',
+    u.id,
+    'recuperacao-senha:' || u.id || ':' || v.usuario_id || ':' || to_char(now() at time zone 'UTC', 'YYYY-MM-DD-HH24')
+  )
+  from public.usuario u
+  join public.vinculo_perfil v
+    on v.perfil = 'ADMINISTRADOR'
+   and v.usuario_id <> u.id
+   and v.vigencia_inicio <= now()
+   and (v.vigencia_fim is null or v.vigencia_fim > now())
+  where u.email = lower(trim(p_email)) and u.situacao = 'ATIVO'
+$$;
+
+revoke all on function app.solicitar_recuperacao_senha(text) from public;
+grant execute on function app.solicitar_recuperacao_senha(text) to app_runtime;
+
 -- RF070 "conforme o vínculo de cada um com o item": everyone linked to an internship, by role
 create or replace function app.pessoas_do_estagio(p_estagio_id uuid)
 returns table (usuario_id uuid, papel text)
