@@ -3,8 +3,7 @@ import { opcoesEnderecoIp } from "./auth-options";
 
 /**
  * Client address recorded as complementary evidence of a signature (RF019). It comes from the
- * same trusted source as the sign-in rate limit (AUTH_IP_HEADERS, or the headers Vercel
- * overwrites), first address of the chain; null when there is no trustworthy value. It is
+ * same trusted source as the sign-in rate limit (AUTH_IP_HEADERS), first address of the chain; null when there is no trustworthy value. It is
  * evidence, never an authorization input.
  */
 export function enderecoIpDaRequisicao(headers: Headers): string | null {

@@ -85,8 +85,7 @@ services:
       timeout: 3s
       retries: 30
 
-  # SeaweedFS replaced Cloudflare R2, whose activation asks for a card or PayPal even in the
-  # free tier (decision of 2026-11-03). Tag pinned: change it on purpose, after running
+  # Tag pinned: change it on purpose, after running
   # npm run storage:check. Data is encrypted before reaching the volume (RN-38, RNF-05).
   storage:
     image: chrislusf/seaweedfs:4.06

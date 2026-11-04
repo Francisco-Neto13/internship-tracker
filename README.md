@@ -79,7 +79,7 @@ Pontos que antes admitiam mais de uma interpretação, definidos com o professor
 
 ## Requisitos de qualidade
 
-Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com as metas mais apertadas da equipe (`DAS.docx` §10) como alvo, não como garantia: o projeto roda em planos gratuitos de terceiros, sem redundância paga.
+Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com as metas mais apertadas da equipe (`DAS.docx` §10) como alvo, não como garantia: o sistema roda em um único servidor, sem redundância.
 
 - **Segurança:** RLS sem exceção em qualquer tabela (RNF-01); senha com hash Argon2id, mínimo de 15 caracteres e recusa de senha vazada ou previsível (RNF-02); dado de saúde com acesso por vínculo, criptografia em repouso e cada leitura registrada (RNF-05, RN-38); sessão expira em 30 minutos de inatividade.
 - **Desempenho:** consultas com p95 de até 2 s (RNF-11); alvo da equipe p95 < 800 ms e PDF em até 5 s.
@@ -94,7 +94,7 @@ Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com 
 | Linguagem | TypeScript (modo estrito) |
 | Framework web | Next.js 16 (App Router) |
 | Runtime | Node.js 24 LTS |
-| Interface | React 19, Tailwind CSS 4, shadcn/ui |
+| Interface | React 19, Tailwind CSS 4, Radix UI e componentes próprios (`src/shared/ui`) |
 | Formulários e validação | React Hook Form e Zod |
 | Banco de dados | PostgreSQL 17 em Docker, com Row Level Security |
 | Acesso a dados | Drizzle ORM, drizzle-kit e driver `pg` |
@@ -104,7 +104,7 @@ Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com 
 | Geração de PDF | pdf-lib no servidor |
 | Testes | Vitest (unidade/integração) e Playwright (e2e) |
 | Rotinas agendadas | Timer do servidor chamando `/api/cron/diaria` |
-| Deploy | Servidor próprio com Docker Compose (aplicação, banco e arquivos) |
+| Deploy | VPS com Docker Compose (aplicação, banco, arquivos e Caddy para HTTPS), publicada pelo GitHub Actions |
 
 ## Ambientes
 
@@ -116,7 +116,7 @@ Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com 
 
 O CI usa o mesmo contêiner e o mesmo script de papéis do ambiente local, então um teste de RLS que passa na máquina passa no CI pelas mesmas razões.
 
-O MinIO, previsto antes, deixou de publicar imagens da edição comunitária em 2025; o SeaweedFS expõe a mesma API S3. O Cloudflare R2, previsto para produção, também saiu: a ativação pede cartão de crédito ou PayPal mesmo na franquia gratuita, e a equipe decidiu não cadastrar meio de pagamento. O código é o mesmo em todos os ambientes; o prefixo `R2_` das variáveis é histórico. O arquivo nunca passa pela aplicação: o navegador envia direto ao bucket por URL assinada, e o servidor confere tamanho, tipo pelos bytes e SHA-256 antes de aceitar o documento (PDF, JPEG ou PNG até 10 MiB).
+O código é o mesmo em todos os ambientes; o prefixo `R2_` das variáveis de armazenamento é só um nome antigo. O arquivo nunca passa pela aplicação: o navegador envia direto ao bucket por URL assinada, e o servidor confere tamanho, tipo pelos bytes e SHA-256 antes de aceitar o documento (PDF, JPEG ou PNG até 10 MiB).
 
 ## Como rodar localmente
 
@@ -163,7 +163,7 @@ npm run lint
 npm run typecheck
 npm run test:unit          # Vitest sem banco
 npm run test:db            # RLS, auditoria, autenticação, cadastros e formalização contra Postgres real
-npm run storage:check      # confere o bucket e o CORS do armazenamento local
+npm run storage:check      # confere o bucket e o CORS do armazenamento
 npm run db:desempenho      # carga de 600 estágios e p95 das leituras de acompanhamento (banco *_test)
 npm run test:e2e           # Playwright (banco migrado e com seed)
 npm run db:generate        # gera migração de tabela a partir de src/db/schema
@@ -190,7 +190,7 @@ alter role auth_runtime with login password '<senha gerada>';
 A migração roda num passo separado com `DATABASE_MIGRATION_URL`, nunca no build. Variáveis da
 aplicação: `DATABASE_URL` (`app_runtime`), `DATABASE_AUTH_URL` (`auth_runtime`),
 `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `AUTH_IP_HEADERS`, `AUTH_TRUSTED_PROXIES`, as `R2_*` do
-bucket privado (`R2_ENDPOINT` é o endereço público com HTTPS do armazenamento) e `CRON_SECRET` (32 caracteres ou mais). O cron do servidor chama
+bucket privado (`R2_ENDPOINT` é o endereço público com HTTPS do armazenamento) e `CRON_SECRET` (32 caracteres ou mais). O timer do servidor chama
 `/api/cron/diaria` uma vez por dia com o segredo no cabeçalho `Authorization`; sem ele a rota
 recusa tudo. Nunca conecte a aplicação com o dono do banco: isso contorna a RLS.
 
@@ -209,7 +209,9 @@ drizzle/migrations/     SQL de tabelas gerado pelo drizzle-kit
 drizzle/rollback/       reversão manual de cada migração (*.down.sql)
 drizzle/sql/            papéis, funções, políticas RLS e triggers versionados como SQL
 scripts/db/             migração e seed
-scripts/storage/        bucket e CORS do armazenamento local
+scripts/storage/        bucket e CORS do armazenamento
+scripts/servidor/       produção: cofre criptografado, publicação, deploy e rotina diária
+docker/                 configuração do Caddy e dos papéis do Postgres
 scripts/ci-local.mjs    CI local, espelho do workflow do GitHub
 .githooks/              pre-push que recusa push direto em develop e main
 scripts/github/         automação do fluxo de lotes e da proteção das branches
@@ -262,6 +264,7 @@ Commits seguem `type(scope): summary`, no imperativo, com notas em bullet explic
 | 3 · Acompanhamento | Frequência, homologação, carga horária, divergências, relatórios, avaliação e acompanhamento do orientador; guardas de conclusão e registro de leitura de dado de saúde (**concluída**) |
 | 4 · Atividades complementares e integralização | Cadastro com comprovante, análise, limites por categoria, vedação de dupla contagem, apuração (**concluída**) |
 | 5 · Ocorrências, conclusão e conformidade | Afastamento, rescisão e conclusão, PDFs do TCE e declarações, guarda documental, relatórios gerenciais, notificações (**concluída**) |
+| 6 · Interface | Telas sobre componentes próprios, painel por perfil, listagens com busca, ordenação e paginação no servidor, confirmações em diálogo (**concluída**) |
 
 A ordem segue a dependência de dados, não a numeração dos requisitos. Critérios de saída de cada fase em `AGENTS.md`.
 
