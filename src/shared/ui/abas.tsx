@@ -35,7 +35,7 @@ export function Abas({
                   "relative inline-flex h-11 items-center gap-2 rounded-t-md px-3 text-sm whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none",
                   ativa
                     ? "font-medium text-navy-900 after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-navy-700"
-                    : "text-navy-900/60 hover:text-navy-900",
+                    : "text-navy-900/65 hover:text-navy-900",
                 )}
               >
                 {aba.rotulo}
@@ -43,7 +43,7 @@ export function Abas({
                   <span
                     className={cn(
                       "rounded-full px-1.5 text-xs tabular-nums",
-                      ativa ? "bg-navy-700 text-white" : "bg-nevoa-100 text-navy-900/60",
+                      ativa ? "bg-navy-700 text-white" : "bg-nevoa-100 text-navy-900/65",
                     )}
                   >
                     {aba.contagem}

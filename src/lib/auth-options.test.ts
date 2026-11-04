@@ -2,16 +2,10 @@ import { describe, expect, it } from "vitest";
 import { opcoesEnderecoIp, urlRangeSenhasVazadas, verificacaoSenhaVazadaAtiva } from "./auth-options";
 
 describe("opcoesEnderecoIp (sign-in rate limit, RF002)", () => {
-  it("uses the headers and proxies configured for a self-hosted proxy", () => {
+  it("uses the headers and proxies configured for the proxy", () => {
     expect(
       opcoesEnderecoIp({ NODE_ENV: "production", AUTH_IP_HEADERS: "X-Real-IP, x-forwarded-for", AUTH_TRUSTED_PROXIES: "10.0.0.5, 10.1.0.0/16" }),
     ).toEqual({ ipAddressHeaders: ["x-real-ip", "x-forwarded-for"], trustedProxies: ["10.0.0.5", "10.1.0.0/16"] });
-  });
-
-  it("trusts the headers Vercel overwrites, with no configuration", () => {
-    expect(opcoesEnderecoIp({ NODE_ENV: "production", VERCEL: "1" })).toEqual({
-      ipAddressHeaders: ["x-vercel-forwarded-for", "x-forwarded-for"],
-    });
   });
 
   it("keeps the library default in development and tests", () => {
@@ -19,7 +13,7 @@ describe("opcoesEnderecoIp (sign-in rate limit, RF002)", () => {
     expect(opcoesEnderecoIp({ NODE_ENV: "test" })).toEqual({});
   });
 
-  it("refuses a self-hosted production without a trusted source", () => {
+  it("refuses production without a trusted source", () => {
     expect(() => opcoesEnderecoIp({ NODE_ENV: "production" })).toThrow(/AUTH_IP_HEADERS/);
   });
 

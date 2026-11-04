@@ -300,9 +300,8 @@ provisória gerada é gravada com `hashPassword` direto (`definirSenha`), porque
 contexto de rota da biblioteca.
 
 Limite de login por IP: a origem do endereço vem de `AUTH_IP_HEADERS` e
-`AUTH_TRUSTED_PROXIES` (`src/lib/auth-options.ts`). Na Vercel o padrão confia em
-`x-vercel-forwarded-for`/`x-forwarded-for`, que a plataforma sobrescreve. Em hospedagem
-própria, produção sem essas variáveis não inicia.
+`AUTH_TRUSTED_PROXIES` (`src/lib/auth-options.ts`). Produção sem essas variáveis não inicia;
+no servidor, o Caddy define `x-real-ip`.
 
 Conta nova ou senha esquecida recebe senha provisória (`usuario.troca_senha_obrigatoria`, `senha_provisoria_expira_em`).
 Enquanto a troca estiver pendente, `authenticatedRoute` responde 403
@@ -453,6 +452,11 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
   senão o `INSERT` falha com 42501 (não com violação de RLS).
 - Em função SQL, subconsulta lateral com chamada cara precisa de `case` e `offset 0` para não ser
   achatada e chamada em toda linha (`relatorio_pendencias_integralizacao`, `DER-LOGICO.MD` §13.1).
+- `e2e/acessibilidade.spec.ts` roda as regras automáticas de WCAG 2.1 AA (axe) em cada perfil, a 1280 e 360 px; teclado e
+  leitor de tela seguem exigindo gente. Texto com opacidade abaixo de `text-navy-900/65` não passa no fundo da página.
+- Outros navegadores (RNF-13) rodam sob demanda: `E2E_NAVEGADORES=1 npx playwright test --project=firefox` (`webkit`,
+  `edge`), com `CI=1` e `AUTH_IP_HEADERS=x-forwarded-for`, no build de produção; no servidor de desenvolvimento o login falha
+  por clicar antes da hidratação. O WebKit do Playwright no Windows não é o Safari.
 - Com `CI=1`, o Playwright sobe o build de produção já existente: rota nova dá 404 até
   `npm run build` (o `npm run ci` compila antes do e2e).
 - Constraint trigger (verificação adiada para o commit) não aceita `create or replace`: em
@@ -467,8 +471,8 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
 - O bucket é privado; download sempre passa por endpoint
   que verifica permissão e emite URL assinada de expiração curta, nunca URL
   pública direta.
-- A guarda documental tem uma barreira só, o gatilho `BEFORE DELETE` no banco. Sem o Bucket
-  Locks do R2, quem administra o servidor consegue apagar arquivos direto no disco.
+- A guarda documental tem uma barreira só, o gatilho `BEFORE DELETE` no banco: quem administra
+  o servidor consegue apagar arquivos direto no disco.
 
 - Grid sem coluna base (`grid-cols-1`) estica até a largura do conteúdo e estoura a página no celular. Contêiner
   com rolagem precisa de `relative`, senão o rótulo `sr-only` (absoluto) escapa dele e cria rolagem na página.

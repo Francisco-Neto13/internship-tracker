@@ -79,7 +79,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
               ["Tolerância", `${divergencia.toleranciaPercentual.toLocaleString("pt-BR")}%`],
             ].map(([rotulo, valor]) => (
               <div key={rotulo} className="rounded-lg bg-nevoa-50 px-3 py-2">
-                <dt className="text-xs text-navy-900/60">{rotulo}</dt>
+                <dt className="text-xs text-navy-900/65">{rotulo}</dt>
                 <dd className="font-semibold text-navy-900 tabular-nums">{valor}</dd>
               </div>
             ))}
@@ -90,13 +90,13 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]">
         <Painel titulo="Frequência" descricao={`${lancamentos.length} lançamento(s); os 30 mais recentes`} flush>
           {lancamentos.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-navy-900/60" data-testid="frequencias">
+            <p className="px-5 py-6 text-sm text-navy-900/65" data-testid="frequencias">
               Nenhum lançamento ainda.
             </p>
           ) : (
-            <div className="relative overflow-x-auto">
+            <div tabIndex={0} className="relative overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-navy-900/10 bg-nevoa-50 text-xs text-navy-900/60">
+                <thead className="border-b border-navy-900/10 bg-nevoa-50 text-xs text-navy-900/65">
                   <tr>
                     <th scope="col" className="px-4 py-2.5 font-medium">
                       Dia
@@ -120,7 +120,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
                     <tr key={registro.id} className="border-b border-navy-900/[0.07] last:border-0">
                       <td className="px-4 py-2.5 whitespace-nowrap text-navy-900">{formatarDataCurta(registro.data)}</td>
                       <td className="px-4 py-2.5 text-right text-navy-900 tabular-nums">{h(registro.duracaoMinutos)}</td>
-                      <td className="hidden px-4 py-2.5 text-navy-900/60 md:table-cell">
+                      <td className="hidden px-4 py-2.5 text-navy-900/65 md:table-cell">
                         {registro.horaEntrada ? `${registro.horaEntrada.slice(0, 5)} às ${registro.horaSaida?.slice(0, 5)}` : "—"}
                       </td>
                       <td className="px-4 py-2.5">
@@ -184,7 +184,7 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-navy-900">{relatorio.tipo === "FINAL" ? "Relatório final" : `Relatório parcial nº ${relatorio.sequencia}`}</p>
-                    <p className="text-xs text-navy-900/60">
+                    <p className="text-xs text-navy-900/65">
                       {relatorio.periodoInicio ? `${formatarDataCurta(relatorio.periodoInicio)} a ${formatarDataCurta(relatorio.periodoFim)}` : `até ${formatarDataCurta(relatorio.periodoFim)}`} · prazo{" "}
                       {formatarData(relatorio.prazoEntrega)}
                     </p>
@@ -225,18 +225,18 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
         {avaliacoes && (
           <Painel titulo="Avaliações de desempenho" descricao="Pela concedente, por critério (RF042, RF043)." flush>
             <ul className="divide-y divide-navy-900/[0.07]" data-testid="avaliacoes">
-              {avaliacoes.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/60">Nenhuma avaliação registrada.</li>}
+              {avaliacoes.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhuma avaliação registrada.</li>}
               {avaliacoes.map((avaliacao) => (
                 <li key={avaliacao.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
                   <span>
                     <span className="block font-medium text-navy-900">
                       {avaliacao.momento === "FINAL" ? "Avaliação final" : `Periódica · ${formatarDataCurta(avaliacao.periodoInicio)} a ${formatarDataCurta(avaliacao.periodoFim)}`}
                     </span>
-                    <span className="block text-xs text-navy-900/60">{avaliacao.avaliadorNome ?? "Avaliador"}</span>
+                    <span className="block text-xs text-navy-900/65">{avaliacao.avaliadorNome ?? "Avaliador"}</span>
                   </span>
                   <span className="text-lg font-semibold text-navy-900 tabular-nums">
                     {avaliacao.media ?? "—"}
-                    <span className="text-xs font-normal text-navy-900/60"> / 10</span>
+                    <span className="text-xs font-normal text-navy-900/65"> / 10</span>
                   </span>
                 </li>
               ))}

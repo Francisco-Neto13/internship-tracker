@@ -80,7 +80,7 @@ export function TrocarSenhaForm({
           onChange={(event) => setNova(event.target.value)}
         />
         {/* NIST SP 800-63B-4 3.1.1.2: the verifier SHALL offer guidance to choose a strong password */}
-        <p className="text-xs text-navy-900/60">
+        <p className="text-xs text-navy-900/65">
           Ao menos {MINIMO} caracteres; espaços e acentos valem. Prefira uma frase só sua, fácil de lembrar. Não use o seu
           nome, o seu e-mail, o nome do sistema nem uma senha que você já usa em outro lugar: senhas que aparecem em
           vazamentos de dados são recusadas.

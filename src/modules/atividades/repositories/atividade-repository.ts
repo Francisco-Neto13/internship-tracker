@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { analiseAtividade, atividadeComplementar, categoriaAtividade, comprovanteAtividade, documento, estudante, usuario } from "@/db/schema";
 import type { Transaction } from "@/db/with-user";
 
@@ -24,15 +24,37 @@ export async function findAtividades(tx: Transaction, filtros: FiltrosAtividade)
     .innerJoin(categoriaAtividade, eq(categoriaAtividade.id, atividadeComplementar.categoriaId))
     .innerJoin(estudante, eq(estudante.id, atividadeComplementar.estudanteId))
     .leftJoin(usuario, eq(usuario.id, estudante.usuarioId))
-    .where(
-      and(
-        filtros.estudanteId ? eq(atividadeComplementar.estudanteId, filtros.estudanteId) : undefined,
-        filtros.categoriaId ? eq(atividadeComplementar.categoriaId, filtros.categoriaId) : undefined,
-        filtros.situacao ? eq(atividadeComplementar.situacao, filtros.situacao) : undefined,
-      ),
-    )
+    .where(condicoesAtividade(filtros))
     .orderBy(desc(atividadeComplementar.enviadaEm));
   return linhas.map((linha) => ({ ...linha.atividade, categoriaNome: linha.categoriaNome, estudanteNome: linha.estudanteNome, matricula: linha.matricula }));
+}
+
+function condicoesAtividade(filtros: FiltrosAtividade) {
+  return and(
+    filtros.estudanteId ? eq(atividadeComplementar.estudanteId, filtros.estudanteId) : undefined,
+    filtros.categoriaId ? eq(atividadeComplementar.categoriaId, filtros.categoriaId) : undefined,
+    filtros.situacao ? eq(atividadeComplementar.situacao, filtros.situacao) : undefined,
+  );
+}
+
+/** One page for the list screens (RNF-11). The id breaks ties, so no row repeats between pages. */
+export async function findAtividadesPagina(
+  tx: Transaction,
+  filtros: FiltrosAtividade,
+  pagina: { limit: number; offset: number; maisAntigasPrimeiro?: boolean },
+): Promise<{ items: AtividadeRow[]; total: number }> {
+  const linhas = await tx
+    .select({ atividade: atividadeComplementar, categoriaNome: categoriaAtividade.nome, estudanteNome: usuario.nome, matricula: estudante.matricula })
+    .from(atividadeComplementar)
+    .innerJoin(categoriaAtividade, eq(categoriaAtividade.id, atividadeComplementar.categoriaId))
+    .innerJoin(estudante, eq(estudante.id, atividadeComplementar.estudanteId))
+    .leftJoin(usuario, eq(usuario.id, estudante.usuarioId))
+    .where(condicoesAtividade(filtros))
+    .orderBy((pagina.maisAntigasPrimeiro ? asc : desc)(atividadeComplementar.enviadaEm), asc(atividadeComplementar.id))
+    .limit(pagina.limit)
+    .offset(pagina.offset);
+  const [{ total }] = await tx.select({ total: count() }).from(atividadeComplementar).where(condicoesAtividade(filtros));
+  return { items: linhas.map((linha) => ({ ...linha.atividade, categoriaNome: linha.categoriaNome, estudanteNome: linha.estudanteNome, matricula: linha.matricula })), total };
 }
 
 export async function findAtividadeById(tx: Transaction, id: string): Promise<AtividadeRow | undefined> {

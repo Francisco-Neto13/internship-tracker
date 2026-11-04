@@ -200,7 +200,7 @@ export function SegurancaConta({ usuario }: { usuario: { id: string; nome: strin
           <KeyRound className="mt-0.5 size-5 shrink-0 text-navy-700" aria-hidden />
           <div className="min-w-0">
             <p className="text-sm font-medium text-navy-900">Senha provisória</p>
-            <p className="text-sm text-navy-900/60">Para quem esqueceu a senha: vale 72 h, é exibida uma vez e exige troca no primeiro acesso (RF002).</p>
+            <p className="text-sm text-navy-900/65">Para quem esqueceu a senha: vale 72 h, é exibida uma vez e exige troca no primeiro acesso (RF002).</p>
           </div>
         </div>
         <Button variant="outline" disabled={enviando || !ativo} onClick={() => setConfirmando("senha")} className="w-fit">
@@ -212,7 +212,7 @@ export function SegurancaConta({ usuario }: { usuario: { id: string; nome: strin
           {ativo ? <UserX className="mt-0.5 size-5 shrink-0 text-status-danger-text" aria-hidden /> : <UserCheck className="mt-0.5 size-5 shrink-0 text-status-ok-text" aria-hidden />}
           <div className="min-w-0">
             <p className="text-sm font-medium text-navy-900">{ativo ? "Inativar conta" : "Reativar conta"}</p>
-            <p className="text-sm text-navy-900/60">
+            <p className="text-sm text-navy-900/65">
               {ativo ? "Encerra as sessões abertas e impede novos acessos. Os registros da pessoa permanecem." : "Devolve o acesso com os perfis vigentes."}
             </p>
           </div>

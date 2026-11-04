@@ -18,8 +18,8 @@ import {
 } from "./documento-repository";
 import { assinarPedido, verificarPedido } from "./token-upload";
 
-// D8 (DER-LOGICO §9.2): upload straight to the bucket by a signed PUT URL (Vercel functions
-// refuse bodies above 4.5 MB), then a confirmation in which the server checks the stored
+// D8 (DER-LOGICO §9.2): upload straight to the bucket by a signed PUT URL (the file never
+// passes through the application), then a confirmation in which the server checks the stored
 // object (size, type by its first bytes, SHA-256) before the documento row exists. Objects
 // wait under pendentes/ and only reach documentos/ when confirmed, so a retention lock on
 // documentos/ never holds a rejected file.

@@ -1,6 +1,7 @@
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, lt, or, sql, type SQL } from "drizzle-orm";
 import { anexoRelatorio, documento, estagio, estudante, parecerRelatorio, relatorio, usuario, versaoRelatorio } from "@/db/schema";
 import type { Transaction } from "@/db/with-user";
+import type { VisaoRelatorio } from "../domain/relatorio";
 
 // Reports (RF036 to RF041). No authorization filter: RLS decides who reads, and the triggers of
 // functions/09_relatorios.sql decide who sends and who analyzes.
@@ -101,4 +102,48 @@ export async function findRelatoriosEmAberto(tx: Transaction) {
     .leftJoin(usuario, eq(usuario.id, estudante.usuarioId))
     .where(and(eq(estagio.situacao, "ATIVO"), inArray(relatorio.situacao, ["PENDENTE", "DEVOLVIDO", "EM_ANALISE"])))
     .orderBy(asc(relatorio.prazoEntrega));
+}
+
+// RF040: what is waiting now, in SQL so the list screen pages on the server (RNF-11). A report is
+// due once its period has ended; in analysis, it waits for the advisor. "atraso" mirrors
+// relatorioEmAtraso of the domain, and a test holds the two together.
+function pendenteAgora(diaAtual: string): SQL {
+  return and(
+    eq(estagio.situacao, "ATIVO"),
+    or(eq(relatorio.situacao, "EM_ANALISE"), and(inArray(relatorio.situacao, ["PENDENTE", "DEVOLVIDO"]), lt(relatorio.periodoFim, diaAtual))),
+  )!;
+}
+
+function naVisao(visao: VisaoRelatorio, diaAtual: string): SQL | undefined {
+  if (visao === "orientador") return eq(relatorio.situacao, "EM_ANALISE");
+  if (visao === "estudante") return inArray(relatorio.situacao, ["PENDENTE", "DEVOLVIDO"]);
+  if (visao === "atraso") return and(inArray(relatorio.situacao, ["PENDENTE", "DEVOLVIDO"]), lt(relatorio.prazoEntrega, diaAtual));
+  return undefined;
+}
+
+export async function findRelatoriosPendentesPagina(tx: Transaction, diaAtual: string, visao: VisaoRelatorio, limit: number, offset: number) {
+  return tx
+    .select({ relatorio, estudanteNome: usuario.nome })
+    .from(relatorio)
+    .innerJoin(estagio, eq(estagio.id, relatorio.estagioId))
+    .leftJoin(estudante, eq(estudante.id, estagio.estudanteId))
+    .leftJoin(usuario, eq(usuario.id, estudante.usuarioId))
+    .where(and(pendenteAgora(diaAtual), naVisao(visao, diaAtual)))
+    .orderBy(asc(relatorio.prazoEntrega), asc(relatorio.id))
+    .limit(limit)
+    .offset(offset);
+}
+
+/** Total of each view, read at once: the filter chips show all of them. */
+export async function countRelatoriosPendentes(tx: Transaction, diaAtual: string): Promise<Record<VisaoRelatorio, number>> {
+  const contar = (visao: VisaoRelatorio) => {
+    const condicao = naVisao(visao, diaAtual);
+    return (condicao ? sql<number>`count(*) filter (where ${condicao})` : sql<number>`count(*)`).mapWith(Number);
+  };
+  const [linha] = await tx
+    .select({ todos: contar("todos"), orientador: contar("orientador"), estudante: contar("estudante"), atraso: contar("atraso") })
+    .from(relatorio)
+    .innerJoin(estagio, eq(estagio.id, relatorio.estagioId))
+    .where(pendenteAgora(diaAtual));
+  return linha;
 }

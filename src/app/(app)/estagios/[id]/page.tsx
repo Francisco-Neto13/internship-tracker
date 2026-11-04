@@ -77,7 +77,7 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
             <StatusBadge tone={situacao.tom}>{situacao.rotulo}</StatusBadge>
             <span>
               {formatarDataCurta(estagio.dataInicio)} – {formatarDataCurta(estagio.dataFimPrevista)}
-              {estagio.dataFimPrevista !== estagio.dataFimPactuada && <span className="text-navy-900/60"> (pactuado até {formatarDataCurta(estagio.dataFimPactuada)})</span>}
+              {estagio.dataFimPrevista !== estagio.dataFimPactuada && <span className="text-navy-900/65"> (pactuado até {formatarDataCurta(estagio.dataFimPactuada)})</span>}
             </span>
             {estagio.situacao === "ATIVO" && <span>{restantes > 0 ? `${restantes} dias restantes` : "termina hoje"}</span>}
             <span>
@@ -133,7 +133,7 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
           </Painel>
           <Painel titulo="Aditivos" descricao="Mudanças no TCE depois da ativação, com as três assinaturas (RF020)." flush>
             <ul className="divide-y divide-navy-900/[0.07]">
-              {aditivos.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/60">Nenhum aditivo.</li>}
+              {aditivos.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhum aditivo.</li>}
               {aditivos.map((aditivo) => (
                 <li key={aditivo.id} className="flex flex-col gap-2 px-5 py-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -181,7 +181,7 @@ confirmacao={{ titulo: "Propor a prorrogação?", descricao: "O aditivo fica reg
       {aba === "acompanhamento" &&
         (estagio.situacao === "EM_FORMALIZACAO" ? (
           <Painel titulo="Acompanhamento">
-            <p className="text-sm text-navy-900/60">Frequência, relatórios e avaliações começam depois da ativação do estágio.</p>
+            <p className="text-sm text-navy-900/65">Frequência, relatórios e avaliações começam depois da ativação do estágio.</p>
           </Painel>
         ) : (
           <AcompanhamentoEstagio identity={identity} estagioId={id} />
@@ -189,7 +189,7 @@ confirmacao={{ titulo: "Propor a prorrogação?", descricao: "O aditivo fica reg
       {aba === "ocorrencias" &&
         (estagio.situacao === "EM_FORMALIZACAO" ? (
           <Painel titulo="Ocorrências">
-            <p className="text-sm text-navy-900/60">Afastamentos, conclusão e rescisão valem para estágios ativos.</p>
+            <p className="text-sm text-navy-900/65">Afastamentos, conclusão e rescisão valem para estágios ativos.</p>
           </Painel>
         ) : (
           <OcorrenciasEstagio identity={identity} estagio={estagio} />

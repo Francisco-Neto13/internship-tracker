@@ -46,7 +46,7 @@ export function ModalTrocarSenha({
             </div>
             <Dialog.Close
               aria-label="Fechar"
-              className="rounded-md p-1 text-navy-900/60 hover:bg-nevoa-100 hover:text-navy-900 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none"
+              className="rounded-md p-1 text-navy-900/65 hover:bg-nevoa-100 hover:text-navy-900 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none"
             >
               <X className="size-5" aria-hidden />
             </Dialog.Close>

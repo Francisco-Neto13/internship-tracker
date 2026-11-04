@@ -16,7 +16,17 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // RNF-13: the other browsers run on demand (E2E_NAVEGADORES=1); the CI stays on Chromium
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    ...(process.env.E2E_NAVEGADORES
+      ? [
+          { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+          { name: "webkit", use: { ...devices["Desktop Safari"] } },
+          { name: "edge", use: { ...devices["Desktop Edge"], channel: "msedge" } },
+        ]
+      : []),
+  ],
   webServer: [
     // Have I Been Pwned stand-in: the pipeline never depends on the real service (RF002)
     {

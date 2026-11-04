@@ -4,7 +4,8 @@ import * as schema from "@/db/schema";
 import { withUser } from "@/db/with-user";
 import { PERIODICIDADE_PADRAO } from "@/modules/academico/domain/periodicidade";
 import { definirPeriodicidades, getPeriodicidades } from "@/modules/academico/services/periodicidade-service";
-import { decidirRelatorio, enviarRelatorio, getRelatorio, listRelatorios, listRelatoriosPendentes } from "@/modules/acompanhamento/services/relatorio-service";
+import type { VisaoRelatorio } from "@/modules/acompanhamento/domain/relatorio";
+import { decidirRelatorio, enviarRelatorio, getRelatorio, listRelatorios, listRelatoriosPendentes, listRelatoriosPendentesPagina } from "@/modules/acompanhamento/services/relatorio-service";
 import { assinarAditivo, criarAditivo } from "@/modules/estagios/services/aditivo-service";
 import { closeOwnerDatabase, createDocumentoDoEstagio, createMundoEstagio, createUsuario, grantPerfil, owner } from "./fixtures";
 import { como, estagioAtivo, type Mundo } from "./estagio-helpers";
@@ -171,6 +172,50 @@ describe("prazo e pendências (RF037, RF040)", () => {
     expect(enviado).toMatchObject({ situacao: "EM_ANALISE", emAtraso: false, pendenteDe: "ORIENTADOR" });
     expect(versoes[0].enviadaComAtraso).toBe(true);
     expect((await listRelatoriosPendentes(como(mundo.orientador))).map((item) => item.id)).toContain(relatorio.id);
+  });
+
+  it("pages the same list on the server, and each view agrees with the rule of the domain (RNF-11)", async () => {
+    const mundo = await createMundoEstagio();
+    await definirMensal(mundo);
+    const id = await estagioAtivo(mundo);
+    const relatorio = await primeiroPeriodico(mundo, id);
+    await enviarRelatorio(como(mundo.aluno), relatorio.id, { conteudo: "Enviado", documentoIds: [] });
+
+    // The student reads only this internship, so the numbers belong to this scenario
+    const pessoa = como(mundo.aluno);
+    const completa = await listRelatoriosPendentes(pessoa);
+    expect(completa.length).toBeGreaterThan(1);
+    const paginar = (visao: VisaoRelatorio, page: number, limit: number) => listRelatoriosPendentesPagina(pessoa, { visao, page, limit });
+
+    const todos = await paginar("todos", 1, 100);
+    expect(todos.items.map((item) => item.id).sort()).toEqual(completa.map((item) => item.id).sort());
+    expect(todos.contagens).toEqual({
+      todos: completa.length,
+      orientador: completa.filter((item) => item.pendenteDe === "ORIENTADOR").length,
+      estudante: completa.filter((item) => item.pendenteDe === "ESTUDANTE").length,
+      atraso: completa.filter((item) => item.emAtraso).length,
+    });
+    expect((await paginar("atraso", 1, 100)).items.every((item) => item.emAtraso)).toBe(true);
+    expect((await paginar("orientador", 1, 100)).items.map((item) => item.id)).toEqual([relatorio.id]);
+
+    const primeira = await paginar("todos", 1, 1);
+    const segunda = await paginar("todos", 2, 1);
+    expect(primeira.total).toBe(completa.length);
+    expect(primeira.items).toHaveLength(1);
+    expect(segunda.items).toHaveLength(1);
+    expect(segunda.items[0].id).not.toBe(primeira.items[0].id);
+  });
+
+  it("a page of reports stays inside what RLS shows", async () => {
+    const mundo = await createMundoEstagio();
+    await definirMensal(mundo);
+    await estagioAtivo(mundo);
+    const outro = await createMundoEstagio();
+    expect(await listRelatoriosPendentesPagina(como(outro.aluno), { visao: "todos", page: 1, limit: 10 })).toEqual({
+      items: [],
+      total: 0,
+      contagens: { todos: 0, orientador: 0, estudante: 0, atraso: 0 },
+    });
   });
 });
 

@@ -202,7 +202,7 @@ revoke all on function app.validar_alteracao_notificacao() from public;
 
 -- ---------------------------------------------------------------- daily routine
 
--- RF012, RF040, RF069: deadlines. Runs without identity (Vercel Cron), so it writes only
+-- RF012, RF040, RF069: deadlines. Runs without identity (server timer), so it writes only
 -- notifications; the deduplication keys make a second run of the day a no-op. Returns how many
 -- notifications each check created.
 create or replace function app.rotina_diaria()

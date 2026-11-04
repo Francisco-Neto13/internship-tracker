@@ -88,7 +88,7 @@ confirmacao={{ titulo: "Salvar as alterações do curso?", descricao: "Mudar a c
             flush
           >
             <ul className="divide-y divide-navy-900/[0.07]" data-testid="exigencias">
-              {categorias.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/60">Nenhum limite definido: sem limite no curso, uma categoria não aproveita horas.</li>}
+              {categorias.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhum limite definido: sem limite no curso, uma categoria não aproveita horas.</li>}
               {categorias.map((item) => (
                 <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
                   <span className="text-navy-900">{item.categoriaNome}</span>

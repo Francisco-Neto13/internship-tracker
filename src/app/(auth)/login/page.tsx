@@ -25,7 +25,7 @@ export default async function LoginPage() {
     <div className="grid flex-1 lg:grid-cols-[1.15fr_1fr]">
       {/* Painel da marca */}
       <aside className="relative hidden flex-col justify-between overflow-hidden bg-navy-900 p-12 lg:flex">
-        <p className="text-[11px] font-medium tracking-[0.32em] text-white/40 uppercase">
+        <p className="text-[11px] font-medium tracking-[0.32em] text-white/70 uppercase">
           Plataforma de acompanhamento de estágios
         </p>
 
@@ -55,12 +55,12 @@ export default async function LoginPage() {
                     {pilar.titulo}
                   </span>
                 </div>
-                <p className="text-xs leading-relaxed text-white/45">{pilar.descricao}</p>
+                <p className="text-xs leading-relaxed text-white/70">{pilar.descricao}</p>
               </li>
             ))}
           </ul>
 
-          <p className="text-xs text-white/30">
+          <p className="text-xs text-white/70">
             Project Lab · 6 perfis · 37 regras de negócio · 73 requisitos funcionais
           </p>
         </div>
@@ -85,7 +85,7 @@ export default async function LoginPage() {
 
           <div className="surface-elevated p-8">
             <div className="mb-7 space-y-2">
-              <p className="text-[11px] font-medium tracking-[0.18em] text-navy-900/60 uppercase">
+              <p className="text-[11px] font-medium tracking-[0.18em] text-navy-900/65 uppercase">
                 Acesso restrito
               </p>
               <h1 className="font-display text-3xl font-semibold text-navy-900">
@@ -94,7 +94,7 @@ export default async function LoginPage() {
                   Internship Tracker
                 </span>
               </h1>
-              <p className="text-sm text-navy-900/60">
+              <p className="text-sm text-navy-900/65">
                 Cadastro próprio desabilitado: as contas são criadas pelo administrador (RF001).
               </p>
             </div>
@@ -103,13 +103,13 @@ export default async function LoginPage() {
 
             <div className="divider-rule my-6" />
 
-            <p className="text-center text-xs text-navy-900/60">
+            <p className="text-center text-xs text-navy-900/65">
               Estudante, orientador, supervisor, coordenação, concedente ou administrador — o
               sistema reconhece o seu perfil ao entrar.
             </p>
           </div>
 
-          <p className="mt-6 text-center text-[11px] text-navy-900/40">
+          <p className="mt-6 text-center text-[11px] text-navy-900/65">
             Esqueceu a senha? O administrador do sistema emite uma senha provisória.
           </p>
         </div>

@@ -113,7 +113,7 @@ export async function dadosAdministrador(identity: Identity) {
   const [ativos, inativos, trocaPendente, auditoria, guarda, convenios, estagiarios] = await Promise.all([
     tentar(listUsuarios(identity, { page: 1, limit: 1, situacao: "ATIVO" })),
     tentar(listUsuarios(identity, { page: 1, limit: 1, situacao: "INATIVO" })),
-    tentar(listUsuarios(identity, { page: 1, limit: 100, situacao: "ATIVO" })),
+    tentar(listUsuarios(identity, { page: 1, limit: 1, situacao: "ATIVO", trocaSenhaPendente: true })),
     tentar(listUltimosRegistros(identity, 8)),
     tentar(listDocumentosEmGuarda(identity, null)),
     tentar(listConveniosAVencer(identity, hoje, 30)),
@@ -122,9 +122,7 @@ export async function dadosAdministrador(identity: Identity) {
   return {
     usuariosAtivos: ativos?.total ?? null,
     usuariosInativos: inativos?.total ?? null,
-    // Só a primeira página de ativos: a contagem exata de troca pendente não tem consulta própria
-    trocaSenhaPendente: trocaPendente ? trocaPendente.items.filter((usuario) => usuario.trocaSenhaObrigatoria).length : null,
-    trocaSenhaAmostra: trocaPendente ? trocaPendente.total > trocaPendente.items.length : false,
+    trocaSenhaPendente: trocaPendente?.total ?? null,
     auditoria,
     guarda,
     convenios,

@@ -15,7 +15,7 @@ function tomDe(semente: string) {
 export function CapaCurso({ codigo, semente, className }: { codigo: string; semente: string; className?: string }) {
   return (
     <div aria-hidden className={cn("relative flex h-24 items-end overflow-hidden rounded-t-xl px-5 pb-3", tomDe(semente), className)}>
-      <span className="absolute -top-3 -right-2 font-mono text-[5.5rem] leading-none font-bold text-white/[0.08] select-none">{codigo.slice(0, 3)}</span>
+      <span aria-hidden data-decorativo className="absolute -top-3 -right-2 font-mono text-[5.5rem] leading-none font-bold text-white/[0.08] select-none">{codigo.slice(0, 3)}</span>
       <span className="relative font-mono text-sm font-semibold tracking-wide text-white">{codigo}</span>
     </div>
   );

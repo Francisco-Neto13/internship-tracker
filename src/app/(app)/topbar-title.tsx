@@ -11,7 +11,7 @@ export function TopbarTitle() {
 
   return (
     <div className="min-w-0">
-      {item.modulo !== item.titulo && <p className="truncate text-xs text-navy-900/60">{item.modulo}</p>}
+      {item.modulo !== item.titulo && <p className="truncate text-xs text-navy-900/65">{item.modulo}</p>}
       <p className="truncate text-sm font-semibold text-navy-900">{item.titulo}</p>
     </div>
   );
