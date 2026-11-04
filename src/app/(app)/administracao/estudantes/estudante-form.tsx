@@ -107,6 +107,7 @@ export function EstudanteForm({ cursos }: { cursos: { id: string; nome: string }
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<EstudanteInput, unknown, EstudanteOutput>({
+    mode: "onTouched",
     resolver: zodResolver(estudanteSchema),
     defaultValues: { curso_id: cursos.length === 1 ? cursos[0].id : "" },
   });
@@ -156,7 +157,7 @@ export function EstudanteForm({ cursos }: { cursos: { id: string; nome: string }
         </p>
       )}
       <div className="flex justify-end gap-2 sm:col-span-2">
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" carregando={isSubmitting}>
           {isSubmitting ? "Cadastrando…" : "Cadastrar estudante"}
         </Button>
       </div>

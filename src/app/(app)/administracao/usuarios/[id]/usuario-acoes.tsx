@@ -1,5 +1,7 @@
 "use client";
 
+import { VALIDACOES } from "@/shared/ui/validacoes";
+import { ErroCampo, useValidacao } from "@/shared/ui/use-validacao";
 import { LIMITE } from "@/lib/campos";
 import * as Dialog from "@radix-ui/react-dialog";
 import { KeyRound, UserCheck, UserX } from "lucide-react";
@@ -66,22 +68,27 @@ export function DadosConta({ usuario }: { usuario: { id: string; nome: string; e
   const [email, setEmail] = useState(usuario.email);
   const { enviar, enviando, retorno } = useEnvio(usuario.id);
   const alterado = nome !== usuario.nome || email !== usuario.email;
+  const { erros, aoInteragir, conferir } = useValidacao(VALIDACOES.usuario, () => ({ nome, email }));
   return (
     <form
       className="grid grid-cols-1 gap-4 sm:grid-cols-2"
       noValidate
+      {...aoInteragir}
       onSubmit={(event) => {
         event.preventDefault();
+        if (!conferir(event.currentTarget)) return;
         void enviar("", "PATCH", { nome, email }, "Dados atualizados.");
       }}
     >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="usuario-nome">Nome</Label>
-        <Input id="usuario-nome" maxLength={LIMITE.nomeUsuario} value={nome} onChange={(event) => setNome(event.target.value)} />
+        <Input id="usuario-nome" name="nome" maxLength={LIMITE.nomeUsuario} value={nome} onChange={(event) => setNome(event.target.value)} aria-invalid={Boolean(erros.nome)} aria-describedby="usuario-nome-erro" />
+        <ErroCampo id="usuario-nome-erro" mensagem={erros.nome} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="usuario-email">E-mail (login)</Label>
-        <Input id="usuario-email" type="email" maxLength={LIMITE.email} value={email} onChange={(event) => setEmail(event.target.value)} />
+        <Input id="usuario-email" name="email" type="email" maxLength={LIMITE.email} value={email} onChange={(event) => setEmail(event.target.value)} aria-invalid={Boolean(erros.email)} aria-describedby="usuario-email-erro" />
+        <ErroCampo id="usuario-email-erro" mensagem={erros.email} />
       </div>
       <div className="flex flex-col gap-2 sm:col-span-2">
         {retorno}
@@ -179,7 +186,7 @@ function Confirmar({
             <Dialog.Close asChild>
               <Button variant="outline">Cancelar</Button>
             </Dialog.Close>
-            <Button variant={destrutivo ? "destructive" : "default"} disabled={enviando} onClick={aoConfirmar}>
+            <Button variant={destrutivo ? "destructive" : "default"} carregando={enviando} onClick={aoConfirmar}>
               {enviando ? "Aguarde…" : confirmar}
             </Button>
           </div>

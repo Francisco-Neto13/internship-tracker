@@ -139,6 +139,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
               <summary className="cursor-pointer text-sm font-medium text-azul-500 hover:text-navy-700">Editar dados</summary>
               <div className="mt-4">
                 <FormularioApi
+                  validacao="concedenteEdicao"
                   url={`/api/v1/concedentes/${id}`}
                   metodo="PATCH"
                   rotuloEnviar="Salvar dados"
@@ -166,7 +167,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
                       <span className="text-xs text-navy-900/65">{formatarDataHora(item.criadoEm)}</span>
                     </span>
                     <span className="text-navy-900/75">
-                      {item.decididoPorNome ?? "—"}
+                      {item.decididoPorNome ?? "Sem registro"}
                       {item.motivo && ` · ${item.motivo}`}
                     </span>
                   </li>

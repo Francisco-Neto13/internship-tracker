@@ -1,5 +1,8 @@
 "use client";
 
+import { CheckCircle2 } from "lucide-react";
+import { VALIDACOES, type NomeValidacao } from "./validacoes";
+import { ErroCampo, useValidacao } from "./use-validacao";
 import { AreaTexto } from "./area-texto";
 import { aplicarMascara, TECLADO, type Mascara } from "@/lib/mascaras";
 import { useRouter } from "next/navigation";
@@ -34,7 +37,7 @@ export type Campo = CampoBase &
   );
 
 export const selectClass =
-  "h-11 w-full rounded-md border border-navy-900/20 bg-white px-3 text-sm text-navy-900 outline-none transition-colors focus:border-azul-500 focus:ring-2 focus:ring-azul-500/25";
+  "h-11 w-full rounded-md border border-navy-900/20 bg-white px-3 text-sm text-navy-900 outline-none transition-[border-color,box-shadow] duration-[var(--duracao-rapida)] focus:border-azul-500 focus:ring-2 focus:ring-azul-500/25 aria-invalid:border-status-danger-text";
 
 export async function mensagemDaApi(response: Response, padrao: string): Promise<string> {
   const body = await response.json().catch(() => null);
@@ -58,6 +61,7 @@ export function FormularioApi({
   testId,
   embutido = false,
   confirmacao,
+  validacao,
 }: {
   campos: Campo[];
   url: string;
@@ -75,6 +79,8 @@ export function FormularioApi({
   embutido?: boolean;
   /** Explains the consequence before sending, when the result cannot be undone. */
   confirmacao?: { titulo: string; descricao: string; confirmar: string; destrutiva?: boolean };
+  /** Rule checked while the form is filled in: the schema of the route it sends to (issue #97). */
+  validacao: NomeValidacao;
 }) {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
@@ -82,11 +88,8 @@ export function FormularioApi({
   const [enviando, setEnviando] = useState(false);
   const [pendente, setPendente] = useState<Record<string, unknown> | null>(null);
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setErro(null);
-    setAviso(null);
-    const formulario = new FormData(event.currentTarget);
+  function montarCorpo(elemento: HTMLFormElement): Record<string, unknown> {
+    const formulario = new FormData(elemento);
     const corpo: Record<string, unknown> = { ...extras };
     for (const campo of campos) {
       if (campo.tipo === "checkbox") {
@@ -100,6 +103,20 @@ export function FormularioApi({
       }
       corpo[campo.nome] = campo.tipo === "number" ? Number(bruto.replace(",", ".")) : bruto;
     }
+    return corpo;
+  }
+
+  const { erros, aoInteragir, conferir } = useValidacao(VALIDACOES[validacao], (elemento) => {
+    const corpo = montarCorpo(elemento);
+    return envolverEmLista ? { [envolverEmLista]: [corpo] } : corpo;
+  });
+
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErro(null);
+    setAviso(null);
+    if (!conferir(event.currentTarget)) return;
+    const corpo = montarCorpo(event.currentTarget);
 
     if (confirmacao) setPendente(corpo);
     else await enviar(corpo);
@@ -125,10 +142,12 @@ export function FormularioApi({
   }
 
   return (
-    <form onSubmit={onSubmit} className={embutido ? "grid gap-4 sm:grid-cols-2" : "surface-card grid gap-4 p-5 sm:grid-cols-2"} noValidate data-testid={testId}>
+    <form onSubmit={onSubmit} {...aoInteragir} className={embutido ? "grid gap-4 sm:grid-cols-2" : "surface-card grid gap-4 p-5 sm:grid-cols-2"} noValidate data-testid={testId}>
       {campos.map((campo) => {
         const id = `campo-${campo.nome}`;
-        const ajuda = campo.ajuda ? `${id}-ajuda` : undefined;
+        const idErro = `${id}-erro`;
+        const mensagem = erros[campo.nome];
+        const ajuda = [campo.ajuda && `${id}-ajuda`, idErro].filter(Boolean).join(" ");
         const inicial = campo.valorInicial ?? "";
         return (
           <div key={campo.nome} className={`flex flex-col gap-1.5 ${campo.tipo === "textarea" ? "sm:col-span-2" : ""}`}>
@@ -141,8 +160,8 @@ export function FormularioApi({
               <>
                 <Label htmlFor={id}>{campo.rotulo}</Label>
                 {campo.tipo === "select" ? (
-                  <select id={id} name={campo.nome} defaultValue={String(inicial)} className={selectClass} aria-describedby={ajuda}>
-                    {!campo.obrigatorio && <option value="">—</option>}
+                  <select id={id} name={campo.nome} defaultValue={String(inicial)} className={selectClass} aria-describedby={ajuda} aria-invalid={Boolean(mensagem)}>
+                    {!campo.obrigatorio && <option value="">Selecione</option>}
                     {campo.opcoes.map((opcao) => (
                       <option key={opcao.valor} value={opcao.valor}>
                         {opcao.rotulo}
@@ -150,7 +169,7 @@ export function FormularioApi({
                     ))}
                   </select>
                 ) : campo.tipo === "textarea" ? (
-                  <AreaTexto id={id} name={campo.nome} defaultValue={String(inicial)} rows={4} aria-describedby={ajuda} maxLength={campo.max ?? 0} />
+                  <AreaTexto id={id} name={campo.nome} defaultValue={String(inicial)} rows={4} aria-describedby={ajuda} aria-invalid={Boolean(mensagem)} maxLength={campo.max ?? 0} />
                 ) : (
                   <Input
                     id={id}
@@ -159,6 +178,7 @@ export function FormularioApi({
                     step={campo.passo}
                     defaultValue={String(inicial)}
                     aria-describedby={ajuda}
+                    aria-invalid={Boolean(mensagem)}
                     maxLength={campo.max}
                     inputMode={campo.mascara ? TECLADO[campo.mascara] : undefined}
                     onInput={
@@ -170,8 +190,9 @@ export function FormularioApi({
                     }
                   />
                 )}
+                <ErroCampo id={idErro} mensagem={mensagem} />
                 {campo.ajuda && (
-                  <p id={ajuda} className="text-xs text-navy-900/65">
+                  <p id={`${id}-ajuda`} className="text-xs text-navy-900/65">
                     {campo.ajuda}
                   </p>
                 )}
@@ -186,11 +207,12 @@ export function FormularioApi({
         </p>
       )}
       {aviso && (
-        <p role="status" className="text-sm text-status-ok-text sm:col-span-2">
+        <p role="status" className="animate-aviso flex items-center gap-1.5 text-sm text-status-ok-text sm:col-span-2">
+          <CheckCircle2 className="size-4 shrink-0" aria-hidden />
           {aviso}
         </p>
       )}
-      <Button type="submit" disabled={enviando} className="sm:col-span-2 sm:w-fit">
+      <Button type="submit" carregando={enviando} className="sm:col-span-2 sm:w-fit">
         {enviando ? "Salvando..." : rotuloEnviar}
       </Button>
       {confirmacao && (

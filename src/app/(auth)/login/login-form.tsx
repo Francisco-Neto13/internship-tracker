@@ -22,18 +22,24 @@ type LoginValues = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
+  // A new attempt that fails shakes the message again, even with the same words
+  const [tentativa, setTentativa] = useState(0);
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginValues>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginValues>({ mode: "onTouched", resolver: zodResolver(loginSchema) });
 
   async function onSubmit(values: LoginValues) {
     setErro(null);
     // Nothing this long can be right; same answer as a wrong password
-    if (values.senha.length > SENHA_MAXIMO) return setErro("E-mail ou senha incorretos.");
+    if (values.senha.length > SENHA_MAXIMO) {
+      setTentativa((atual) => atual + 1);
+      return setErro("E-mail ou senha incorretos.");
+    }
     const { error } = await authClient.signIn.email({ email: values.email, password: values.senha });
     if (error) {
+      setTentativa((atual) => atual + 1);
       // Same message for unknown e-mail and wrong password, so accounts cannot be enumerated.
       // The 403 reasons come only after the password matched (session hook in src/lib/auth.ts).
       if (error.status === 429) {
@@ -72,12 +78,12 @@ export function LoginForm() {
       </div>
 
       {erro && (
-        <p role="alert" className="text-sm text-status-danger-text">
+        <p key={tentativa} role="alert" className="animate-tremer text-sm text-status-danger-text">
           {erro}
         </p>
       )}
 
-      <Button type="submit" disabled={isSubmitting} className="h-11 w-full">
+      <Button type="submit" carregando={isSubmitting} className="h-11 w-full">
         {isSubmitting ? "Entrando..." : "Entrar"}
       </Button>
     </form>

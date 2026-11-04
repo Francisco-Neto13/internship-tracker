@@ -8,7 +8,7 @@ export function Input({ className, ...props }: ComponentProps<"input">) {
     <input
       {...(props.type === "date" ? FAIXA_DATA : {})}
       className={cn(
-        "h-11 w-full rounded-md border border-navy-900/20 bg-white px-3 text-sm text-navy-900 outline-none transition-colors",
+        "h-11 w-full rounded-md border border-navy-900/20 bg-white px-3 text-sm text-navy-900 outline-none transition-[border-color,box-shadow] duration-[var(--duracao-rapida)]",
         "placeholder:text-navy-900/60",
         // focus-within: Tab between day, month and year of a date moves inside the field
         "focus-within:border-azul-500 focus-within:ring-2 focus-within:ring-azul-500/25",

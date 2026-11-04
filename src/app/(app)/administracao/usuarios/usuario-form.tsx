@@ -1,5 +1,7 @@
 "use client";
 
+import { VALIDACOES } from "@/shared/ui/validacoes";
+import { ErroCampo, useValidacao } from "@/shared/ui/use-validacao";
 import { LIMITE } from "@/lib/campos";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -28,9 +30,12 @@ export function UsuarioForm({
   const [enviando, setEnviando] = useState(false);
   const [emitida, setEmitida] = useState<{ id: string; email: string; senha: string } | null>(null);
 
-  async function onSubmit(event: React.FormEvent) {
+  const { erros, aoInteragir, conferir } = useValidacao(VALIDACOES.usuario, () => ({ nome, email }));
+
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErro(null);
+    if (!conferir(event.currentTarget)) return;
     setEnviando(true);
     try {
       const response = await fetch("/api/v1/usuarios", {
@@ -67,14 +72,16 @@ export function UsuarioForm({
           </a>
         </div>
       )}
-      <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2" noValidate>
+      <form onSubmit={onSubmit} {...aoInteragir} className="grid grid-cols-1 gap-4 sm:grid-cols-2" noValidate>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="usuario-nome">Nome</Label>
-          <Input id="usuario-nome" maxLength={LIMITE.nomeUsuario} value={nome} onChange={(event) => setNome(event.target.value)} required />
+          <Input id="usuario-nome" name="nome" maxLength={LIMITE.nomeUsuario} value={nome} onChange={(event) => setNome(event.target.value)} required aria-invalid={Boolean(erros.nome)} aria-describedby="usuario-nome-erro" />
+          <ErroCampo id="usuario-nome-erro" mensagem={erros.nome} />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="usuario-email">E-mail</Label>
-          <Input id="usuario-email" type="email" maxLength={LIMITE.email} value={email} onChange={(event) => setEmail(event.target.value)} required />
+          <Input id="usuario-email" name="email" type="email" maxLength={LIMITE.email} value={email} onChange={(event) => setEmail(event.target.value)} required aria-invalid={Boolean(erros.email)} aria-describedby="usuario-email-erro" />
+          <ErroCampo id="usuario-email-erro" mensagem={erros.email} />
         </div>
         <div className="sm:col-span-2">
           <PerfisCampo catalogo={catalogo} cursos={cursos} concedentes={concedentes} value={perfis} onChange={setPerfis} />
@@ -84,7 +91,7 @@ export function UsuarioForm({
             {erro}
           </p>
         )}
-        <Button type="submit" disabled={enviando} className="sm:col-span-2 sm:w-fit sm:justify-self-end">
+        <Button type="submit" carregando={enviando} className="sm:col-span-2 sm:w-fit sm:justify-self-end">
           {enviando ? "Salvando..." : "Cadastrar usuário"}
         </Button>
       </form>

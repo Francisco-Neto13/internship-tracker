@@ -1,5 +1,7 @@
 "use client";
 
+import { afastamentoBodySchema } from "@/modules/estagios/schemas/estagio";
+import { ErroCampo, useValidacao } from "@/shared/ui/use-validacao";
 import { LIMITE } from "@/lib/campos";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -19,10 +21,22 @@ export function NovoAfastamento({ estagioId }: { estagioId: string }) {
   const [pendente, setPendente] = useState<Record<string, unknown> | null>(null);
   const [enviando, setEnviando] = useState(false);
 
+  const { erros, aoInteragir, conferir } = useValidacao(afastamentoBodySchema, (formulario) => {
+    const dados = new FormData(formulario);
+    return {
+      tipo: dados.get("tipo"),
+      descricao: String(dados.get("descricao") ?? "").trim() || null,
+      data_inicio: dados.get("data_inicio"),
+      data_fim: dados.get("data_fim"),
+    };
+  });
+
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErro(null);
+    const camposOk = conferir(event.currentTarget);
     if (!documento) return setErro("Envie o atestado ou comprovante do afastamento.");
+    if (!camposOk) return;
     const dados = new FormData(event.currentTarget);
     setPendente({
       tipo: dados.get("tipo"),
@@ -47,7 +61,7 @@ export function NovoAfastamento({ estagioId }: { estagioId: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="surface-card grid gap-4 p-5 sm:grid-cols-3" noValidate data-testid="novo-afastamento">
+    <form onSubmit={onSubmit} {...aoInteragir} className="surface-card grid gap-4 p-5 sm:grid-cols-3" noValidate data-testid="novo-afastamento">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="afastamento-tipo">Tipo</Label>
         <select id="afastamento-tipo" name="tipo" className={selectClass} defaultValue="ATESTADO_MEDICO">
@@ -58,15 +72,18 @@ export function NovoAfastamento({ estagioId }: { estagioId: string }) {
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="afastamento-inicio">Início</Label>
-        <Input id="afastamento-inicio" name="data_inicio" type="date" />
+        <Input id="afastamento-inicio" name="data_inicio" type="date" aria-invalid={Boolean(erros.data_inicio)} aria-describedby="afastamento-inicio-erro" />
+        <ErroCampo id="afastamento-inicio-erro" mensagem={erros.data_inicio} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="afastamento-fim">Fim</Label>
-        <Input id="afastamento-fim" name="data_fim" type="date" />
+        <Input id="afastamento-fim" name="data_fim" type="date" aria-invalid={Boolean(erros.data_fim)} aria-describedby="afastamento-fim-erro" />
+        <ErroCampo id="afastamento-fim-erro" mensagem={erros.data_fim} />
       </div>
       <div className="flex flex-col gap-1.5 sm:col-span-3">
         <Label htmlFor="afastamento-descricao">Descrição (obrigatória no tipo Outro; dado sensível)</Label>
-        <Input id="afastamento-descricao" name="descricao" maxLength={LIMITE.descricaoAfastamento} />
+        <Input id="afastamento-descricao" name="descricao" maxLength={LIMITE.descricaoAfastamento} aria-invalid={Boolean(erros.descricao)} aria-describedby="afastamento-descricao-erro" />
+        <ErroCampo id="afastamento-descricao-erro" mensagem={erros.descricao} />
       </div>
       <div className="sm:col-span-3">
         <EnvioDocumento tipo="ATESTADO_AFASTAMENTO" escopo={{ estagio_id: estagioId }} rotulo="Atestado (PDF, JPEG ou PNG, até 10 MiB)" aoConcluir={setDocumento} />

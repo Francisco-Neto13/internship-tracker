@@ -82,6 +82,7 @@ export function BotaoAcao({
         variant={variante}
         size={tamanho}
         disabled={enviando}
+        carregando={enviando && !aberto}
         onClick={() => (precisaDialogo ? (setErro(null), setAberto(true)) : void executar())}
       >
         {enviando && !aberto ? "Aguarde…" : rotulo}
@@ -92,7 +93,7 @@ export function BotaoAcao({
         </span>
       )}
       {aviso && (
-        <span role="status" className="inline-flex items-center gap-1 text-xs text-status-ok-text">
+        <span role="status" className="animate-aviso inline-flex items-center gap-1 text-xs text-status-ok-text">
           <CheckCircle2 className="size-3.5" aria-hidden />
           {aviso}
         </span>
@@ -141,7 +142,7 @@ export function BotaoAcao({
                     Cancelar
                   </Button>
                 </Dialog.Close>
-                <Button type="button" variant={variante === "destructive" ? "destructive" : "default"} disabled={enviando} onClick={() => void executar()}>
+                <Button type="button" variant={variante === "destructive" ? "destructive" : "default"} carregando={enviando} onClick={() => void executar()}>
                   {enviando ? "Aguarde…" : (confirmacao?.confirmar ?? rotulo)}
                 </Button>
               </div>

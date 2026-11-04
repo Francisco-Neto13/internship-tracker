@@ -24,7 +24,7 @@ import { NovaAtividade } from "./nova-atividade";
 // em cada categoria; a coordenação decide a fila, mais antigas primeiro, vendo antes de aprovar
 // quanto a aprovação contaria (o banco calcula pelo limite da categoria e do curso, RF051).
 
-const h = (minutos: number | null) => (minutos === null ? "—" : `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`);
+const h = (minutos: number | null) => (minutos === null ? "Sem dado" : `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`);
 
 export default async function AtividadesComplementaresPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
   const identity = await getIdentity();

@@ -67,7 +67,8 @@ export default async function ConcedentesPage({ searchParams }: { searchParams: 
         acoes={
           <Dialogo gatilho={{ rotulo: "Nova concedente", icone: <Plus className="size-4" aria-hidden /> }} titulo="Nova concedente" descricao="Dados da organização e do representante legal (RF007)." largura="lg">
             <FormularioApi
-              url="/api/v1/concedentes"
+              validacao="concedenteNovo"
+                  url="/api/v1/concedentes"
               rotuloEnviar="Cadastrar concedente"
               redirecionarPara="/administracao/concedentes/:id"
               embutido

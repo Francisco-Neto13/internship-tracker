@@ -223,7 +223,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                 celula: (estagio) => (
                   <span className="flex items-center gap-3">
                     <Avatar nome={estagio.concedenteRazaoSocial} semente={estagio.concedenteId} forma="quadrado" tamanho="sm" />
-                    <span className="font-medium text-navy-900">{estagio.concedenteRazaoSocial ?? "—"}</span>
+                    <span className="font-medium text-navy-900">{estagio.concedenteRazaoSocial ?? "Não informada"}</span>
                   </span>
                 ),
               },
@@ -254,13 +254,13 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                   </span>
                 ),
               },
-              { chave: "categoria", cabecalho: "Categoria", ocultarNoCelular: true, celula: (atividade) => atividade.categoriaNome ?? "—" },
+              { chave: "categoria", cabecalho: "Categoria", ocultarNoCelular: true, celula: (atividade) => atividade.categoriaNome ?? "Sem categoria" },
               { chave: "horas", cabecalho: "Declaradas", alinhar: "direita", ocultarNoCelular: true, celula: (atividade) => h(atividade.horasDeclaradasMinutos) },
               {
                 chave: "aproveitadas",
                 cabecalho: "Aproveitadas",
                 alinhar: "direita",
-                celula: (atividade) => (atividade.horasAproveitadasMinutos === null ? "—" : h(atividade.horasAproveitadasMinutos)),
+                celula: (atividade) => (atividade.horasAproveitadasMinutos === null ? "Sem dado" : h(atividade.horasAproveitadasMinutos)),
               },
               { chave: "situacao", cabecalho: "Situação", celula: (atividade) => <StatusBadge tone={SITUACAO_ATIVIDADE[atividade.situacao].tom}>{SITUACAO_ATIVIDADE[atividade.situacao].rotulo}</StatusBadge> },
             ]}
@@ -300,7 +300,8 @@ async function DadosAcademicos({ id, estudante, identity }: { id: string; estuda
       descricao="A situação oferece só as transições permitidas: trancado volta a matriculado; formado e desligado são finais. Toda alteração fica na auditoria."
     >
       <FormularioApi
-        url={`/api/v1/estudantes/${id}`}
+        validacao="estudanteEdicao"
+                  url={`/api/v1/estudantes/${id}`}
         metodo="PATCH"
         rotuloEnviar="Salvar alterações"
 confirmacao={{ titulo: "Salvar as alterações do estudante?", descricao: "Se a situação acadêmica mudar, a transição fica registrada na auditoria. As situações Formado e Desligado são finais e não podem ser revertidas.", confirmar: "Salvar alterações" }}

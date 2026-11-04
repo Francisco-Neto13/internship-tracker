@@ -254,6 +254,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
               </summary>
               <div className="mt-4">
                 <FormularioApi
+                  validacao="responsavel"
                   url={`${api}/responsaveis`}
                   rotuloEnviar="Vincular responsável"
 confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa a ter acesso ao estágio. Se já houver um responsável nessa função, a substituição fica registrada e não apaga o anterior.", confirmar: "Vincular" }}
@@ -325,6 +326,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
               </summary>
               <div className="mt-4">
                 <FormularioApi
+                  validacao="apolice"
                   url={`${api}/apolices`}
                   rotuloEnviar="Registrar apólice"
                   embutido
@@ -437,7 +439,8 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
             </summary>
             <div className="mt-4">
               <FormularioApi
-                url={`${api}/plano-atividades`}
+                validacao="plano"
+                  url={`${api}/plano-atividades`}
                 metodo="PUT"
                 rotuloEnviar="Salvar plano"
                 embutido

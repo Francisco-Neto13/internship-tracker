@@ -11,20 +11,20 @@ export function hojeSaoPaulo(agora = new Date()): string {
 
 /** "03/08/2026" a partir de "2026-08-03" (data de calendário, sem fuso). */
 export function formatarData(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "Sem data";
   const [ano, mes, dia] = iso.slice(0, 10).split("-");
   return `${dia}/${mes}/${ano}`;
 }
 
 /** "3 ago. 2026": curta, para listas e cabeçalhos. */
 export function formatarDataCurta(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "Sem data";
   const data = new Date(`${iso.slice(0, 10)}T12:00:00Z`);
   return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(data);
 }
 
 export function formatarDataHora(instante: Date | string | null | undefined): string {
-  if (!instante) return "—";
+  if (!instante) return "Sem data";
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: FUSO }).format(new Date(instante));
 }
 

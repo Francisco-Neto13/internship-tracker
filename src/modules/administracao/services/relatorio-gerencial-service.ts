@@ -99,7 +99,7 @@ export async function exportarRelatorio(identity: Identity, tipo: TipoRelatorio,
     }),
     cabecalho: definicao.colunas.map((coluna) => coluna.rotulo),
     pesos: definicao.colunas.map((coluna) => coluna.peso),
-    linhas: valores.map((linha) => linha.map((valor) => (valor === null ? "—" : typeof valor === "number" ? String(valor).replace(".", ",") : String(valor)))),
+    linhas: valores.map((linha) => linha.map((valor) => (valor === null ? "Não informado" : typeof valor === "number" ? String(valor).replace(".", ",") : String(valor)))),
     rodape: `Internship Tracker · ${definicao.titulo}`,
   });
 }

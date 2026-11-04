@@ -122,7 +122,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
                       <td className="px-4 py-2.5 whitespace-nowrap text-navy-900">{formatarDataCurta(registro.data)}</td>
                       <td className="px-4 py-2.5 text-right text-navy-900 tabular-nums">{h(registro.duracaoMinutos)}</td>
                       <td className="hidden px-4 py-2.5 text-navy-900/65 md:table-cell">
-                        {registro.horaEntrada ? `${registro.horaEntrada.slice(0, 5)} às ${registro.horaSaida?.slice(0, 5)}` : "—"}
+                        {registro.horaEntrada ? `${registro.horaEntrada.slice(0, 5)} às ${registro.horaSaida?.slice(0, 5)}` : "Sem horário"}
                       </td>
                       <td className="px-4 py-2.5">
                         <StatusBadge tone={FREQUENCIA[registro.situacao][1]}>{FREQUENCIA[registro.situacao][0]}</StatusBadge>
@@ -148,7 +148,8 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
         <div className="flex flex-col gap-4">
           <Painel titulo="Registrar dia" descricao="Estudante: um lançamento por dia, até o limite diário e semanal (RF023, RF024).">
             <FormularioApi
-              url={`/api/v1/estagios/${estagioId}/frequencias`}
+              validacao="frequencia"
+                  url={`/api/v1/estagios/${estagioId}/frequencias`}
               rotuloEnviar="Registrar dia"
               testId="registrar-frequencia"
               embutido
@@ -162,7 +163,8 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
           </Painel>
           <Painel titulo="Homologar período" descricao="Supervisor: confirma os dias lançados no período (RF027).">
             <FormularioApi
-              url={`/api/v1/estagios/${estagioId}/frequencias/homologacao`}
+              validacao="homologacao"
+                  url={`/api/v1/estagios/${estagioId}/frequencias/homologacao`}
               rotuloEnviar="Homologar período"
 confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do período passam a contar na carga do estágio. Depois disso, só a coordenação consegue substituir um lançamento homologado.", confirmar: "Homologar" }}
               embutido
@@ -206,7 +208,8 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
                     <summary className="cursor-pointer text-sm font-medium text-azul-500 hover:text-navy-700">Enviar relatório</summary>
                     <div className="mt-3">
                       <FormularioApi
-                        url={`/api/v1/relatorios/${relatorio.id}/versoes`}
+                        validacao="relatorio"
+                  url={`/api/v1/relatorios/${relatorio.id}/versoes`}
                         rotuloEnviar="Enviar relatório"
 confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica registrada e vai para a análise, sem poder ser editada. Uma nova versão só pode ser enviada se o relatório for devolvido.", confirmar: "Enviar relatório" }}
                         embutido
@@ -236,7 +239,7 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
                     <span className="block text-xs text-navy-900/65">{avaliacao.avaliadorNome ?? "Avaliador"}</span>
                   </span>
                   <span className="text-lg font-semibold text-navy-900 tabular-nums">
-                    {avaliacao.media ?? "—"}
+                    {avaliacao.media ?? "Sem nota"}
                     <span className="text-xs font-normal text-navy-900/65"> / 10</span>
                   </span>
                 </li>
@@ -246,7 +249,8 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
         )}
         <Painel titulo="Acompanhamento do orientador" descricao="Visitas, contatos e reuniões (RF033).">
           <FormularioApi
-            url={`/api/v1/estagios/${estagioId}/acompanhamentos`}
+            validacao="acompanhamento"
+                  url={`/api/v1/estagios/${estagioId}/acompanhamentos`}
             rotuloEnviar="Registrar acompanhamento"
             embutido
             sucesso="Acompanhamento registrado"
