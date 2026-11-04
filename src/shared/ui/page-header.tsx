@@ -35,7 +35,7 @@ export function PageHeader({
       {voltar && (
         <Link
           href={voltar.href}
-          className="inline-flex w-fit items-center gap-1 rounded-md text-sm text-navy-900/60 transition-colors hover:text-navy-900 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none"
+          className="inline-flex w-fit items-center gap-1 rounded-md text-sm text-navy-900/65 transition-colors hover:text-navy-900 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none"
         >
           <ChevronLeft className="size-4" aria-hidden />
           {voltar.rotulo}

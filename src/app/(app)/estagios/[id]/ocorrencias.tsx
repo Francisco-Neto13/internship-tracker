@@ -68,7 +68,7 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
                       <span className="block font-medium text-navy-900">
                         {TIPO_AFASTAMENTO[item.tipo]} · {formatarDataCurta(item.dataInicio)} a {formatarDataCurta(item.dataFim)}
                       </span>
-                      <span className="block text-xs text-navy-900/60">
+                      <span className="block text-xs text-navy-900/65">
                         {item.diasCorridos} dia(s) corridos · estendeu {item.diasExtensao}
                         {item.diasExtensao < item.diasCorridos && " (teto de 2 anos atingido)"}
                       </span>
@@ -81,7 +81,7 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
                     Afastamento de {formatarDataCurta(periodo.dataInicio)} a {formatarDataCurta(periodo.dataFim)}
                   </li>
                 ))}
-            {afastamentos.length === 0 && periodos.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/60">Nenhum afastamento.</li>}
+            {afastamentos.length === 0 && periodos.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhum afastamento.</li>}
           </ul>
           {estagio.situacao === "ATIVO" && (
             <details className="border-t border-navy-900/[0.07] px-5 py-4">

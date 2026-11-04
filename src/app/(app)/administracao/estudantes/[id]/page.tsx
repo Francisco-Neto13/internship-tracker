@@ -129,7 +129,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                     <Avatar nome={atual.concedenteRazaoSocial} semente={atual.concedenteId} forma="quadrado" />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-navy-900">{atual.concedenteRazaoSocial ?? "Concedente"}</p>
-                      <p className="text-sm text-navy-900/60">
+                      <p className="text-sm text-navy-900/65">
                         {TIPO_ESTAGIO[atual.tipo]} · {formatarDataCurta(atual.dataInicio)} a {formatarDataCurta(atual.dataFimPrevista)}
                       </p>
                     </div>
@@ -144,11 +144,11 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                       detalhe={carga.resumo.minutosPendentes > 0 ? `${h(carga.resumo.minutosPendentes)} aguardando homologação` : undefined}
                     />
                   ) : (
-                    atual.situacao === "EM_FORMALIZACAO" && <p className="text-sm text-navy-900/60">Em formalização: a carga horária começa a contar depois da ativação.</p>
+                    atual.situacao === "EM_FORMALIZACAO" && <p className="text-sm text-navy-900/65">Em formalização: a carga horária começa a contar depois da ativação.</p>
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-navy-900/60">Nenhum estágio ativo ou em formalização.</p>
+                <p className="text-sm text-navy-900/65">Nenhum estágio ativo ou em formalização.</p>
               )}
             </Painel>
             <Painel titulo="Integralização" verTodos={integralizacao ? { href: `?aba=integralizacao`, rotulo: "Detalhes" } : undefined}>
@@ -168,7 +168,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                   />
                 </div>
               ) : (
-                <p className="text-sm text-navy-900/60">A integralização fica com a coordenação do curso e o próprio estudante.</p>
+                <p className="text-sm text-navy-900/65">A integralização fica com a coordenação do curso e o próprio estudante.</p>
               )}
             </Painel>
           </div>
@@ -195,12 +195,12 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                   ].map((item) => (
                     <div key={item.rotulo} className="rounded-lg bg-nevoa-50 px-2 py-3">
                       <p className="text-lg font-semibold text-navy-900 tabular-nums">{item.valor}</p>
-                      <p className="text-xs text-navy-900/60">{item.rotulo}</p>
+                      <p className="text-xs text-navy-900/65">{item.rotulo}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-navy-900/60">Fora do alcance do seu perfil.</p>
+                <p className="text-sm text-navy-900/65">Fora do alcance do seu perfil.</p>
               )}
             </Painel>
           </div>
@@ -249,7 +249,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                 celula: (atividade) => (
                   <span className="block min-w-0">
                     <span className="block truncate font-medium text-navy-900">{atividade.descricao}</span>
-                    <span className="block truncate text-xs text-navy-900/60">{atividade.instituicaoPromotora}</span>
+                    <span className="block truncate text-xs text-navy-900/65">{atividade.instituicaoPromotora}</span>
                   </span>
                 ),
               },
@@ -282,7 +282,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
 
       {aba === "dados" && <DadosAcademicos id={id} estudante={estudante} identity={identity} />}
 
-      <p className="text-xs text-navy-900/60">
+      <p className="text-xs text-navy-900/65">
         <ExternalLink className="mr-1 inline size-3" aria-hidden />
         Perfil acadêmico (RF005). Conta, perfis e senha ficam em Usuários e acesso.
       </p>

@@ -38,7 +38,7 @@ export function Painel({
                 {titulo}
               </h2>
             )}
-            {descricao && <p className="mt-0.5 text-sm text-navy-900/60">{descricao}</p>}
+            {descricao && <p className="mt-0.5 text-sm text-navy-900/65">{descricao}</p>}
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {acoes}
@@ -80,9 +80,9 @@ export function ListaDefinicao({
     >
       {itens.map((item) => (
         <div key={item.rotulo} className={cn("min-w-0", item.largo && "sm:col-span-full")}>
-          <dt className="text-xs font-medium text-navy-900/60">{item.rotulo}</dt>
+          <dt className="text-xs font-medium text-navy-900/65">{item.rotulo}</dt>
           <dd className="mt-0.5 text-sm break-words text-navy-900">
-            {item.valor === null || item.valor === undefined || item.valor === "" ? <span className="text-navy-900/40">—</span> : item.valor}
+            {item.valor === null || item.valor === undefined || item.valor === "" ? <span className="text-navy-900/65">—</span> : item.valor}
           </dd>
         </div>
       ))}

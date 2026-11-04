@@ -98,7 +98,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
         <div className="flex flex-col gap-4">
           <Painel titulo="Convênios" descricao="Sem convênio vigente na data de início, o estágio não é ativado (RF010)." flush>
             <ul className="divide-y divide-navy-900/[0.07]" data-testid="convenios">
-              {convenios.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/60">Nenhum convênio registrado.</li>}
+              {convenios.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhum convênio registrado.</li>}
               {ordenados.map((convenio) => {
                 const vigente = convenio.vigenteEm(hoje);
                 return (
@@ -107,7 +107,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
                       <span className="font-medium text-navy-900">Convênio {convenio.numero}</span>
                       <StatusBadge tone={vigente ? "ok" : "neutral"}>{vigente ? "Vigente" : convenio.situacao === "ATIVO" ? "Fora de vigência" : "Encerrado"}</StatusBadge>
                     </span>
-                    <ol className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-navy-900/60">
+                    <ol className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-navy-900/65">
                       {convenio.vigencias.map((vigencia) => (
                         <li key={vigencia.id ?? vigencia.vigenciaInicio}>
                           {formatarDataCurta(vigencia.vigenciaInicio)} a {formatarDataCurta(vigencia.vigenciaFim)}
@@ -162,7 +162,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
                   <li key={item.id} className="flex flex-col gap-0.5 px-5 py-3 text-sm">
                     <span className="flex items-center gap-2">
                       <StatusBadge tone={SITUACAO_CONCEDENTE[item.situacaoNova]?.tom ?? "neutral"}>{SITUACAO_CONCEDENTE[item.situacaoNova]?.rotulo ?? item.situacaoNova}</StatusBadge>
-                      <span className="text-xs text-navy-900/60">{formatarDataHora(item.criadoEm)}</span>
+                      <span className="text-xs text-navy-900/65">{formatarDataHora(item.criadoEm)}</span>
                     </span>
                     <span className="text-navy-900/75">
                       {item.decididoPorNome ?? "—"}

@@ -85,7 +85,7 @@ export function TrilhaFormalizacao({ detalhe }: { detalhe: Detalhe }) {
         <div>
           <p className="text-sm font-semibold text-navy-900">Formalização</p>
           <p
-            className="text-sm text-navy-900/60"
+            className="text-sm text-navy-900/65"
             data-testid="etapas-formalizacao"
           >
             {prontos} de {passos.length} etapas concluídas · TCE{" "}
@@ -119,7 +119,7 @@ export function TrilhaFormalizacao({ detalhe }: { detalhe: Detalhe }) {
                 "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                 passo.feito
                   ? "bg-status-ok-text text-white"
-                  : "bg-nevoa-100 text-navy-900/60 ring-1 ring-navy-900/10",
+                  : "bg-nevoa-100 text-navy-900/65 ring-1 ring-navy-900/10",
               )}
               aria-hidden
             >
@@ -129,7 +129,7 @@ export function TrilhaFormalizacao({ detalhe }: { detalhe: Detalhe }) {
               <span className="block text-sm font-medium text-navy-900">
                 {passo.rotulo}
               </span>
-              <span className="block text-xs text-navy-900/60">
+              <span className="block text-xs text-navy-900/65">
                 {passo.detalhe}
               </span>
               <span className="sr-only">
@@ -209,7 +209,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
         >
           <ul className="divide-y divide-navy-900/[0.07]">
             {responsaveis.length === 0 && (
-              <li className="px-5 py-4 text-sm text-navy-900/60">
+              <li className="px-5 py-4 text-sm text-navy-900/65">
                 Nenhum responsável vinculado.
               </li>
             )}
@@ -221,18 +221,18 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                 <span>
                   <span className="block font-medium text-navy-900">
                     {responsavel.usuarioNome ?? (
-                      <span className="font-normal text-navy-900/60">
+                      <span className="font-normal text-navy-900/65">
                         Nome não visível para o seu perfil
                       </span>
                     )}
                   </span>
-                  <span className="block text-xs text-navy-900/60">
+                  <span className="block text-xs text-navy-900/65">
                     {responsavel.papel === "ORIENTADOR"
                       ? "Professor orientador"
                       : "Supervisor"}
                   </span>
                 </span>
-                <span className="text-xs text-navy-900/60">
+                <span className="text-xs text-navy-900/65">
                   {responsavel.vigenciaFim
                     ? responsavel.vigenciaFim === responsavel.vigenciaInicio
                       ? "designação anulada"
@@ -291,7 +291,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
         >
           <ul className="divide-y divide-navy-900/[0.07]">
             {apolices.length === 0 && (
-              <li className="px-5 py-4 text-sm text-navy-900/60">
+              <li className="px-5 py-4 text-sm text-navy-900/65">
                 Nenhuma apólice registrada.
               </li>
             )}
@@ -300,7 +300,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
                 <span className="block font-medium text-navy-900">
                   {apolice.seguradora} · nº {apolice.numeroApolice}
                 </span>
-                <span className="block text-xs text-navy-900/60">
+                <span className="block text-xs text-navy-900/65">
                   {formatarData(apolice.vigenciaInicio)} a{" "}
                   {formatarData(apolice.vigenciaFim)} · contratada pela{" "}
                   {apolice.contratante === "CONCEDENTE"
@@ -363,7 +363,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <p className="text-xs font-medium text-navy-900/60">
+                <p className="text-xs font-medium text-navy-900/65">
                   Atividades previstas · versão {planoAtual.versao}
                 </p>
                 <p className="mt-1 text-sm whitespace-pre-line text-navy-900">
@@ -371,7 +371,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-navy-900/60">
+                <p className="text-xs font-medium text-navy-900/65">
                   Compatibilidade com o curso
                 </p>
                 <p className="mt-1 text-sm whitespace-pre-line text-navy-900">
@@ -414,7 +414,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
             </div>
           </div>
         ) : (
-          <p className="text-sm text-navy-900/60">Nenhum plano registrado.</p>
+          <p className="text-sm text-navy-900/65">Nenhum plano registrado.</p>
         )}
         {(!planoAtual ||
           planoAtual.situacao === "RASCUNHO" ||
@@ -487,11 +487,11 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
                       {assinatura.signatarioNome} ·{" "}
                       {PARTE[assinatura.parte] ?? assinatura.parte}
                     </span>
-                    <span className="block font-mono text-xs text-navy-900/60">
+                    <span className="block font-mono text-xs text-navy-900/65">
                       {assinatura.hashDocumento.slice(0, 16)}…
                     </span>
                   </span>
-                  <span className="flex items-center gap-2 text-xs text-navy-900/60">
+                  <span className="flex items-center gap-2 text-xs text-navy-900/65">
                     {assinatura.aditivoId ? "Aditivo" : "TCE"} ·{" "}
                     {formatarDataHora(assinatura.criadoEm)}
                     {anterior && (

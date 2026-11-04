@@ -7,7 +7,7 @@ type EstadoVazioVariante = "vazio" | "sem-resultados" | "sem-permissao" | "indis
 const CONFIG: Record<EstadoVazioVariante, { icon: LucideIcon; tom: string }> = {
   vazio: { icon: Inbox, tom: "bg-nevoa-100 text-navy-700" },
   "sem-resultados": { icon: SearchX, tom: "bg-nevoa-100 text-navy-700" },
-  "sem-permissao": { icon: Lock, tom: "bg-nevoa-100 text-navy-900/60" },
+  "sem-permissao": { icon: Lock, tom: "bg-nevoa-100 text-navy-900/65" },
   indisponivel: { icon: AlertTriangle, tom: "bg-status-pending-bg text-status-pending-text" },
   erro: { icon: AlertTriangle, tom: "bg-status-danger-bg text-status-danger-text" },
 };
@@ -48,7 +48,7 @@ export function EstadoVazio({
       </span>
       <div className="space-y-1">
         <p className="text-sm font-semibold text-navy-900">{titulo}</p>
-        {descricao && <p className="mx-auto max-w-md text-sm text-navy-900/60">{descricao}</p>}
+        {descricao && <p className="mx-auto max-w-md text-sm text-navy-900/65">{descricao}</p>}
       </div>
       {acao && <div className="mt-1">{acao}</div>}
     </div>

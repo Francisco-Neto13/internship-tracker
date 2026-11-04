@@ -16,7 +16,7 @@ export function CampoSenha({ className, ...props }: Omit<ComponentProps<typeof I
         type="button"
         variant="ghost"
         size="icon"
-        className="absolute top-1/2 right-1 size-9 -translate-y-1/2 text-navy-900/60 hover:text-navy-900"
+        className="absolute top-1/2 right-1 size-9 -translate-y-1/2 text-navy-900/65 hover:text-navy-900"
         onClick={() => setVisivel((atual) => !atual)}
         aria-label={visivel ? "Ocultar caracteres digitados" : "Exibir caracteres digitados"}
       >

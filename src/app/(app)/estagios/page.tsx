@@ -27,9 +27,9 @@ const TIPOS = ["OBRIGATORIO", "NAO_OBRIGATORIO"] as const;
 
 /** Quanto do período já passou, para ler de relance quem está no começo ou perto do fim. */
 function Andamento({ estagio, hoje }: { estagio: Estagio; hoje: string }) {
-  if (estagio.situacao !== "ATIVO") return <span className="text-xs text-navy-900/60">—</span>;
+  if (estagio.situacao !== "ATIVO") return <span className="text-xs text-navy-900/65">—</span>;
   const paraComecar = diasEntre(hoje, estagio.dataInicio);
-  if (paraComecar > 0) return <span className="text-xs text-navy-900/60">{paraComecar === 1 ? "Começa amanhã" : `Começa em ${paraComecar} dias`}</span>;
+  if (paraComecar > 0) return <span className="text-xs text-navy-900/65">{paraComecar === 1 ? "Começa amanhã" : `Começa em ${paraComecar} dias`}</span>;
   const total = Math.max(1, diasEntre(estagio.dataInicio, estagio.dataFimPrevista));
   const decorrido = Math.min(total, Math.max(0, diasEntre(estagio.dataInicio, hoje)));
   const percentual = Math.round((decorrido / total) * 100);
@@ -39,7 +39,7 @@ function Andamento({ estagio, hoje }: { estagio: Estagio; hoje: string }) {
       <span className="h-1.5 overflow-hidden rounded-full bg-nevoa-100" aria-hidden>
         <span className="block h-full rounded-full bg-azul-500" style={{ width: `${percentual}%` }} />
       </span>
-      <span className="text-xs text-navy-900/60">{restantes > 0 ? `${restantes} dias restantes` : "No último dia"}</span>
+      <span className="text-xs text-navy-900/65">{restantes > 0 ? `${restantes} dias restantes` : "No último dia"}</span>
     </span>
   );
 }
@@ -78,7 +78,7 @@ export default async function EstagiosPage({ searchParams }: { searchParams: Pro
           <Avatar nome={estagio.estudanteNome} semente={estagio.estudanteId} tamanho="sm" />
           <span className="min-w-0">
             <span className="block truncate font-medium text-navy-900">{identificarEstagio(estagio)}</span>
-            {estagio.matricula ? <span className="block truncate font-mono text-xs text-navy-900/60">{estagio.matricula}</span> : <span className="block truncate text-xs text-navy-900/60">Nome não visível para o seu perfil</span>}
+            {estagio.matricula ? <span className="block truncate font-mono text-xs text-navy-900/65">{estagio.matricula}</span> : <span className="block truncate text-xs text-navy-900/65">Nome não visível para o seu perfil</span>}
           </span>
         </span>
       ),
@@ -91,7 +91,7 @@ export default async function EstagiosPage({ searchParams }: { searchParams: Pro
       celula: (estagio) => (
         <span className="block min-w-0">
           <span className="block max-w-64 truncate text-navy-900">{estagio.concedenteRazaoSocial ?? "—"}</span>
-          <span className="block text-xs text-navy-900/60">{TIPO_ESTAGIO[estagio.tipo]}</span>
+          <span className="block text-xs text-navy-900/65">{TIPO_ESTAGIO[estagio.tipo]}</span>
         </span>
       ),
     },

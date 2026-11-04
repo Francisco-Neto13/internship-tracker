@@ -49,7 +49,7 @@ export default async function ConveniosPage() {
                       <Avatar nome={item.concedenteRazaoSocial} semente={item.concedenteId} forma="quadrado" tamanho="sm" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium text-navy-900">{item.concedenteRazaoSocial}</span>
-                        <span className="block text-xs text-navy-900/60">Convênio {item.numero}</span>
+                        <span className="block text-xs text-navy-900/65">Convênio {item.numero}</span>
                       </span>
                       <span className="text-right text-xs text-navy-900/65">
                         <span className="block font-medium text-navy-900">vence {prazoEmPalavras(item.vigenciaFim, hoje)}</span>

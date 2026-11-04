@@ -11,7 +11,7 @@ export function StatTile({ label, valor, icon: Icon }: { label: string; valor: n
         <p className="font-display text-2xl font-semibold text-navy-900">
           <ContadorAnimado valor={valor} />
         </p>
-        <p className="text-xs text-navy-900/60">{label}</p>
+        <p className="text-xs text-navy-900/65">{label}</p>
       </div>
     </div>
   );

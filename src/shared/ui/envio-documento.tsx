@@ -78,7 +78,7 @@ export function EnvioDocumento({
           if (arquivo) void enviar(arquivo);
         }}
       />
-      {estado && <span className="text-xs text-navy-900/60">{estado}</span>}
+      {estado && <span className="text-xs text-navy-900/65">{estado}</span>}
       {erro && (
         <span role="alert" className="text-xs text-status-danger-text">
           {erro}

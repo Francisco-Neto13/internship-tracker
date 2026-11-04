@@ -75,7 +75,7 @@ export default async function AtividadesComplementaresPage({ searchParams }: { s
                       celula: (atividade) => (
                         <span className="block min-w-0">
                           <span className="block truncate font-medium text-navy-900">{atividade.descricao}</span>
-                          <span className="block truncate text-xs text-navy-900/60">{atividade.categoriaNome}</span>
+                          <span className="block truncate text-xs text-navy-900/65">{atividade.categoriaNome}</span>
                         </span>
                       ),
                     },
@@ -139,7 +139,7 @@ export default async function AtividadesComplementaresPage({ searchParams }: { s
                     <p className="text-sm text-navy-900/65">
                       {atividade.estudanteNome ?? "Estudante"} · {atividade.matricula} · {atividade.categoriaNome}
                     </p>
-                    <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-navy-900/60">
+                    <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-navy-900/65">
                       <span className="inline-flex items-center gap-1">
                         <Building className="size-3.5" aria-hidden />
                         {atividade.instituicaoPromotora}
@@ -161,7 +161,7 @@ export default async function AtividadesComplementaresPage({ searchParams }: { s
                   <p className="text-sm text-navy-900">
                     <span className="font-semibold tabular-nums">{h(atividade.horasDeclaradasMinutos)}</span> declaradas
                     {previa && (
-                      <span className={previa.excedentesMinutos > 0 ? "text-status-pending-text" : "text-navy-900/60"}>
+                      <span className={previa.excedentesMinutos > 0 ? "text-status-pending-text" : "text-navy-900/65"}>
                         {" "}
                         · aproveitaria {h(previa.aproveitadosMinutos)}
                         {previa.excedentesMinutos > 0 && ` (${h(previa.excedentesMinutos)} acima do limite)`}

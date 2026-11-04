@@ -68,7 +68,7 @@ export default async function ParametrosPage() {
             <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {grupo.itens.map(([rotulo, valor]) => (
                 <div key={rotulo}>
-                  <dt className="text-xs text-navy-900/60">{rotulo}</dt>
+                  <dt className="text-xs text-navy-900/65">{rotulo}</dt>
                   <dd className="text-lg font-semibold text-navy-900 tabular-nums">{valor}</dd>
                 </div>
               ))}
@@ -101,13 +101,13 @@ confirmacao={{ titulo: "Registrar esta versão dos parâmetros?", descricao: "Pa
         </Painel>
         <Painel titulo="Histórico de versões" descricao="Cada versão vale até o início da seguinte." flush>
           {historico.length === 0 ? (
-            <p className="px-5 py-4 text-sm text-navy-900/60">Nenhuma versão registrada: vale o padrão legal.</p>
+            <p className="px-5 py-4 text-sm text-navy-900/65">Nenhuma versão registrada: vale o padrão legal.</p>
           ) : (
             <ol className="divide-y divide-navy-900/[0.07]" data-testid="parametros-historico">
               {historico.map((versao) => (
                 <li key={versao.id} className="px-5 py-3 text-sm">
                   <span className="block font-medium text-navy-900">Desde {formatarData(versao.vigenciaInicio)}</span>
-                  <span className="block text-xs text-navy-900/60">
+                  <span className="block text-xs text-navy-900/65">
                     {horas(versao.limiteSemanalMinutos)}/semana · {versao.duracaoMaximaMeses} meses · tolerância {versao.toleranciaDivergenciaPercentual}% · guarda {versao.prazoGuardaAnos} anos
                   </span>
                 </li>
