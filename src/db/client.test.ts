@@ -18,7 +18,7 @@ describe("connection pools refuse a role that bypasses RLS (RF003, RNF-01)", () 
   });
 
   it("never echoes the password in the error", () => {
-    process.env.DATABASE_URL = "postgres://neondb_owner:senha-secreta@host/neondb";
+    process.env.DATABASE_URL = "postgres://migrator:senha-secreta@host/internship_tracker";
 
     const error = (() => {
       try {
@@ -27,7 +27,7 @@ describe("connection pools refuse a role that bypasses RLS (RF003, RNF-01)", () 
         return caught as Error;
       }
     })();
-    expect(error?.message).toContain("neondb_owner");
+    expect(error?.message).toContain("migrator");
     expect(error?.message).not.toContain("senha-secreta");
   });
 

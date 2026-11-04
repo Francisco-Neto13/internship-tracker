@@ -1,5 +1,5 @@
 -- Runtime roles (RF003, RN-37). Created without login here; each environment enables
--- login with its own password (docker/postgres/init locally, ALTER ROLE on Neon).
+-- login with its own password (docker/postgres/init locally, ALTER ROLE in production).
 -- Neither role may own objects or carry BYPASSRLS: scripts/db/apply-migrations.ts
 -- aborts the migration if that ever happens.
 do $$

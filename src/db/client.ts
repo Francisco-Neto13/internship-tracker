@@ -34,8 +34,8 @@ function getDatabase(name: PoolName): Database {
     throw new Error(`${variable} is not set (see .env.example)`);
   }
 
-  // The table owner bypasses every RLS policy, and the Neon + Vercel integration injects
-  // DATABASE_URL with exactly that role. Refuse to start instead of serving unfiltered rows
+  // The table owner bypasses every RLS policy, so a DATABASE_URL with that role would serve
+  // every row to everyone. Refuse to start instead of serving unfiltered rows
   // (RF003, RNF-01). Only the user name is reported, never the URL with its password.
   const role = decodeURIComponent(new URL(connectionString).username);
   if (role !== ROLE_BY_POOL[name]) {
