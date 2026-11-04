@@ -40,7 +40,7 @@ async function BlocoCoordenacao({ identity }: { identity: Parameters<typeof dado
       <h2 id="titulo-coordenacao" className="text-sm font-semibold text-navy-900/70">
         Coordenação · o que pede atenção
       </h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grupo-em-sequencia grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <Indicador
           rotulo="Atividades a analisar"
           valor={dados.fila?.length ?? null}
@@ -94,11 +94,11 @@ async function BlocoCoordenacao({ identity }: { identity: Parameters<typeof dado
             <div className="grid grid-cols-2 gap-3">
               <Link href="/administracao/estudantes?situacao=MATRICULADO" className="rounded-lg bg-nevoa-50 p-3 transition-colors hover:bg-nevoa-100">
                 <p className="text-xs text-navy-900/65">Matriculados</p>
-                <p className="text-xl font-semibold text-navy-900 tabular-nums">{dados.estudantesMatriculados?.toLocaleString("pt-BR") ?? "—"}</p>
+                <p className="text-xl font-semibold text-navy-900 tabular-nums">{dados.estudantesMatriculados?.toLocaleString("pt-BR") ?? "Sem dado"}</p>
               </Link>
               <Link href="/administracao/relatorios-gerenciais?tipo=pendencias-integralizacao" className="rounded-lg bg-nevoa-50 p-3 transition-colors hover:bg-nevoa-100">
                 <p className="text-xs text-navy-900/65">Com integralização pendente</p>
-                <p className="text-xl font-semibold text-navy-900 tabular-nums">{dados.pendenciasIntegralizacao?.toLocaleString("pt-BR") ?? "—"}</p>
+                <p className="text-xl font-semibold text-navy-900 tabular-nums">{dados.pendenciasIntegralizacao?.toLocaleString("pt-BR") ?? "Sem dado"}</p>
               </Link>
             </div>
             <div className="border-t border-navy-900/[0.07] pt-4">
@@ -236,7 +236,7 @@ async function BlocoSupervisor({ identity }: { identity: Parameters<typeof dados
       <h2 id="titulo-supervisor" className="text-sm font-semibold text-navy-900/70">
         Supervisão
       </h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grupo-em-sequencia grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Indicador rotulo="Estagiários ativos" valor={dados.ativos?.total ?? null} contexto="sob a sua supervisão" href="/estagios?situacao=ATIVO" icone={Users} />
         <Indicador
           rotulo="Com horas a homologar"
@@ -421,7 +421,7 @@ async function BlocoAdministrador({ identity }: { identity: Parameters<typeof da
       <h2 id="titulo-administrador" className="text-sm font-semibold text-navy-900/70">
         Administração
       </h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grupo-em-sequencia grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Indicador rotulo="Usuários ativos" valor={dados.usuariosAtivos} contexto={dados.usuariosInativos !== null ? `${dados.usuariosInativos} inativos` : undefined} href="/administracao/usuarios" icone={Users} />
         <Indicador
           rotulo="Troca de senha pendente"

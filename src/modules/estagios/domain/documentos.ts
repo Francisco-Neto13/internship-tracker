@@ -36,11 +36,11 @@ type Assinatura = { parte: string; signatarioNome: string; hashDocumento: string
 type Responsavel = { papel: string; nome: string | null; vigenciaInicio: string; vigenciaFim: string | null };
 type Apolice = { seguradora: string; numeroApolice: string; contratante: string; vigenciaInicio: string; vigenciaFim: string };
 
-const data = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "—");
+const data = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "Não informado");
 const instante = (valor: Date) => valor.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-const horas = (minutos: number | null) => (minutos === null ? "—" : `${String(minutosParaHoras(minutos)).replace(".", ",")} h`);
+const horas = (minutos: number | null) => (minutos === null ? "Não informado" : `${String(minutosParaHoras(minutos)).replace(".", ",")} h`);
 const reais = (valor: string | null) => (valor === null ? "Não se aplica" : `R$ ${Number(valor).toFixed(2).replace(".", ",")}`);
-const cnpj = (valor: string | null) => (valor ? valor.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, "$1.$2.$3/$4-$5") : "—");
+const cnpj = (valor: string | null) => (valor ? valor.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, "$1.$2.$3/$4-$5") : "Não informado");
 const TIPO = { OBRIGATORIO: "Obrigatório", NAO_OBRIGATORIO: "Não obrigatório" } as const;
 const PARTE: Record<string, string> = { ESTUDANTE: "Estudante", INSTITUICAO: "Instituição de ensino", CONCEDENTE: "Concedente" };
 
@@ -48,10 +48,10 @@ function partes(id: IdentificacaoEstagio): SecaoPdf {
   return {
     titulo: "Partes",
     campos: [
-      ["Estudante", `${id.estudanteNome ?? "—"} (matrícula ${id.matricula ?? "—"})`],
-      ["Instituição de ensino", `Curso ${id.curso ?? "—"}`],
-      ["Concedente", `${id.concedente ?? "—"} (CNPJ ${cnpj(id.cnpj)})`],
-      ["Convênio", id.convenio ?? "—"],
+      ["Estudante", `${id.estudanteNome ?? "Não informado"} (matrícula ${id.matricula ?? "Não informado"})`],
+      ["Instituição de ensino", `Curso ${id.curso ?? "Não informado"}`],
+      ["Concedente", `${id.concedente ?? "Não informado"} (CNPJ ${cnpj(id.cnpj)})`],
+      ["Convênio", id.convenio ?? "Não informado"],
     ],
   };
 }
@@ -89,7 +89,7 @@ export function documentoTce(estagio: Estagio, id: IdentificacaoEstagio, extras:
       {
         titulo: "Responsáveis",
         campos: extras.responsaveis.length
-          ? extras.responsaveis.map((item) => [item.papel === "ORIENTADOR" ? "Professor orientador" : "Supervisor", `${item.nome ?? "—"}, desde ${data(item.vigenciaInicio)}${item.vigenciaFim ? ` até ${data(item.vigenciaFim)}` : ""}`] as [string, string])
+          ? extras.responsaveis.map((item) => [item.papel === "ORIENTADOR" ? "Professor orientador" : "Supervisor", `${item.nome ?? "Não informado"}, desde ${data(item.vigenciaInicio)}${item.vigenciaFim ? ` até ${data(item.vigenciaFim)}` : ""}`] as [string, string])
           : [["Situação", "Ainda não vinculados"]],
       },
       {
@@ -129,9 +129,9 @@ export function documentoPlano(plano: Plano, id: IdentificacaoEstagio, estagioId
       {
         titulo: "Decisão do professor orientador (RF017)",
         campos: [
-          ["Orientador", orientador ?? "—"],
+          ["Orientador", orientador ?? "Não informado"],
           ["Decidido em", plano.decididoEm ? instante(plano.decididoEm) : "Aguardando"],
-          ["Parecer", plano.parecer ?? "—"],
+          ["Parecer", plano.parecer ?? "Não informado"],
         ],
       },
     ],

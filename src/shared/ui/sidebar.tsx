@@ -123,13 +123,13 @@ export function Sidebar({ className, children, ...props }: React.ComponentProps<
       <div
         aria-hidden
         className={cn(
-          "relative h-svh w-[var(--sidebar-width)] bg-transparent transition-[width] duration-200 ease-linear",
+          "relative h-svh w-[var(--sidebar-width)] bg-transparent transition-[width] duration-[var(--duracao-entrada)] ease-padrao",
           "group-data-[collapsible=icon]:w-[var(--sidebar-width-icon)]",
         )}
       />
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-20 hidden h-svh w-[var(--sidebar-width)] flex-col border-r border-sidebar-border bg-sidebar-background transition-[width] duration-200 ease-linear md:flex",
+          "fixed inset-y-0 left-0 z-20 hidden h-svh w-[var(--sidebar-width)] flex-col border-r border-sidebar-border bg-sidebar-background transition-[width] duration-[var(--duracao-entrada)] ease-padrao md:flex",
           "group-data-[collapsible=icon]:w-[var(--sidebar-width-icon)]",
           className,
         )}
@@ -194,7 +194,7 @@ export function SidebarGroupLabel({ className, ...props }: React.ComponentProps<
     <div
       className={cn(
         "flex h-6 items-center px-3 text-[10px] font-semibold tracking-[0.18em] text-sidebar-foreground/50 uppercase",
-        "transition-[margin,opacity] duration-200 ease-linear",
+        "transition-[margin,opacity] duration-[var(--duracao-entrada)] ease-padrao",
         "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
         className,
       )}

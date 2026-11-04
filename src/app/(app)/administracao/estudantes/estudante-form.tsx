@@ -157,7 +157,7 @@ export function EstudanteForm({ cursos }: { cursos: { id: string; nome: string }
         </p>
       )}
       <div className="flex justify-end gap-2 sm:col-span-2">
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" carregando={isSubmitting}>
           {isSubmitting ? "Cadastrando…" : "Cadastrar estudante"}
         </Button>
       </div>

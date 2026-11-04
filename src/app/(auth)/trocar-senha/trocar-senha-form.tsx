@@ -123,7 +123,7 @@ export function TrocarSenhaForm({
         </p>
       )}
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={enviando}>
+        <Button type="submit" carregando={enviando}>
           {enviando ? "Salvando..." : "Salvar nova senha"}
         </Button>
         <Button type="button" variant="ghost" onClick={() => (aoCancelar ? aoCancelar() : void sair())}>

@@ -122,7 +122,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
                       <td className="px-4 py-2.5 whitespace-nowrap text-navy-900">{formatarDataCurta(registro.data)}</td>
                       <td className="px-4 py-2.5 text-right text-navy-900 tabular-nums">{h(registro.duracaoMinutos)}</td>
                       <td className="hidden px-4 py-2.5 text-navy-900/65 md:table-cell">
-                        {registro.horaEntrada ? `${registro.horaEntrada.slice(0, 5)} às ${registro.horaSaida?.slice(0, 5)}` : "—"}
+                        {registro.horaEntrada ? `${registro.horaEntrada.slice(0, 5)} às ${registro.horaSaida?.slice(0, 5)}` : "Sem horário"}
                       </td>
                       <td className="px-4 py-2.5">
                         <StatusBadge tone={FREQUENCIA[registro.situacao][1]}>{FREQUENCIA[registro.situacao][0]}</StatusBadge>
@@ -239,7 +239,7 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
                     <span className="block text-xs text-navy-900/65">{avaliacao.avaliadorNome ?? "Avaliador"}</span>
                   </span>
                   <span className="text-lg font-semibold text-navy-900 tabular-nums">
-                    {avaliacao.media ?? "—"}
+                    {avaliacao.media ?? "Sem nota"}
                     <span className="text-xs font-normal text-navy-900/65"> / 10</span>
                   </span>
                 </li>

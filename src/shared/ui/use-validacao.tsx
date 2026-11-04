@@ -51,7 +51,7 @@ export function useValidacao(schema: z.ZodType, montar: (formulario: HTMLFormEle
 /** The message under a field. Its id goes in the aria-describedby of the field. */
 export function ErroCampo({ id, mensagem }: { id: string; mensagem?: string }) {
   return (
-    <p id={id} aria-live="polite" className={mensagem ? "text-sm text-status-danger-text" : "hidden"}>
+    <p id={id} aria-live="polite" className={mensagem ? "animate-aviso text-sm text-status-danger-text" : "hidden"}>
       {mensagem}
     </p>
   );

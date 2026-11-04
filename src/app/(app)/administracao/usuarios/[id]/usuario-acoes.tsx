@@ -186,7 +186,7 @@ function Confirmar({
             <Dialog.Close asChild>
               <Button variant="outline">Cancelar</Button>
             </Dialog.Close>
-            <Button variant={destrutivo ? "destructive" : "default"} disabled={enviando} onClick={aoConfirmar}>
+            <Button variant={destrutivo ? "destructive" : "default"} carregando={enviando} onClick={aoConfirmar}>
               {enviando ? "Aguarde…" : confirmar}
             </Button>
           </div>

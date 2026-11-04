@@ -91,7 +91,7 @@ export function CursoForm() {
           {erro}
         </p>
       )}
-      <Button type="submit" disabled={isSubmitting} className="sm:col-span-2 sm:w-fit sm:justify-self-end">
+      <Button type="submit" carregando={isSubmitting} className="sm:col-span-2 sm:w-fit sm:justify-self-end">
         {isSubmitting ? "Salvando..." : "Cadastrar curso"}
       </Button>
     </form>

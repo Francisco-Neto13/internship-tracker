@@ -38,7 +38,7 @@ export function EstadoVazio({
     <div
       role={variante === "erro" ? "alert" : undefined}
       className={cn(
-        "flex flex-col items-center gap-3 rounded-xl border border-dashed border-navy-900/15 bg-white/60 px-6 text-center",
+        "animate-surgir flex flex-col items-center gap-3 rounded-xl border border-dashed border-navy-900/15 bg-white/60 px-6 text-center",
         compacto ? "py-8" : "py-14",
         className,
       )}
