@@ -1,11 +1,10 @@
 #!/bin/sh
 # Builds and starts the code already copied to the server. Safe to run again: secrets are
 # generated once, migrations and the bucket setup are idempotent. Needs the open volume.
-#   sh publicar.sh <dominio-do-sistema> <dominio-dos-arquivos>
+#   sh publicar.sh [<dominio-do-sistema> <dominio-dos-arquivos>]
+# The domains are needed only the first time; after that they come from the volume.
 set -eu
 
-APP_DOMAIN=$1
-STORAGE_DOMAIN=$2
 PONTO=/srv/dados
 AMBIENTE="$PONTO/.env"
 CODIGO=/srv/internship-tracker
@@ -17,7 +16,12 @@ fi
 
 segredo() { openssl rand -hex 32; }
 
-if [ ! -f "$AMBIENTE" ]; then
+if [ -f "$AMBIENTE" ]; then
+  APP_DOMAIN=$(sed -n 's/^APP_DOMAIN=//p' "$AMBIENTE")
+  STORAGE_DOMAIN=$(sed -n 's/^STORAGE_DOMAIN=//p' "$AMBIENTE")
+else
+  APP_DOMAIN=${1:?informe o dominio do sistema}
+  STORAGE_DOMAIN=${2:?informe o dominio dos arquivos}
   umask 077
   cat > "$AMBIENTE" <<EOF
 APP_DOMAIN=$APP_DOMAIN
