@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle2 } from "lucide-react";
 import { VALIDACOES, type NomeValidacao } from "./validacoes";
 import { ErroCampo, useValidacao } from "./use-validacao";
 import { AreaTexto } from "./area-texto";
@@ -36,7 +37,7 @@ export type Campo = CampoBase &
   );
 
 export const selectClass =
-  "h-11 w-full rounded-md border border-navy-900/20 bg-white px-3 text-sm text-navy-900 outline-none transition-colors focus:border-azul-500 focus:ring-2 focus:ring-azul-500/25";
+  "h-11 w-full rounded-md border border-navy-900/20 bg-white px-3 text-sm text-navy-900 outline-none transition-[border-color,box-shadow] duration-[var(--duracao-rapida)] focus:border-azul-500 focus:ring-2 focus:ring-azul-500/25 aria-invalid:border-status-danger-text";
 
 export async function mensagemDaApi(response: Response, padrao: string): Promise<string> {
   const body = await response.json().catch(() => null);
@@ -160,7 +161,7 @@ export function FormularioApi({
                 <Label htmlFor={id}>{campo.rotulo}</Label>
                 {campo.tipo === "select" ? (
                   <select id={id} name={campo.nome} defaultValue={String(inicial)} className={selectClass} aria-describedby={ajuda} aria-invalid={Boolean(mensagem)}>
-                    {!campo.obrigatorio && <option value="">Nenhum</option>}
+                    {!campo.obrigatorio && <option value="">Selecione</option>}
                     {campo.opcoes.map((opcao) => (
                       <option key={opcao.valor} value={opcao.valor}>
                         {opcao.rotulo}
@@ -206,11 +207,12 @@ export function FormularioApi({
         </p>
       )}
       {aviso && (
-        <p role="status" className="text-sm text-status-ok-text sm:col-span-2">
+        <p role="status" className="animate-aviso flex items-center gap-1.5 text-sm text-status-ok-text sm:col-span-2">
+          <CheckCircle2 className="size-4 shrink-0" aria-hidden />
           {aviso}
         </p>
       )}
-      <Button type="submit" disabled={enviando} className="sm:col-span-2 sm:w-fit">
+      <Button type="submit" carregando={enviando} className="sm:col-span-2 sm:w-fit">
         {enviando ? "Salvando..." : rotuloEnviar}
       </Button>
       {confirmacao && (
