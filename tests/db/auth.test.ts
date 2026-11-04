@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { conta, sessao, usuario } from "@/db/schema";
 import { getAuth } from "@/lib/auth";
+import { LIMITE, SENHA_MAXIMO } from "@/lib/campos";
 import { resolveSession } from "@/lib/session";
 import { createUsuario, owner, signIn } from "./fixtures";
 
@@ -22,6 +23,17 @@ describe("authentication (RF001, RF002)", () => {
 
     expect(resolved?.identity.userId).toBe(user.id);
     expect(resolved?.user).toMatchObject({ nome: user.nome, email: user.email });
+  });
+
+  it("answers a sign-in too long to be right like a wrong password, without hashing it (issue #97)", async () => {
+    const user = await createUsuario({ senha: SENHA });
+    const inicio = Date.now();
+    await expect(signIn(user.email, "x".repeat(SENHA_MAXIMO + 1))).rejects.toMatchObject({ body: { code: "INVALID_EMAIL_OR_PASSWORD" } });
+    await expect(signIn(`${"x".repeat(LIMITE.email)}@teste.local`, SENHA)).rejects.toMatchObject({ body: { code: "INVALID_EMAIL_OR_PASSWORD" } });
+    // Argon2 alone takes longer than this: the request stopped before the hash
+    expect(Date.now() - inicio).toBeLessThan(50);
+    // The ceiling does not get in the way of a correct password
+    expect(await resolveSession(await signIn(user.email, SENHA))).toMatchObject({ identity: { userId: user.id } });
   });
 
   it("rejects a wrong password", async () => {

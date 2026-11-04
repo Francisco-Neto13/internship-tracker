@@ -1,9 +1,9 @@
+import { SENHA_MAXIMO, SENHA_MINIMO } from "@/lib/campos";
 import { z } from "zod";
 
 // RF002: contract of POST /api/v1/auth/senha. Bounds match src/lib/auth.ts (NIST SP
 // 800-63B-4, 3.1.1.2: at least 15 characters, at least 64 accepted; any character allowed).
-export const SENHA_MINIMO = 15;
-export const SENHA_MAXIMO = 128;
+export { SENHA_MAXIMO, SENHA_MINIMO };
 
 export const trocarSenhaBodySchema = z
   .object({

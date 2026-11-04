@@ -1,3 +1,4 @@
+import { LIMITE } from "@/lib/campos";
 import { z } from "zod";
 import { perfil } from "@/db/schema";
 
@@ -5,9 +6,9 @@ import { perfil } from "@/db/schema";
 // services receive camelCase. Business rules on the links (coordination needs a course,
 // supervisor waits for Fase 2, duplicates) live in domain/vinculos.ts, not here.
 
-const nome = z.string().trim().min(1).max(200);
+const nome = z.string().trim().min(1).max(LIMITE.nomeUsuario);
 // The auth library stores e-mails lowercased and looks them up by exact match
-const email = z.email().trim().toLowerCase().max(254);
+const email = z.email().trim().toLowerCase().max(LIMITE.email);
 
 export const vinculoBodySchema = z.object({
   perfil: z.enum(perfil.enumValues),
@@ -17,14 +18,14 @@ export const vinculoBodySchema = z.object({
 
 const perfis = z.array(vinculoBodySchema).min(1).max(20);
 
-export const contasEstudanteQuerySchema = z.object({ busca: z.string().trim().min(2).max(100) });
+export const contasEstudanteQuerySchema = z.object({ busca: z.string().trim().min(2).max(LIMITE.busca) });
 
 export const listUsuariosQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   perfil: z.enum(perfil.enumValues).optional(),
   situacao: z.enum(["ATIVO", "INATIVO"]).optional(),
-  busca: z.string().trim().min(1).max(100).optional(),
+  busca: z.string().trim().min(1).max(LIMITE.busca).optional(),
   ordem: z.enum(["nome", "-nome", "email", "-email", "situacao", "-situacao", "criado", "-criado"]).optional(),
 });
 

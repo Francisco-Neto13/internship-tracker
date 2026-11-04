@@ -1,3 +1,4 @@
+import { dataSchema } from "@/lib/campos";
 import { z } from "zod";
 import { TIPOS_RELATORIO } from "../domain/relatorios-gerenciais";
 
@@ -10,8 +11,8 @@ const filtros = z
   .object({
     curso_id: z.uuid().optional(),
     concedente_id: z.uuid().optional(),
-    de: z.iso.date().optional(),
-    ate: z.iso.date().optional(),
+    de: dataSchema.optional(),
+    ate: dataSchema.optional(),
   })
   .refine((query) => !query.de || !query.ate || query.de <= query.ate, { path: ["ate"], message: "A data final precisa ser igual ou posterior à inicial" });
 

@@ -1,3 +1,4 @@
+import { cepSchema, LIMITE, telefoneSchema, UFS } from "@/lib/campos";
 import { z } from "zod";
 
 // Contracts of /api/v1/concedentes, /portes-concedente and /setores-atuacao (RF007, RF008,
@@ -7,21 +8,21 @@ const texto = (max: number) => z.string().trim().min(1).max(max);
 const opcional = (max: number) => z.string().trim().max(max).nullish().transform((valor) => valor || null);
 
 const campos = {
-  razao_social: texto(200),
-  nome_fantasia: opcional(200),
-  cnpj: z.string().trim().min(14).max(18),
-  logradouro: texto(200),
-  numero_endereco: texto(20),
-  complemento: opcional(100),
-  bairro: texto(100),
-  municipio: texto(100),
-  uf: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/, "UF com duas letras"),
-  cep: z.string().trim().transform((valor) => valor.replace(/\D/g, "")).pipe(z.string().regex(/^\d{8}$/, "CEP com 8 dígitos")),
-  email_contato: z.email().trim().toLowerCase().max(254),
-  telefone_contato: opcional(30),
-  representante_legal_nome: texto(200),
-  representante_legal_cargo: opcional(100),
-  area_atuacao: texto(200),
+  razao_social: texto(LIMITE.razaoSocial),
+  nome_fantasia: opcional(LIMITE.nomeFantasia),
+  cnpj: z.string().trim().min(14).max(LIMITE.cnpj),
+  logradouro: texto(LIMITE.logradouro),
+  numero_endereco: texto(LIMITE.numeroEndereco),
+  complemento: opcional(LIMITE.complemento),
+  bairro: texto(LIMITE.bairro),
+  municipio: texto(LIMITE.municipio),
+  uf: z.string().trim().toUpperCase().pipe(z.enum(UFS, "Escolha uma UF válida")),
+  cep: cepSchema,
+  email_contato: z.email().trim().toLowerCase().max(LIMITE.email),
+  telefone_contato: telefoneSchema,
+  representante_legal_nome: texto(LIMITE.representante),
+  representante_legal_cargo: opcional(LIMITE.cargo),
+  area_atuacao: texto(LIMITE.areaAtuacao),
   porte_id: z.uuid().nullish().transform((valor) => valor ?? null),
   setor_atuacao_id: z.uuid().nullish().transform((valor) => valor ?? null),
 };
@@ -67,10 +68,10 @@ export const listConcedentesQuerySchema = z.object({
   situacao: z.enum(["ATIVA", "SUSPENSA"]).optional(),
   porte_id: z.uuid().optional(),
   setor_atuacao_id: z.uuid().optional(),
-  busca: z.string().trim().min(1).max(100).optional(),
+  busca: z.string().trim().min(1).max(LIMITE.busca).optional(),
 });
 
-export const suspensaoBodySchema = z.object({ motivo: texto(1000) });
+export const suspensaoBodySchema = z.object({ motivo: texto(LIMITE.motivoSuspensao) });
 
 export const classificacaoBodySchema = z.object({ nome: texto(100) });
 
