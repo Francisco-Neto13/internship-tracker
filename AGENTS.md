@@ -200,7 +200,7 @@ drizzle/rollback/        reversão manual de cada migração (*.down.sql)
 drizzle/sql/             roles/, functions/, policies/, triggers/ (aplicados nessa ordem)
 scripts/db/              migrate, seed
 scripts/storage/         init (bucket e CORS) e check do armazenamento
-scripts/servidor/        produção: cofre criptografado, publicação, deploy e rotina diária
+scripts/servidor/        produção: cofre criptografado, publicação, deploy, rotina diária e backup
 src/shared/documentos/   upload direto (D8): token, conteúdo pelos bytes, armazenamento S3 e em memória
 scripts/ci-local.mjs     CI local, espelho do .github/workflows/ci.yml
 .githooks/               pre-push que recusa push direto em develop/main (core.hooksPath)
@@ -376,8 +376,8 @@ alternativa descartada por engano):
 | Recurso contra recusa de atividade complementar | Não existe; cadastra-se nova atividade |
 | Divergência relevante de carga horária | Percentual parametrizável, padrão 10% |
 | Hospedagem em território nacional | Sem exigência |
-| Banco em produção | PostgreSQL 17 em Docker no servidor próprio, sem serviço gerenciado. Backup com restauração a um ponto no tempo (RNF-12) fica a cargo da equipe e ainda precisa ser montado (issue #63) |
-| Arquivos em produção | SeaweedFS em Docker no servidor próprio, sem Cloudflare R2. A ativação pede cartão de crédito ou PayPal mesmo na franquia gratuita, e a equipe decidiu não cadastrar meio de pagamento. Criptografia em repouso, backup dos arquivos e a perda da segunda barreira da guarda ficam a cargo da equipe |
+| Banco em produção | PostgreSQL 17 em Docker no servidor próprio, sem serviço gerenciado. Backup com restauração a um ponto no tempo (RNF-12) fica a cargo da equipe, com pgBackRest (seção Produção) |
+| Arquivos em produção | SeaweedFS em Docker no servidor próprio, sem Cloudflare R2. A ativação pede cartão de crédito ou PayPal mesmo na franquia gratuita, e a equipe decidiu não cadastrar meio de pagamento. Criptografia em repouso e backup dos arquivos ficam a cargo da equipe (seção Produção); a segunda barreira da guarda foi perdida |
 | Situação acadêmica (RF005) | Transições restritas (acima), validadas no serviço e por gatilho, auditadas. Decisão final da equipe (2026-11-04) |
 | Visto do supervisor nos relatórios (Lei 11.788/2008, art. 3º, §1º) | Não implementado: o supervisor não lê relatórios, conforme DER §4.5. Decisão final da equipe (2026-11-04); o orientador não tem mais ajustes a passar |
 | Redução da jornada em período de avaliações (art. 10, §2º) | Não implementada, porque exige calendário acadêmico. Decisão final da equipe (2026-11-04) |
@@ -505,7 +505,17 @@ dados e os segredos ficam num volume LUKS em `/srv/dados`, com a senha só com a
 A chave do deploy só dispara o deploy: usuário `deploy`, com comando forçado (`configurar-deploy.sh`).
 A chave do host fica fixada no secret `VPS_KNOWN_HOSTS`.
 
-**Ainda não existe backup** (RNF-12, issue #63): não colocar dados reais antes disso.
+### Backup (RNF-12)
+
+| Camada | O que faz | Onde |
+|---|---|---|
+| pgBackRest | Cópia completa aos domingos, diferencial nos outros dias e cada alteração do banco arquivada, no máximo 5 min depois. Permite voltar a um horário exato | `/srv/dados/backup`, no volume criptografado |
+| restic e rclone | A cada hora, envia cópias do banco, arquivos e `.env`, criptografados no servidor | Google Drive, fora da Contabo (`backup-configurar.sh`) |
+| Auto Backup da Contabo | Imagem diária do servidor inteiro, com até 10 cópias. Não volta a horário exato, e a restauração leva o servidor todo | Painel da Contabo |
+
+Provar que abre: `sh scripts/servidor/backup-testar-restauracao.sh ["<horário>"]`, que restaura em contêineres descartáveis, com o sistema no ar. Rodar depois de mudança no banco ou no armazenamento.
+
+A senha do restic fica em `/srv/dados/.backup/senha` e em um cofre de senhas da equipe: sem ela, o backup não abre. Não há aviso automático de falha; confira `/srv/dados/.backup/ultimo-envio` e `systemctl status internship-backup`.
 
 ## Roadmap (fases)
 

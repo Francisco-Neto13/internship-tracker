@@ -38,12 +38,16 @@ CRON_SECRET=$(segredo)
 EOF
   umask 022
 fi
-mkdir -p "$PONTO/postgres" "$PONTO/armazenamento" "$PONTO/caddy"
+mkdir -p "$PONTO/postgres" "$PONTO/armazenamento" "$PONTO/caddy" "$PONTO/backup/pgbackrest" "$PONTO/backup/log"
+# The user of the postgres image writes the database backups
+chown -R 999:999 "$PONTO/backup/pgbackrest" "$PONTO/backup/log"
 
 cd "$CODIGO"
 COMPOSE="docker compose --env-file $AMBIENTE -f docker-compose.prod.yml"
-$COMPOSE build app
+$COMPOSE build app postgres
 $COMPOSE up -d --wait postgres storage
+# RNF-12: repository of the database backups; safe to run again
+$COMPOSE exec -T -u postgres postgres pgbackrest --stanza=main stanza-create
 $COMPOSE run --rm ferramentas npm run db:migrate
 $COMPOSE up -d --wait
 
@@ -82,7 +86,30 @@ Persistent=true
 [Install]
 WantedBy=timers.target
 EOF
+# Backup every hour (RNF-12). A closed volume makes it fail without side effects
+cat > /etc/systemd/system/internship-backup.service <<EOF
+[Unit]
+Description=Backup do Internship Tracker
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh $CODIGO/scripts/servidor/backup.sh
+EOF
+cat > /etc/systemd/system/internship-backup.timer <<EOF
+[Unit]
+Description=Backup do Internship Tracker
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
 systemctl daemon-reload
 systemctl enable --now internship-rotina.timer >/dev/null 2>&1
+systemctl enable --now internship-backup.timer >/dev/null 2>&1
+# The first database copy starts now, without holding the deploy
+systemctl start --no-block internship-backup.service
 
 echo "Publicado em https://$APP_DOMAIN"
