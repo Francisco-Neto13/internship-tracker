@@ -70,7 +70,7 @@ export default async function LoginPage() {
       {/* Painel de acesso */}
       <section className="relative flex items-center justify-center bg-nevoa-50 px-6 py-16">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-navy-900/15 to-transparent lg:hidden" />
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md animate-surgir">
           <div className="mb-8 flex justify-center lg:hidden">
             <span className="inline-flex items-center rounded-xl bg-navy-900 px-5 py-4">
               <Image
