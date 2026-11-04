@@ -208,7 +208,7 @@ const steps = [
   {
     name: "Prepare storage",
     docker: true,
-    // D8: the private bucket the upload flow and the e2e use (SeaweedFS locally, R2 in production)
+    // D8: the private bucket the upload flow and the e2e use (SeaweedFS)
     run: () => {
       const subir = run("docker", ["compose", "up", "-d", "storage", "--wait"]);
       if (subir.status !== 0) return subir;

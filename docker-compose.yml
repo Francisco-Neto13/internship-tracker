@@ -17,7 +17,7 @@ services:
       timeout: 3s
       retries: 30
 
-  # Local S3 API for the private bucket (D8, RNF-06); production uses Cloudflare R2.
+  # Local S3 API for the private bucket (D8, RNF-06); production: docker-compose.prod.yml.
   # SeaweedFS replaced MinIO, whose community edition stopped publishing images (2025).
   # Tag pinned: change it on purpose, after running npm run storage:check.
   storage:
