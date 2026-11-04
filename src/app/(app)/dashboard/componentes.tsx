@@ -1,3 +1,4 @@
+import { ContadorAnimado } from "@/shared/ui/contador-animado";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
@@ -66,11 +67,15 @@ export function DistribuicaoEstagios({ contagens }: { contagens: Record<string, 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-baseline gap-2">
-        <span className="text-[1.75rem] leading-none font-semibold text-navy-900 tabular-nums">{total.toLocaleString("pt-BR")}</span>
+        <span className="text-[1.75rem] leading-none font-semibold text-navy-900 tabular-nums">
+          <ContadorAnimado valor={total} />
+        </span>
         <span className="text-sm text-navy-900/65">estágios no seu alcance</span>
       </div>
       <div className="flex h-2.5 overflow-hidden rounded-full bg-nevoa-100" role="img" aria-label={valores.map((item) => `${item.rotulo}: ${item.valor}`).join(", ")}>
-        {total > 0 && valores.map((item) => item.valor > 0 && <div key={item.chave} className={item.cor} style={{ width: `${(item.valor / total) * 100}%` }} />)}
+        <div className="flex h-full w-full origin-left animate-crescer-x">
+          {total > 0 && valores.map((item) => item.valor > 0 && <div key={item.chave} className={item.cor} style={{ width: `${(item.valor / total) * 100}%` }} />)}
+        </div>
       </div>
       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {valores.map((item) => (

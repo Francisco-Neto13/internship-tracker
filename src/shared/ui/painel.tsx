@@ -29,7 +29,7 @@ export function Painel({
 }) {
   const temCabecalho = titulo || descricao || acoes || verTodos;
   return (
-    <section id={id} className={cn("surface-card flex min-w-0 flex-col", className)} aria-labelledby={id && titulo ? `${id}-titulo` : undefined}>
+    <section id={id} className={cn("surface-card flex min-w-0 animate-surgir flex-col", className)} aria-labelledby={id && titulo ? `${id}-titulo` : undefined}>
       {temCabecalho && (
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-navy-900/[0.07] px-5 py-4">
           <div className="min-w-0">

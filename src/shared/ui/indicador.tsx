@@ -1,3 +1,4 @@
+import { ContadorAnimado } from "./contador-animado";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "./cn";
@@ -16,7 +17,7 @@ export function Indicador({
   href,
   icone: Icone,
   tom = "neutro",
-  formatar = (numero) => numero.toLocaleString("pt-BR"),
+  formatar,
 }: {
   rotulo: string;
   valor: number | null;
@@ -45,7 +46,7 @@ export function Indicador({
         </p>
       ) : (
         <p className={cn("mt-2 text-[1.75rem] leading-none font-semibold tabular-nums", atencao ? "text-status-pending-text" : "text-navy-900")}>
-          {formatar(valor)}
+          {formatar ? formatar(valor) : <ContadorAnimado valor={valor} />}
         </p>
       )}
       {(contexto || (valor === null && motivoSemValor)) && (
@@ -102,7 +103,7 @@ export function Progresso({
         aria-valuenow={percentual}
         className="mt-2 h-2 overflow-hidden rounded-full bg-nevoa-100"
       >
-        <div className={cn("h-full rounded-full", completo ? "bg-status-ok-text" : "bg-azul-500")} style={{ width: `${percentual}%` }} />
+        <div className={cn("h-full origin-left animate-crescer-x rounded-full", completo ? "bg-status-ok-text" : "bg-azul-500")} style={{ width: `${percentual}%` }} />
       </div>
       {detalhe && <p className="mt-1.5 text-xs text-navy-900/65">{detalhe}</p>}
     </div>
