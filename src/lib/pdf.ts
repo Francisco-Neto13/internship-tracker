@@ -199,7 +199,7 @@ export async function gerarPdfDocumento(documento: DocumentoPdf): Promise<Uint8A
     }
     for (const [rotulo, valor] of secao.campos ?? []) {
       escritor.texto(rotulo, { tamanho: 8, cor: COR_SUAVE });
-      escritor.texto(valor || "—", { tamanho: 10 });
+      escritor.texto(valor || "Não informado", { tamanho: 10 });
       escritor.espaco(3);
     }
     for (const paragrafo of secao.paragrafos ?? []) {

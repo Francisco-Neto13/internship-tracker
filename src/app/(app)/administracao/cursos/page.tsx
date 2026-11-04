@@ -77,11 +77,11 @@ export default async function CursosPage({ searchParams }: { searchParams: Promi
                     <div className="mt-auto flex flex-wrap gap-4 border-t border-navy-900/[0.07] pt-3 text-xs text-navy-900/65">
                       <span className="inline-flex items-center gap-1.5">
                         <GraduationCap className="size-4 text-navy-900/40" aria-hidden />
-                        {curso.estudantesMatriculados ?? "—"} matriculados
+                        {curso.estudantesMatriculados ?? "Sem contagem de"} matriculados
                       </span>
                       <span className="inline-flex items-center gap-1.5">
                         <Briefcase className="size-4 text-navy-900/40" aria-hidden />
-                        {curso.estagiosAtivos ?? "—"} estágios ativos
+                        {curso.estagiosAtivos ?? "Sem contagem de"} estágios ativos
                       </span>
                     </div>
                   </div>

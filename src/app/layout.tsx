@@ -7,7 +7,7 @@ import "./globals.css";
 // time: uma familia so para titulo e corpo, com as mesmas metricas nos dois, e a mesma face que
 // os tres projetos de referencia usam. Variavel: um arquivo cobre todos os pesos.
 // JetBrains Mono continua nos codigos (RF/RN/M0x, matricula, codigo de curso), onde o
-// espacamento fixo alinha coluna de tabela — nao e escolha de marca, e funcao.
+// espacamento fixo alinha coluna de tabela: nao e escolha de marca, e funcao.
 //
 // Arquivos no pacote, nao baixados do Google na compilacao: o build de producao nao depende de
 // servico externo, e nenhuma requisicao de fonte sai do navegador de quem usa.

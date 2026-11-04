@@ -91,7 +91,7 @@ export function UsuarioForm({
             {erro}
           </p>
         )}
-        <Button type="submit" disabled={enviando} className="sm:col-span-2 sm:w-fit sm:justify-self-end">
+        <Button type="submit" carregando={enviando} className="sm:col-span-2 sm:w-fit sm:justify-self-end">
           {enviando ? "Salvando..." : "Cadastrar usuário"}
         </Button>
       </form>

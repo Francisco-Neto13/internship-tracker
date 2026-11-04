@@ -64,7 +64,7 @@ export function Confirmacao({
             <Button ref={cancelar} type="button" variant="outline" disabled={ocupado} onClick={() => aoMudarAberto(false)}>
               Cancelar
             </Button>
-            <Button type="button" variant={destrutiva ? "destructive" : "default"} disabled={ocupado} onClick={() => void aoConfirmar()}>
+            <Button type="button" variant={destrutiva ? "destructive" : "default"} carregando={ocupado} onClick={() => void aoConfirmar()}>
               {ocupado ? "Aguarde..." : rotuloConfirmar}
             </Button>
           </div>

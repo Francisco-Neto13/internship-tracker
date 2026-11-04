@@ -15,6 +15,8 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
+    // Tests do not wait for movement; e2e/movimento.spec.ts turns it on where motion is the subject
+    contextOptions: { reducedMotion: "reduce" },
   },
   // RNF-13: the other browsers run on demand (E2E_NAVEGADORES=1); the CI stays on Chromium
   projects: [

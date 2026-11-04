@@ -98,14 +98,14 @@ export function DataTable<T>({
               })}
             </tr>
           </thead>
-          <tbody data-testid={testId}>
+          <tbody data-testid={testId} className="linhas-em-sequencia">
             {items.map((item) => {
               const href = getRowHref?.(item);
               return (
                 <tr
                   key={getRowKey(item)}
                   className={cn(
-                    "relative border-b border-navy-900/[0.07] transition-colors last:border-0",
+                    "relative border-b border-navy-900/[0.07] transition-colors duration-[var(--duracao-rapida)] last:border-0",
                     href && "hover:bg-nevoa-50 focus-within:bg-nevoa-50",
                   )}
                 >

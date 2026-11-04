@@ -58,7 +58,7 @@ export function RecuperarSenhaForm() {
           {erro}
         </p>
       )}
-      <Button type="submit" disabled={enviando} className="h-11 w-full">
+      <Button type="submit" carregando={enviando} className="h-11 w-full">
         {enviando ? "Enviando..." : "Pedir senha provisória"}
       </Button>
     </form>
