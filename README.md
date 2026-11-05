@@ -104,7 +104,7 @@ Requisitos não funcionais RNF-01 a RNF-13 do documento de requisitos v1.2, com 
 | Geração de PDF | pdf-lib no servidor |
 | Testes | Vitest (unidade/integração) e Playwright (e2e) |
 | Rotinas agendadas | Timer do servidor chamando `/api/cron/diaria` |
-| Deploy | VPS com Docker Compose (aplicação, banco, arquivos e Caddy para HTTPS), publicada pelo GitHub Actions |
+| Deploy | VPS com Docker Compose (aplicação, banco e arquivos), atrás do proxy HTTPS do servidor, publicada pelo GitHub Actions |
 
 ## Ambientes
 
@@ -211,7 +211,7 @@ drizzle/sql/            papéis, funções, políticas RLS e triggers versionado
 scripts/db/             migração e seed
 scripts/storage/        bucket e CORS do armazenamento
 scripts/servidor/       produção: cofre criptografado, publicação, deploy e rotina diária
-docker/                 configuração do Caddy e dos papéis do Postgres
+docker/                 configuração dos papéis do Postgres
 scripts/ci-local.mjs    CI local, espelho do workflow do GitHub
 .githooks/              pre-push que recusa push direto em develop e main
 scripts/github/         automação do fluxo de lotes e da proteção das branches

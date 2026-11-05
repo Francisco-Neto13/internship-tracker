@@ -1,31 +1,11 @@
 # Production on the own server (issue #63). Everything lives in the encrypted volume at
 # DIR_DADOS, secrets included, so nothing starts until scripts/servidor/cofre-abrir.sh opens it.
 #   docker compose --env-file /srv/dados/.env -f docker-compose.prod.yml up -d --wait
-# Only the proxy publishes ports. Docker bypasses ufw for published ports: never add one here.
+# The server proxy, outside this project (/srv/proxy), owns ports 80 and 443 and joins this
+# network. Docker bypasses ufw for published ports: never add one here.
 name: internship-tracker-prod
 
 services:
-  proxy:
-    image: caddy:2.10-alpine
-    restart: unless-stopped
-    depends_on:
-      app:
-        condition: service_healthy
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      APP_DOMAIN: ${APP_DOMAIN:?}
-      STORAGE_DOMAIN: ${STORAGE_DOMAIN:?}
-    volumes:
-      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ${DIR_DADOS:?}/caddy:/data
-    networks:
-      default:
-        # The application reaches the storage by its public name, which the signature covers
-        aliases:
-          - ${STORAGE_DOMAIN:?}
-
   app:
     build: .
     image: internship-tracker-app
@@ -41,7 +21,7 @@ services:
       DATABASE_AUTH_URL: postgres://auth_runtime:${AUTH_RUNTIME_PASSWORD:?}@postgres:5432/internship_tracker
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?}
       BETTER_AUTH_URL: https://${APP_DOMAIN:?}
-      # The proxy overwrites this header, and the application has no other way in
+      # The server proxy overwrites this header, and the application has no other way in
       AUTH_IP_HEADERS: x-real-ip
       R2_ENDPOINT: https://${STORAGE_DOMAIN:?}
       R2_FORCE_PATH_STYLE: "true"
