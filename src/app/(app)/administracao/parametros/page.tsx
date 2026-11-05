@@ -77,7 +77,7 @@ export default async function ParametrosPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
         <Painel titulo="Nova versão" descricao="Começa hoje ou depois. Lançamentos, relatórios e prazos já calculados não mudam.">
           <FormularioApi
             validacao="parametros"

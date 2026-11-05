@@ -88,7 +88,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
         </div>
       </Painel>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]">
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]">
         <Painel titulo="Frequência" descricao={`${lancamentos.length} lançamento(s); os 30 mais recentes`} flush>
           {lancamentos.length === 0 ? (
             <p className="px-5 py-6 text-sm text-navy-900/65" data-testid="frequencias">
@@ -225,7 +225,7 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
         </Painel>
       )}
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-2">
         {avaliacoes && (
           <Painel titulo="Avaliações de desempenho" descricao="Pela concedente, por critério (RF042, RF043)." flush>
             <ul className="divide-y divide-navy-900/[0.07]" data-testid="avaliacoes">
