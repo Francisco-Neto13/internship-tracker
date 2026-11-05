@@ -35,8 +35,9 @@ Quem mexer aqui não pode derrubar o que já está no ar.
   recomendação é separar a VPS.
 - **Docker só sobe depois do cofre.** Depois de reiniciar, todos os contêineres, de qualquer projeto,
   ficam parados até alguém rodar `cofre-abrir.sh`. Nunca habilitar o Docker no boot.
-- **Portas 80 e 443 são do Caddy do tracker.** O projeto novo entra por ele, com domínio próprio. O
-  Docker ignora o ufw: contêiner não publica porta.
+- **Portas 80 e 443 são do proxy do servidor, em `/srv/proxy`.** Ele não pertence a nenhum projeto. O
+  projeto novo entra com um arquivo em `/srv/proxy/sites/`, a rede `borda` no compose dele e
+  `sh /srv/proxy/recarregar.sh`, sem mexer no tracker. O Docker ignora o ufw: contêiner não publica porta.
 - **Não rodar nos contêineres dele** `docker compose down -v` nem `docker system prune --volumes`.
 - **Backup:** o tracker tem o próprio, em `scripts/servidor/backup.sh`. Projeto novo precisa do seu.
 

@@ -38,7 +38,7 @@ CRON_SECRET=$(segredo)
 EOF
   umask 022
 fi
-mkdir -p "$PONTO/postgres" "$PONTO/armazenamento" "$PONTO/caddy" "$PONTO/backup/pgbackrest" "$PONTO/backup/log"
+mkdir -p "$PONTO/postgres" "$PONTO/armazenamento" "$PONTO/backup/pgbackrest" "$PONTO/backup/log"
 # The user of the postgres image writes the database backups
 chown -R 999:999 "$PONTO/backup/pgbackrest" "$PONTO/backup/log"
 
@@ -61,19 +61,13 @@ $COMPOSE up -d --wait postgres storage
 $COMPOSE exec -T -u postgres postgres pgbackrest --stanza=main stanza-create
 $COMPOSE run --rm ferramentas npm run db:migrate
 $COMPOSE up -d --wait
-# Compose does not see a change in a mounted file, and a mount of a single file keeps the old one
-# after git reset. Without this, a new Caddyfile only takes effect when the proxy restarts.
-if ! $COMPOSE exec -T proxy cat /etc/caddy/Caddyfile | cmp -s - docker/caddy/Caddyfile; then
-  $COMPOSE up -d --wait --force-recreate --no-deps proxy
-fi
-
-# The certificates are issued after the proxy starts, and the bucket setup goes through HTTPS
+# The bucket setup goes through HTTPS, by the server proxy (/srv/proxy)
 for tentativa in $(seq 1 60); do
   if curl --silent --output /dev/null --max-time 5 "https://$STORAGE_DOMAIN" && curl --silent --output /dev/null --max-time 5 "https://$APP_DOMAIN/login"; then
     break
   fi
   if [ "$tentativa" -eq 60 ]; then
-    echo "Os certificados não saíram em 5 minutos: veja docker compose logs proxy" >&2
+    echo "O sistema não respondeu por HTTPS em 5 minutos: veja o proxy do servidor, em /srv/proxy" >&2
     exit 1
   fi
   sleep 5
