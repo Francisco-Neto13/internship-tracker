@@ -54,6 +54,8 @@ describe("upload token (D8)", () => {
     const [corpo, assinatura] = token.split(".");
     const alterado = Buffer.from(JSON.stringify({ ...pedido, tamanhoBytes: 10_000_000 })).toString("base64url");
     expect(verificarPedido(`${alterado}.${assinatura}`, "u1")).toBeNull();
-    expect(verificarPedido(`${corpo}.x${assinatura.slice(1)}`, "u1")).toBeNull();
+    // Always a different character: writing "x" changes nothing in 1 of 64 signatures
+    const trocado = assinatura[0] === "x" ? "y" : "x";
+    expect(verificarPedido(`${corpo}.${trocado}${assinatura.slice(1)}`, "u1")).toBeNull();
   });
 });

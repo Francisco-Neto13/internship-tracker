@@ -85,7 +85,7 @@ async function BlocoCoordenacao({ identity }: { identity: Parameters<typeof dado
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Painel titulo="Estágios" descricao="Por situação, em todos os cursos que você coordena" className="xl:col-span-2" verTodos={{ href: "/estagios" }}>
           <DistribuicaoEstagios contagens={dados.situacoes} />
         </Painel>
@@ -118,7 +118,7 @@ async function BlocoCoordenacao({ identity }: { identity: Parameters<typeof dado
         </Painel>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Painel titulo="Fila de análise" descricao="Atividades complementares, as mais antigas primeiro" flush verTodos={{ href: "/atividades-complementares" }}>
           <ListaCompacta vazio="Nenhuma atividade aguardando análise.">
             {(dados.fila ?? []).slice(0, 5).map(({ atividade }) => (
@@ -194,7 +194,7 @@ async function BlocoOrientador({ identity }: { identity: Parameters<typeof dados
         <Indicador rotulo="Divergências de carga" valor={dados.divergentes?.length ?? null} contexto="casos para o seu parecer" href="/frequencia" icone={Scale} tom="atencao" />
         <Indicador rotulo="Estágios orientados" valor={dados.ativos?.total ?? null} contexto="ativos hoje" href="/estagios?situacao=ATIVO" icone={GraduationCap} />
       </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Painel titulo="Relatórios para analisar" flush verTodos={{ href: "/relatorios" }}>
           <ListaCompacta vazio="Nenhum relatório aguardando a sua análise.">
             {(dados.paraAnalisar ?? []).slice(0, 6).map((relatorio) => (
@@ -272,7 +272,7 @@ async function BlocoConcedente({ identity }: { identity: Parameters<typeof dados
       <h2 id="titulo-concedente" className="text-sm font-semibold text-navy-900/70">
         Concedente
       </h2>
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Painel titulo="Estágios na sua organização" className="xl:col-span-2" verTodos={{ href: "/estagios" }}>
           <DistribuicaoEstagios contagens={dados.situacoes} />
         </Painel>
@@ -372,7 +372,7 @@ async function BlocoEstudante({ identity }: { identity: Parameters<typeof dadosE
         />
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Painel titulo="Integralização curricular" verTodos={{ href: "/integralizacao", rotulo: "Ver detalhes" }}>
           {integralizacao ? (
             <div className="flex flex-col gap-5">

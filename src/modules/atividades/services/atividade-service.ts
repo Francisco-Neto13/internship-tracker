@@ -158,7 +158,12 @@ async function comPrevia(tx: Transaction, fila: AtividadeRow[]) {
 export async function listFilaAnalisePagina(identity: Identity, query: { page: number; limit: number }) {
   return withUser(identity, async (tx) => {
     const { items, total } = await findAtividadesPagina(tx, { situacao: "EM_ANALISE" }, { limit: query.limit, offset: (query.page - 1) * query.limit, maisAntigasPrimeiro: true });
-    return { items: await comPrevia(tx, items), total };
+    // RF053: whoever decides has to see the proof. Per row, and only for the page on screen
+    const comProvas = [];
+    for (const item of await comPrevia(tx, items)) {
+      comProvas.push({ ...item, comprovantes: await findComprovantes(tx, item.atividade.id) });
+    }
+    return { items: comProvas, total };
   });
 }
 
