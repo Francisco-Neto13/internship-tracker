@@ -458,6 +458,7 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
   (idem `auth_runtime`). `DATABASE_MIGRATION_URL` usa o dono (`migrator`).
 - O pool de conexões reaproveita a mesma conexão entre requisições. `set_config(..., true)` é
   obrigatório (local à transação); um valor de sessão vazaria a identidade para outra requisição.
+- Disco reservado é disco perdido: o cofre tem tamanho fixo no servidor, e o SeaweedFS reserva 7 volumes × `-master.volumeSizeLimitMB` por bucket. O cofre nasceu com 60 GB de 96 e consumia o espaço de outros projetos com pouco mais de 100 MB de dados. Limites e checagens: `scripts/servidor/REGRAS-DA-VPS.md`.
 - O Docker ignora o ufw nas portas publicadas: no `docker-compose.prod.yml`, só o proxy publica porta.
 - As fontes vêm de pacotes (`next/font/local`). Com `next/font/google`, o build de produção falhou no servidor.
 - `next build` não pode depender de banco: `getAuth()` e os pools são criados sob
@@ -532,6 +533,8 @@ dados e os segredos ficam num volume LUKS em `/srv/dados`, com a senha só com a
 | Simular | Actions > Deploy > Run workflow > `dry_run` |
 | O servidor reiniciou | O sistema fica fora do ar até alguém rodar `ssh -t root@<servidor> sh /srv/internship-tracker/scripts/servidor/cofre-abrir.sh` e digitar a senha. O Docker não sobe sozinho, de propósito: sem o cofre, os contêineres voltariam sem os dados. O deploy falha com aviso enquanto o cofre estiver fechado |
 | Banco novo | `npm run db:primeiro-admin`, no serviço `ferramentas` do Compose |
+| Ver o disco | `vps-espaco`, no servidor. Regras para qualquer projeto: `scripts/servidor/REGRAS-DA-VPS.md`, instaladas em `/srv/` |
+| Mudar o tamanho do cofre | `cofre-trocar.sh <tamanho>`: copia, confere por checksum e volta sozinho se falhar. Apagar `/srv/cofre-antigo.img` depois de conferir |
 
 A chave do deploy só dispara o deploy: usuário `deploy`, com comando forçado (`configurar-deploy.sh`).
 A chave do host fica fixada no secret `VPS_KNOWN_HOSTS`.
