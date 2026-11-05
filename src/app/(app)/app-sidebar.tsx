@@ -61,8 +61,9 @@ export function AppSidebar({ perfis, naoLidas }: { perfis: Perfil[]; naoLidas: n
           onClick={onNavigate}
           className="flex items-center gap-2 rounded-md px-1 py-1 group-data-[collapsible=icon]:justify-center"
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-white p-1">
-            <Image src="/logo-internship-tracker.png" alt="" width={24} height={24} priority />
+          {/* Versão clara do logotipo, cortada para mostrar só o símbolo: o nome já vem escrito ao lado */}
+          <span className="size-8 shrink-0 overflow-hidden">
+            <Image src="/logo-internship-tracker-reverso.png" alt="" width={84} height={32} priority className="h-8 w-[84px] max-w-none" />
           </span>
           <span className="truncate font-display text-sm font-semibold text-white group-data-[collapsible=icon]:hidden">
             Internship Tracker
