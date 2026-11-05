@@ -50,4 +50,12 @@ test("coordination opens the Fase 2 screens and registers an agreement with its 
   await expect(page.getByText(/^Enviado: convenio\.pdf/)).toBeVisible();
   await page.getByRole("button", { name: "Registrar convênio" }).click();
   await expect(page.getByTestId("convenios")).toContainText(numero);
+
+  // The file comes back through the signed link, from the row of this agreement (RF071)
+  const linha = page.getByTestId("convenios").getByRole("listitem").filter({ hasText: numero }).first();
+  const baixando = page.waitForEvent("download");
+  await linha.getByRole("button", { name: "Baixar PDF" }).click();
+  const baixado = await baixando;
+  expect(baixado.suggestedFilename()).toBe("convenio.pdf");
+  expect(await baixado.failure()).toBeNull();
 });

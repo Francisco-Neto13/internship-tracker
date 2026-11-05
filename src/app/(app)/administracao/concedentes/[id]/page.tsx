@@ -1,3 +1,4 @@
+import { BaixarDocumento } from "@/shared/ui/baixar-documento";
 import { LIMITE } from "@/lib/campos";
 import { Briefcase, FileSignature, Percent } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
@@ -95,7 +96,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
         <div className="flex flex-col gap-4">
           <Painel titulo="Convênios" descricao="Sem convênio vigente na data de início, o estágio não é ativado (RF010)." flush>
             <ul className="divide-y divide-navy-900/[0.07]" data-testid="convenios">
@@ -110,8 +111,9 @@ export default async function ConcedentePage({ params, searchParams }: { params:
                     </span>
                     <ol className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-navy-900/65">
                       {convenio.vigencias.map((vigencia) => (
-                        <li key={vigencia.id ?? vigencia.vigenciaInicio}>
+                        <li key={vigencia.id ?? vigencia.vigenciaInicio} className="flex flex-wrap items-center gap-2">
                           {formatarDataCurta(vigencia.vigenciaInicio)} a {formatarDataCurta(vigencia.vigenciaFim)}
+                          <BaixarDocumento documentoId={vigencia.documentoId} rotulo="Baixar PDF" />
                         </li>
                       ))}
                     </ol>

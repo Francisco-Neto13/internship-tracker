@@ -1,3 +1,4 @@
+import { BaixarDocumento } from "@/shared/ui/baixar-documento";
 import { LIMITE } from "@/lib/campos";
 import { formatarDataCurta } from "@/lib/datas";
 import { minutosParaHoras } from "@/lib/horas";
@@ -74,7 +75,11 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
                         {item.diasExtensao < item.diasCorridos && " (teto de 2 anos atingido)"}
                       </span>
                     </span>
-                    {item.situacao === "SUBSTITUIDO" && <StatusBadge tone="neutral">Substituído por correção</StatusBadge>}
+                    <span className="flex flex-wrap items-center gap-2">
+                      {item.situacao === "SUBSTITUIDO" && <StatusBadge tone="neutral">Substituído por correção</StatusBadge>}
+                      {/* The API decides who reads it and records the reading (RF071, RF072) */}
+                      <BaixarDocumento documentoId={item.documentoId} rotulo="Baixar comprovante" />
+                    </span>
                   </li>
                 ))
               : periodos.map((periodo) => (
@@ -96,7 +101,7 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
       )}
 
       {estagio.situacao === "ATIVO" && (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-2">
           <Painel titulo="Concluir estágio" descricao="Exige avaliação final e, se obrigatório, carga mínima homologada e relatório final aprovado; nenhum lançamento pendente (RF045).">
             <BotaoAcao
               url={`${api}/conclusao`}
