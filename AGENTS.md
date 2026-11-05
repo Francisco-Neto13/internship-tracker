@@ -335,7 +335,7 @@ contexto de rota da biblioteca.
 
 Limite de login por IP: a origem do endereço vem de `AUTH_IP_HEADERS` e
 `AUTH_TRUSTED_PROXIES` (`src/lib/auth-options.ts`). Produção sem essas variáveis não inicia;
-no servidor, o Caddy define `x-real-ip`.
+no servidor, o proxy define `x-real-ip`.
 
 Conta nova ou senha esquecida recebe senha provisória (`usuario.troca_senha_obrigatoria`, `senha_provisoria_expira_em`).
 Enquanto a troca estiver pendente, `authenticatedRoute` responde 403
@@ -462,7 +462,7 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
 - O pool de conexões reaproveita a mesma conexão entre requisições. `set_config(..., true)` é
   obrigatório (local à transação); um valor de sessão vazaria a identidade para outra requisição.
 - Disco reservado é disco perdido: o cofre tem tamanho fixo no servidor, e o SeaweedFS reserva 7 volumes × `-master.volumeSizeLimitMB` por bucket. O cofre nasceu com 60 GB de 96 e consumia o espaço de outros projetos com pouco mais de 100 MB de dados. Limites e checagens: `scripts/servidor/REGRAS-DA-VPS.md`.
-- O Docker ignora o ufw nas portas publicadas: no `docker-compose.prod.yml`, só o proxy publica porta.
+- O Docker ignora o ufw nas portas publicadas: o `docker-compose.prod.yml` não publica nenhuma.
 - As fontes vêm de pacotes (`next/font/local`). Com `next/font/google`, o build de produção falhou no servidor.
 - `next build` não pode depender de banco: `getAuth()` e os pools são criados sob
   demanda. Não instanciar nada disso no topo de um módulo.
@@ -527,7 +527,7 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
 ## Produção
 
 Sistema em https://internship.chiconeto.dev, numa VPS da Contabo (região EU) com Docker Compose:
-aplicação, PostgreSQL 17, SeaweedFS e Caddy, que emite os certificados. Só o Caddy publica porta. Os
+aplicação, PostgreSQL 17 e SeaweedFS. O Caddy que emite os certificados e publica as portas é do servidor, fora deste projeto (`/srv/proxy`), e encaminha o `Host` e o `X-Real-IP`. Os
 dados e os segredos ficam num volume LUKS em `/srv/dados`, com a senha só com a equipe.
 
 | Situação | O que fazer |
