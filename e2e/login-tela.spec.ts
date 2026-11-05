@@ -98,6 +98,25 @@ test.describe("authentication scenarios", () => {
   });
 });
 
+for (const [width, height] of [[1440, 900], [1920, 940], [2560, 1300]] as const) {
+  test(`at ${width}x${height} the message and the form share one line, with no void between them`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto("/login");
+    const titulo = await page.getByRole("heading", { level: 2 }).evaluate((elemento) => {
+      const trecho = document.createRange();
+      trecho.selectNodeContents(elemento);
+      const { right, top, bottom } = trecho.getBoundingClientRect();
+      return { right, top, bottom };
+    });
+    const cartao = (await page.getByRole("heading", { level: 1 }).locator("xpath=ancestor::section").boundingBox())!;
+    const mensagem = (await page.getByRole("region", { name: "Perfis do sistema" }).boundingBox())!;
+
+    expect((cartao.x - titulo.right) / width, "gap between title and form").toBeLessThan(0.18);
+    expect(Math.abs(cartao.y + cartao.height / 2 - (mensagem.y + mensagem.height / 2)), "same vertical center").toBeLessThan(4);
+    await expect(page.locator("html")).toHaveJSProperty("scrollHeight", height);
+  });
+}
+
 test("the form fits a small notebook without scrolling", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/login");

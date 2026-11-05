@@ -34,10 +34,11 @@ export function PercursoEstagio() {
   const ativo = PERFIS.find((perfil) => perfil.chave === (previa ?? fixado));
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 lg:gap-5">
-      <div className="flex flex-col gap-4 lg:gap-3">
-        <h2 className="text-2xl font-semibold text-balance text-white lg:text-[1.75rem] lg:leading-tight">Do termo de compromisso à integralização, um caminho só.</h2>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Ver onde cada perfil atua">
+    // As duas partes são itens da grade da página: a mensagem ao lado do formulário, o percurso na base
+    <>
+      <section aria-label="Perfis do sistema" className="flex flex-col gap-5 px-2 sm:px-0 lg:col-start-1 lg:row-start-2 lg:self-center xl:gap-6">
+        <h2 className="text-3xl font-semibold text-balance text-white sm:text-4xl lg:leading-[1.1] lg:[font-size:clamp(2.25rem,min(6.5vw_-_2.5rem,9vh),7rem)]">Do termo de compromisso à integralização, um caminho só.</h2>
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 lg:gap-1.5 min-[90rem]:gap-2 min-[106rem]:[zoom:1.15] min-[137rem]:[zoom:1.35]" role="group" aria-label="Ver onde cada perfil atua">
           {PERFIS.map((perfil) => {
             const marcado = fixado === perfil.chave;
             return (
@@ -61,14 +62,14 @@ export function PercursoEstagio() {
           })}
         </div>
         {/* Altura reservada: a troca de texto não empurra o percurso */}
-        <p aria-live="polite" className="min-h-10 max-w-2xl text-sm text-white/80 md:min-h-5">
+        <p aria-live="polite" className="min-h-12 text-base text-white/80 md:min-h-6 min-[106rem]:[zoom:1.15] min-[137rem]:[zoom:1.35]">
           {ativo ? ativo.papel : "Seis perfis sobre a mesma base. Escolha um para ver onde ele atua."}
         </p>
-      </div>
+      </section>
 
-      <div className="relative">
+      <section aria-label="O percurso do estágio" className="relative border-t border-white/10 px-2 pt-7 sm:px-0 lg:col-span-2 lg:row-start-3 min-[106rem]:[zoom:1.15] min-[137rem]:[zoom:1.35]">
         {/* O trilho que liga as etapas: vertical no celular, horizontal a partir do tablet */}
-        <span aria-hidden className="absolute top-5 bottom-5 left-5 w-px bg-white/25 md:top-5 md:right-[8.33%] md:bottom-auto md:left-[8.33%] md:h-px md:w-auto md:origin-left md:animate-crescer-x" />
+        <span aria-hidden className="absolute top-12 bottom-5 left-7 w-px bg-white/25 sm:left-5 md:top-12 md:right-[8.33%] md:bottom-auto md:left-[8.33%] md:h-px md:w-auto md:origin-left md:animate-crescer-x" />
         <ol className="grupo-em-sequencia relative grid grid-cols-1 gap-5 md:grid-cols-6 md:gap-3" data-testid="percurso">
           {ETAPAS.map((etapa) => {
             const Icone = etapa.icone;
@@ -92,7 +93,7 @@ export function PercursoEstagio() {
             );
           })}
         </ol>
-      </div>
-    </div>
+      </section>
+    </>
   );
 }
