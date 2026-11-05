@@ -111,7 +111,7 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
       />
 
       {aba === "resumo" && (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-3">
           <Painel titulo="Termo de Compromisso" className="xl:col-span-2" descricao={estagio.hashTce ? `SHA-256 ${estagio.hashTce.slice(0, 24)}…` : "Em edição, ainda sem hash"}>
             <ListaDefinicao
               colunas={3}

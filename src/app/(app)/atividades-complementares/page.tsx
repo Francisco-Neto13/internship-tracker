@@ -1,3 +1,4 @@
+import { BaixarDocumento } from "@/shared/ui/baixar-documento";
 import { LIMITE } from "@/lib/campos";
 import { Building, CalendarRange, Clock } from "lucide-react";
 import { redirect } from "next/navigation";
@@ -55,7 +56,7 @@ export default async function AtividadesComplementaresPage({ searchParams }: { s
       />
 
       {integralizacao && (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
+        <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
           <div className="flex flex-col gap-4">
             <Painel titulo="Minhas atividades" flush>
               {totalMinhas === 0 ? (
@@ -131,7 +132,7 @@ export default async function AtividadesComplementaresPage({ searchParams }: { s
       {totalFila > 0 && (
         <Painel titulo="Fila de análise" descricao={`${totalFila} atividade(s) aguardando decisão`} flush>
           <ul className="divide-y divide-navy-900/[0.07]" data-testid="fila-analise">
-            {fila.map(({ atividade, previa }) => (
+            {fila.map(({ atividade, previa, comprovantes }) => (
               <li key={atividade.id} className="grid gap-4 px-5 py-4 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div className="flex min-w-0 gap-3">
                   <Avatar nome={atividade.estudanteNome ?? null} semente={atividade.estudanteId} tamanho="md" />
@@ -170,6 +171,9 @@ export default async function AtividadesComplementaresPage({ searchParams }: { s
                     )}
                   </p>
                   <div className="flex flex-wrap gap-2">
+                    {comprovantes.map((comprovante) => (
+                      <BaixarDocumento key={comprovante.id} documentoId={comprovante.documentoId} rotulo={`Baixar ${comprovante.nomeOriginal ?? "comprovante"}`} />
+                    ))}
                     <BotaoAcao url={`/api/v1/atividades-complementares/${atividade.id}/aprovacao`} rotulo="Aprovar" confirmacao={{ titulo: "Aprovar a atividade?", descricao: "A aprovação é definitiva: as horas são calculadas dentro dos limites da categoria e do curso e entram na integralização do estudante.", confirmar: "Aprovar" }} variante="default" tamanho="sm" sucesso="Aprovada" />
                     <BotaoAcao
                       url={`/api/v1/atividades-complementares/${atividade.id}/devolucao`}

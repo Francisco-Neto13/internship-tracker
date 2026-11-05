@@ -67,7 +67,7 @@ export default async function UsuarioPage({ params, searchParams }: { params: Pr
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="flex flex-col gap-4 xl:col-span-2">
           <Painel titulo="Dados da conta" descricao="Nome exibido e e-mail usado no login.">
             <DadosConta usuario={{ id: usuario.id, nome: usuario.nome, email: usuario.email }} />

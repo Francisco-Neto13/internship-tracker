@@ -151,6 +151,10 @@ h1, h2, h3 {
   .surface-elevated {
     @apply rounded-xl border border-navy-900/10 bg-white shadow-elevated;
   }
+  /* Colunas lado a lado terminam na mesma linha: o último painel da coluna mais curta cresce. */
+  .colunas-alinhadas > .flex-col > :last-child {
+    flex-grow: 1;
+  }
   /* Filete que nasce e morre transparente: separa sem cortar o bloco em dois. */
   .divider-rule {
     @apply h-px w-full bg-gradient-to-r from-transparent via-navy-900/15 to-transparent;

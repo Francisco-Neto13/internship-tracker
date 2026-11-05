@@ -203,7 +203,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
         </Painel>
       )}
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Painel
           titulo="Responsáveis"
           descricao="Professor orientador e supervisor da concedente (RF031, RF032)."

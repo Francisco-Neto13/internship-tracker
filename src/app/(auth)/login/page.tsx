@@ -3,120 +3,42 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getIdentity } from "@/lib/session";
 import { LoginForm } from "./login-form";
+import { PercursoEstagio } from "./percurso-estagio";
 
-const PILARES = [
-  {
-    titulo: "TCE digital",
-    descricao: "Termo de compromisso, plano de atividades e apólice assinados dentro do sistema.",
-  },
-  {
-    titulo: "Do início ao fim",
-    descricao: "Frequência, relatórios, avaliação, afastamento, prorrogação e rescisão num só lugar.",
-  },
-  {
-    titulo: "Cada perfil no seu recorte",
-    descricao: "Seis perfis sobre a mesma base: a política de acesso decide o que cada um enxerga.",
-  },
-];
-
+// A tela inteira é uma superfície só: a mensagem e os perfis de um lado, o formulário do outro e o
+// percurso do estágio de ponta a ponta na base. O formulário vem antes no documento, então quem usa
+// teclado ou leitor de tela chega a ele primeiro, e no celular ele é o que se vê ao abrir.
 export default async function LoginPage() {
   if (await getIdentity()) redirect("/dashboard");
 
   return (
-    <div className="grid flex-1 lg:grid-cols-[1.15fr_1fr]">
-      {/* Painel da marca */}
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-navy-900 p-12 lg:flex">
-        <p className="text-[11px] font-medium tracking-[0.32em] text-white/70 uppercase">
-          Plataforma de acompanhamento de estágios
-        </p>
-
-        <div className="-mt-12 flex flex-col items-center justify-center text-center">
+    <main className="flex flex-1 bg-navy-900">
+      {/* Sem largura máxima: colunas, título e cartão crescem com a tela, para não sobrar vão em monitor grande */}
+      <div className="grid min-h-dvh w-full grid-cols-1 gap-x-16 gap-y-8 px-4 py-6 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:grid-rows-[auto_1fr_auto] lg:px-12 lg:py-7 2xl:gap-x-24 2xl:px-[5vw] min-[106rem]:grid-cols-[minmax(0,1fr)_minmax(0,31rem)] min-[137rem]:grid-cols-[minmax(0,1fr)_minmax(0,36rem)]">
+        <header className="px-2 sm:px-0 lg:col-start-1 lg:row-start-1">
           {/* Versão reversa do logotipo: a original é navy sobre claro e sumiria aqui */}
-          <Image
-            src="/logo-internship-tracker-reverso.png"
-            alt="Internship Tracker"
-            width={918}
-            height={351}
-            priority
-            className="h-auto w-full max-w-md"
-          />
-          <p className="mt-10 max-w-md text-base leading-relaxed text-white/55">
-            Estágio e atividades complementares formalizados em um só lugar, do termo de
-            compromisso à integralização curricular.
-          </p>
-        </div>
+          <Image src="/logo-internship-tracker-reverso.png" alt="Internship Tracker" width={918} height={351} priority className="h-10 w-auto xl:h-12 min-[106rem]:h-14 min-[137rem]:h-20" />
+        </header>
 
-        <div className="space-y-6">
-          <ul className="grid grid-cols-3 gap-6 border-t border-white/10 pt-6">
-            {PILARES.map((pilar) => (
-              <li key={pilar.titulo} className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="size-1.5 shrink-0 rounded-full bg-azul-500" />
-                  <span className="text-xs font-semibold tracking-wider text-white uppercase">
-                    {pilar.titulo}
-                  </span>
-                </div>
-                <p className="text-xs leading-relaxed text-white/70">{pilar.descricao}</p>
-              </li>
-            ))}
-          </ul>
-
-          <p className="text-xs text-white/70">
-            Project Lab · 6 perfis · 37 regras de negócio · 73 requisitos funcionais
-          </p>
-        </div>
-      </aside>
-
-      {/* Painel de acesso */}
-      <section className="relative flex items-center justify-center bg-nevoa-50 px-6 py-16">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-navy-900/15 to-transparent lg:hidden" />
-        <div className="w-full max-w-md animate-surgir">
-          <div className="mb-8 flex justify-center lg:hidden">
-            <span className="inline-flex items-center rounded-xl bg-navy-900 px-5 py-4">
-              <Image
-                src="/logo-internship-tracker-reverso.png"
-                alt="Internship Tracker"
-                width={918}
-                height={351}
-                priority
-                className="h-8 w-auto"
-              />
-            </span>
-          </div>
-
-          <div className="surface-elevated p-8">
-            <div className="mb-7 space-y-2">
-              <p className="text-[11px] font-medium tracking-[0.18em] text-navy-900/65 uppercase">
-                Acesso restrito
-              </p>
-              <h1 className="font-display text-3xl font-semibold text-navy-900">
-                Entrar no{" "}
-                <span className="bg-gradient-to-r from-navy-700 to-azul-500 bg-clip-text text-transparent">
-                  Internship Tracker
-                </span>
-              </h1>
-              <p className="text-sm text-navy-900/65">
-                Cadastro próprio desabilitado: as contas são criadas pelo administrador (RF001).
-              </p>
-            </div>
-
+        {/* Em tela baixa o cartão usa também a altura do logotipo; com altura sobrando, centra junto com o título */}
+        <section aria-labelledby="titulo-login" className="w-full lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center [@media(min-height:800px)]:lg:row-span-1 [@media(min-height:800px)]:lg:row-start-2">
+          <div className="surface-elevated mx-auto w-full max-w-md animate-surgir p-6 sm:p-7 lg:max-w-none min-[106rem]:[zoom:1.15] min-[137rem]:[zoom:1.35]">
+            <h1 id="titulo-login" className="font-display text-2xl font-semibold text-navy-900">
+              Entrar no Internship Tracker
+            </h1>
+            <p className="mt-1 mb-5 text-sm text-navy-900/65">Use o e-mail e a senha da sua conta.</p>
             <LoginForm />
-
-            <div className="divider-rule my-6" />
-
-            <p className="text-center text-xs text-navy-900/65">
-              Estudante, orientador, supervisor, coordenação, concedente ou administrador: o
-              sistema reconhece o seu perfil ao entrar.
-            </p>
+            <div className="mt-4 flex flex-col gap-1 text-sm">
+              <Link href="/recuperar-senha" className="w-fit rounded text-azul-500 hover:text-navy-700 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none">
+                Esqueceu a senha?
+              </Link>
+              <p className="text-navy-900/65">As contas são criadas pela administração.</p>
+            </div>
           </div>
+        </section>
 
-          <p className="mt-6 text-center text-sm">
-            <Link href="/recuperar-senha" className="rounded text-azul-500 hover:text-navy-700 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none">
-              Esqueceu a senha?
-            </Link>
-          </p>
-        </div>
-      </section>
-    </div>
+        <PercursoEstagio />
+      </div>
+    </main>
   );
 }

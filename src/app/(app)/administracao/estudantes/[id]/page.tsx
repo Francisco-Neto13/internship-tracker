@@ -121,7 +121,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
       />
 
       {aba === "visao" && (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-3">
           <div className="flex flex-col gap-4 xl:col-span-2">
             <Painel titulo="Estágio atual" verTodos={atual ? { href: `/estagios/${atual.id}`, rotulo: "Abrir estágio" } : undefined}>
               {atual ? (
