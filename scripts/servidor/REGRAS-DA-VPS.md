@@ -26,6 +26,31 @@ O disco é dividido entre os projetos: o que um reserva, os outros perdem, mesmo
 O Docker daqui já limita o cache de build a 3 GB e os logs a 30 MB por contêiner (`/etc/docker/daemon.json`).
 Não remover.
 
+## Memória
+
+A VPS tem 8 GB e nenhum swap. Contêiner sem teto pode consumir a máquina inteira e derrubar todos os
+projetos, não só o dele.
+
+1. **Todo serviço que fica no ar tem `mem_limit` no compose.** Estourou, o kernel mata só aquele
+   contêiner e o `restart` o sobe de novo.
+2. **A soma dos tetos fica abaixo de 5 GB.** O resto é do sistema e dos builds, que rodam fora dos
+   contêineres e pedem cerca de 2 GB cada.
+3. **Tmpfs conta como memória do contêiner:** sempre com `size=`.
+4. **Ver uso e teto:** `docker stats --no-stream`. Mortes por falta de memória:
+   `journalctl -k | grep -i "killed process"`.
+
+Tetos atuais (soma 4,5 GB):
+
+| Contêiner | Teto |
+|---|---|
+| proxy (`/srv/proxy`) | 256 MB |
+| portfolio | 768 MB |
+| gastos: app / postgres | 768 MB / 512 MB |
+| internship-tracker: app / postgres / storage | 768 MB cada |
+
+Para mudar um teto sem reiniciar: `docker update --memory <valor> --memory-swap <valor> <contêiner>`.
+Depois, gravar o mesmo valor no compose do projeto, senão o próximo deploy volta ao antigo.
+
 ## Internship Tracker
 
 Quem mexer aqui não pode derrubar o que já está no ar.
