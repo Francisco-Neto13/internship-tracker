@@ -10,6 +10,9 @@ services:
     build: .
     image: internship-tracker-app
     restart: unless-stopped
+    # The server is shared with other projects: each service has a memory ceiling, so a leak or a
+    # spike here stops this container instead of the whole machine (/srv/REGRAS-DA-VPS.md)
+    mem_limit: 768m
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,6 +53,7 @@ services:
     build: ./docker/postgres
     image: internship-tracker-postgres
     restart: unless-stopped
+    mem_limit: 768m
     # RNF-12: every change is archived, at most 5 minutes after it happens on a quiet system
     command: ["postgres", "-c", "archive_mode=on", "-c", "archive_command=pgbackrest --stanza=main archive-push %p", "-c", "archive_timeout=300"]
     environment:
@@ -80,6 +84,7 @@ services:
       -filer.encryptVolumeData -s3.encryptVolumeData
       -master.volumeSizeLimitMB=128
     restart: unless-stopped
+    mem_limit: 768m
     environment:
       AWS_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?}
       AWS_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?}
