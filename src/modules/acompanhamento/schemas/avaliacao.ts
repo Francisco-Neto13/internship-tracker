@@ -40,7 +40,7 @@ export const avaliacaoBodySchema = z
     periodo_fim: dataSchema.nullish(),
     observacoes: texto(LIMITE.observacoesAvaliacao).nullish(),
     respostas: z
-      .array(z.object({ criterio_id: z.uuid(), nota: z.number("Dê uma nota a este critério").int(), comentario: texto(LIMITE.comentarioAvaliacao).nullish() }))
+      .array(z.object({ criterio_id: z.uuid(), nota: z.number().int(), comentario: texto(LIMITE.comentarioAvaliacao).nullish() }))
       .min(1)
       .max(50),
   })

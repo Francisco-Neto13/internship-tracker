@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { z } from "zod";
 import { LIMITE } from "@/lib/campos";
-import { avaliacaoBodySchema } from "@/modules/acompanhamento/schemas/avaliacao";
 import { AreaTexto } from "@/shared/ui/area-texto";
 import { Button } from "@/shared/ui/button";
 import { Confirmacao } from "@/shared/ui/confirmacao";
@@ -20,7 +20,8 @@ type Criterio = { id: string; descricao: string; escalaMinima: number; escalaMax
 /** Até 11 notas cabem como botões; escala maior vira campo numérico. */
 const MAIOR_ESCALA_EM_BOTOES = 11;
 
-const regras = avaliacaoBodySchema.refine((corpo) => corpo.momento === "FINAL" || (corpo.periodoInicio && corpo.periodoFim && corpo.periodoFim >= corpo.periodoInicio), {
+// Field errors go by the last name of the path, and every grade would be "nota": grades are checked below
+const regras = z.object({ momento: z.string(), periodo_inicio: z.string().nullable(), periodo_fim: z.string().nullable() }).refine((corpo) => corpo.momento === "FINAL" || (corpo.periodo_inicio && corpo.periodo_fim && corpo.periodo_fim >= corpo.periodo_inicio), {
   path: ["periodo_fim"],
   message: "Informe o período avaliado, com o fim igual ou depois do início",
 });
@@ -29,6 +30,7 @@ export function NovaAvaliacao({ estagioId, criterios, jaTemFinal }: { estagioId:
   const router = useRouter();
   const [momento, setMomento] = useState(jaTemFinal ? "PERIODICA" : "FINAL");
   const [erro, setErro] = useState<string | null>(null);
+  const [semNota, setSemNota] = useState<number[]>([]);
   const [pendente, setPendente] = useState<Record<string, unknown> | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -52,7 +54,16 @@ export function NovaAvaliacao({ estagioId, criterios, jaTemFinal }: { estagioId:
   function onSubmit(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setErro(null);
-    if (conferir(evento.currentTarget)) setPendente(montar(evento.currentTarget));
+    const formulario = evento.currentTarget;
+    const periodoCerto = conferir(formulario);
+    const corpo = montar(formulario);
+    const invalidas = corpo.respostas.flatMap((resposta, indice) => {
+      const { escalaMinima, escalaMaxima } = criterios[indice];
+      return Number.isInteger(resposta.nota) && resposta.nota! >= escalaMinima && resposta.nota! <= escalaMaxima ? [] : [indice];
+    });
+    setSemNota(invalidas);
+    if (invalidas.length > 0) return formulario.querySelector<HTMLElement>(`[name="respostas.${invalidas[0]}.nota"]`)?.focus();
+    if (periodoCerto) setPendente(corpo);
   }
 
   async function enviar() {
@@ -95,7 +106,7 @@ export function NovaAvaliacao({ estagioId, criterios, jaTemFinal }: { estagioId:
         const campo = `respostas.${indice}.nota`;
         const quantidade = criterio.escalaMaxima - criterio.escalaMinima + 1;
         return (
-          <fieldset key={criterio.id} className="flex min-w-0 flex-col gap-2 border-t border-navy-900/[0.07] pt-4">
+          <fieldset key={criterio.id} className="flex min-w-0 flex-col gap-2 border-t border-navy-900/[0.07] pt-4" onChange={() => setSemNota((lista) => lista.filter((item) => item !== indice))}>
             <legend className="float-left w-full text-sm font-medium text-navy-900">{criterio.descricao}</legend>
             <p className="clear-both text-xs text-navy-900/65">
               De {criterio.escalaMinima} a {criterio.escalaMaxima}
@@ -112,9 +123,9 @@ export function NovaAvaliacao({ estagioId, criterios, jaTemFinal }: { estagioId:
                 ))}
               </div>
             ) : (
-              <Input name={campo} type="number" min={criterio.escalaMinima} max={criterio.escalaMaxima} aria-label={`Nota de ${criterio.descricao}`} aria-invalid={Boolean(erros[campo])} className="w-32" />
+              <Input name={campo} type="number" min={criterio.escalaMinima} max={criterio.escalaMaxima} aria-label={`Nota de ${criterio.descricao}`} aria-invalid={semNota.includes(indice)} className="w-32" />
             )}
-            <ErroCampo id={`avaliacao-nota-${indice}-erro`} mensagem={erros[campo]} />
+            <ErroCampo id={`avaliacao-nota-${indice}-erro`} mensagem={semNota.includes(indice) ? `Dê uma nota de ${criterio.escalaMinima} a ${criterio.escalaMaxima} a este critério` : undefined} />
             <Input name={`respostas.${indice}.comentario`} maxLength={LIMITE.comentarioAvaliacao} placeholder="Comentário (opcional)" aria-label={`Comentário sobre ${criterio.descricao}`} />
           </fieldset>
         );

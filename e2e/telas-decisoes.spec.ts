@@ -51,7 +51,7 @@ test("the supervisor evaluates an intern, and everyone involved reads the result
 
   // Saving without grades points at the first criterion and sends nothing
   await formulario.getByRole("button", { name: "Registrar avaliação" }).click();
-  await expect(formulario.getByText("Dê uma nota a este critério").first()).toBeVisible();
+  await expect(formulario.getByText(/^Dê uma nota de \d+ a \d+ a este critério$/).first()).toBeVisible();
   await expect(tela.getByRole("alertdialog")).toHaveCount(0);
 
   const criterios = formulario.locator("fieldset");
