@@ -22,9 +22,7 @@ async function carregar(tx: Transaction, estagioId: string) {
 export async function pdfTce(identity: Identity, estagioId: string): Promise<Uint8Array> {
   const documento = await withUser(identity, async (tx) => {
     const { estagio, identificacao } = await carregar(tx, estagioId);
-    const responsaveis = await Promise.all(
-      (await findResponsaveis(tx, estagioId)).map(async (item) => ({ ...item, nome: await nomeDoUsuario(tx, item.usuarioId) })),
-    );
+    const responsaveis = (await findResponsaveis(tx, estagioId)).map((item) => ({ ...item, nome: item.usuarioNome ?? null }));
     const apolices = await findApolices(tx, estagioId);
     return documentoTce(estagio, identificacao, { responsaveis, apolice: apolices.at(-1) ?? null, assinaturas: await findAssinaturas(tx, estagioId) });
   });

@@ -68,7 +68,10 @@ export async function findResponsaveis(tx: Transaction, estagioId: string): Prom
     .leftJoin(usuario, eq(usuario.id, responsavelEstagio.usuarioId))
     .where(eq(responsavelEstagio.estagioId, estagioId))
     .orderBy(asc(responsavelEstagio.papel), asc(responsavelEstagio.vigenciaInicio), asc(responsavelEstagio.criadoEm));
-  return linhas.map((linha) => ({ ...linha.responsavel, usuarioNome: linha.usuarioNome }));
+  // The policy of usuario hides advisors and supervisors; the coordination gets their names here
+  const { rows } = await tx.execute<{ usuario_id: string; nome: string }>(sql`select usuario_id, nome from app.nomes_responsaveis(${estagioId}::uuid)`);
+  const nomes = new Map(rows.map((row) => [row.usuario_id, row.nome]));
+  return linhas.map((linha) => ({ ...linha.responsavel, usuarioNome: linha.usuarioNome ?? nomes.get(linha.responsavel.usuarioId) ?? null }));
 }
 
 /** Designation of the role not ended (current or starting later), excluding annulled ones. */

@@ -627,3 +627,21 @@ $$;
 
 revoke all on function app.buscar_contas_responsavel(uuid, public.papel_responsavel, text) from public;
 grant execute on function app.buscar_contas_responsavel(uuid, public.papel_responsavel, text) to app_runtime;
+
+-- RF031: the coordination names who it bound. Only names, only for the coordination of the course:
+-- the policies of usuario stay closed for the other people of the internship
+create or replace function app.nomes_responsaveis(p_estagio_id uuid)
+returns table (usuario_id uuid, nome text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select distinct u.id, u.nome
+  from public.responsavel_estagio r
+  join public.usuario u on u.id = r.usuario_id
+  where r.estagio_id = p_estagio_id and app.coordena_curso_do_estagio(p_estagio_id)
+$$;
+
+revoke all on function app.nomes_responsaveis(uuid) from public;
+grant execute on function app.nomes_responsaveis(uuid) to app_runtime;

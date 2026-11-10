@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import * as schema from "@/db/schema";
-import { buscarContasResponsavel } from "@/modules/estagios/services/formalizacao-service";
+import { buscarContasResponsavel, listResponsaveis } from "@/modules/estagios/services/formalizacao-service";
 import { closeOwnerDatabase, createMundoEstagio, createUsuario, grantPerfil, owner } from "./fixtures";
 import { como, estagioAtivo } from "./estagio-helpers";
 
@@ -43,6 +43,16 @@ describe("busca de responsável (RF031)", () => {
     for (const pessoa of [mundo.aluno, mundo.orientador, mundo.supervisor, mundo.representante, outro.coordenador, administrador]) {
       expect(await buscarContasResponsavel(como(pessoa), id, "ORIENTADOR", mundo.orientador.email), pessoa.email).toEqual([]);
     }
+  });
+
+  it("shows the coordination who it bound, and opens those names to nobody else", async () => {
+    const mundo = await createMundoEstagio();
+    const id = await estagioAtivo(mundo);
+    const nomes = async (pessoa: { id: string }) => (await listResponsaveis(como(pessoa), id)).map((item) => item.usuarioNome).sort();
+    expect(await nomes(mundo.coordenador)).toEqual([mundo.orientador.nome, mundo.supervisor.nome].sort());
+    // A person reads their own name, and only that
+    expect((await nomes(mundo.orientador)).filter(Boolean)).toEqual([mundo.orientador.nome]);
+    expect((await nomes(mundo.aluno)).filter(Boolean)).toEqual([]);
   });
 
   it("needs two characters and treats wildcards as text", async () => {
