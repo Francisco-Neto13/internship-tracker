@@ -140,7 +140,7 @@ export async function getAtividade(identity: Identity, id: string) {
  * would count (RF051): the database decides at approval with the same rule.
  */
 export async function listFilaAnalise(identity: Identity) {
-  return withUser(identity, async (tx) => comPrevia(tx, (await findAtividades(tx, { situacao: "EM_ANALISE" })).reverse()));
+  return withUser(identity, async (tx) => comPrevia(tx, (await findAtividades(tx, { situacao: "EM_ANALISE", analisaveis: true })).reverse()));
 }
 
 async function comPrevia(tx: Transaction, fila: AtividadeRow[]) {
@@ -157,7 +157,8 @@ async function comPrevia(tx: Transaction, fila: AtividadeRow[]) {
 /** RF053, RNF-11: one page of the queue for the screen; the preview is computed only for it. */
 export async function listFilaAnalisePagina(identity: Identity, query: { page: number; limit: number }) {
   return withUser(identity, async (tx) => {
-    const { items, total } = await findAtividadesPagina(tx, { situacao: "EM_ANALISE" }, { limit: query.limit, offset: (query.page - 1) * query.limit, maisAntigasPrimeiro: true });
+    // The queue holds what the caller decides: the student reads their own activity under analysis, but it is not theirs to decide
+    const { items, total } = await findAtividadesPagina(tx, { situacao: "EM_ANALISE", analisaveis: true }, { limit: query.limit, offset: (query.page - 1) * query.limit, maisAntigasPrimeiro: true });
     // RF053: whoever decides has to see the proof. Per row, and only for the page on screen
     const comProvas = [];
     for (const item of await comPrevia(tx, items)) {
