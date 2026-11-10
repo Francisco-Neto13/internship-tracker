@@ -19,6 +19,7 @@ const TELAS: Record<string, string> = {
   Estudantes: "/administracao/estudantes",
   Cursos: "/administracao/cursos",
   Concedentes: "/administracao/concedentes",
+  "Minha organização": "/organizacao",
   Convênios: "/administracao/convenios",
   "Visão da administração": "/administracao",
   "Usuários e acesso": "/administracao/usuarios",
@@ -33,7 +34,7 @@ const MATRIZ: { perfil: string; email: string; menu: string[]; porLink?: string[
   { perfil: "Estudante", email: "ana.estudante@internship.local", menu: ["Painel", "Notificações", "Estágios", "Frequência", "Relatórios", "Atividades", "Integralização"] },
   { perfil: "Orientador", email: "orientador@internship.local", menu: ["Painel", "Notificações", "Estágios", "Frequência", "Relatórios"] },
   { perfil: "Supervisor", email: "supervisor@exemplo-software.local", menu: ["Painel", "Notificações", "Estágios", "Frequência"] },
-  { perfil: "Concedente", email: "rh@exemplo-software.local", menu: ["Painel", "Notificações", "Estágios"] },
+  { perfil: "Concedente", email: "rh@exemplo-software.local", menu: ["Painel", "Notificações", "Estágios", "Minha organização"] },
   {
     perfil: "Coordenação",
     email: "coordenacao.software@internship.local",
@@ -73,6 +74,7 @@ for (const { perfil, email, menu, porLink = [] } of MATRIZ) {
         await expect(tela.getByRole("heading", { level: 1 }).first(), caminho).toBeVisible();
         expect(new URL(tela.url()).pathname, caminho).toBe(caminho);
         await expect(tela.getByText("Não foi possível carregar esta página"), caminho).toHaveCount(0);
+        await expect(tela.locator("main"), caminho).not.toContainText(/\b(RF|RNF-?)\d{2,3}\b|\bRN-\d{2}\b/);
       } else {
         await expect(tela, caminho).toHaveURL(/\/sem-acesso$/);
         await semAcesso(tela);

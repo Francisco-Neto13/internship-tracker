@@ -72,7 +72,7 @@ test("columns end on the same line in every tab of an internship", async ({ page
   await page.getByTestId("estagios-lista").getByRole("link").first().click();
   await page.getByTestId("carga-horaria").or(page.getByRole("heading", { level: 1 })).first().waitFor();
   const caminho = new URL(page.url()).pathname;
-  for (const aba of ["", "?aba=formalizacao", "?aba=acompanhamento", "?aba=ocorrencias"]) {
+  for (const aba of ["", "?aba=formalizacao", "?aba=acompanhamento", "?aba=desempenho", "?aba=ocorrencias"]) {
     await page.goto(`${caminho}${aba}`);
     await page.getByRole("heading", { level: 1 }).first().waitFor();
     expect(await desalinhados(page), aba).toEqual([]);
