@@ -10,6 +10,7 @@ const quem = (acao: keyof ReturnType<typeof acoesNoEstagio>) =>
 
 describe("who acts on each step of the internship", () => {
   it.each([
+    ["acompanha", ["estudante", "orientador", "supervisor", "coordenacao", "concedente"]],
     ["lancarFrequencia", ["estudante"]],
     ["cancelarFrequencia", ["estudante", "coordenacao"]],
     ["homologarFrequencia", ["supervisor"]],

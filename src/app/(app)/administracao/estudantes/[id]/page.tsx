@@ -33,11 +33,9 @@ import { ProgressoIntegralizacao } from "../../../integralizacao/progresso";
 // RF005, RF057: o perfil acadêmico de um estudante, separado da conta de acesso (RF001, que
 // fica em Usuários). Uma página própria com abas, porque reúne cinco assuntos: visão geral,
 // estágios, atividades, integralização e os dados acadêmicos editáveis. O administrador não lê
-// atividades nem integralização (M06/M07 fora do seu alcance): as abas dizem isso em vez de
-// parecer vazias.
+// atividades nem integralização (M06/M07 fora do seu alcance): essas abas não aparecem para ele.
 
 const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
-const ABAS = ["visao", "estagios", "atividades", "integralizacao", "dados"] as const;
 
 /** Volta só para a listagem de estudantes (o parâmetro vem da URL e não pode levar a outro site). */
 function destinoDeVolta(valor: string | undefined) {
@@ -57,7 +55,6 @@ export default async function EstudantePage({ params, searchParams }: { params: 
   if (!parsed.success) notFound();
   const { id } = parsed.data;
   const consulta = lerConsulta(await searchParams);
-  const aba = (ABAS as readonly string[]).includes(consulta.aba ?? "") ? consulta.aba! : "visao";
   const voltar = destinoDeVolta(consulta.voltar);
 
   const estudante = await getEstudante(identity, id).catch((error: unknown) => {
@@ -76,6 +73,14 @@ export default async function EstudantePage({ params, searchParams }: { params: 
   const situacao = SITUACAO_ACADEMICA[estudante.situacaoAcademica];
   const contar = (codigo: string) => atividades?.filter((atividade) => atividade.situacao === codigo).length ?? 0;
   const manterVolta = { voltar: consulta.voltar };
+  const abas = [
+    { chave: "visao", rotulo: "Visão geral" },
+    { chave: "estagios", rotulo: "Estágios", contagem: estagios.total },
+    ...(atividades ? [{ chave: "atividades", rotulo: "Atividades", contagem: atividades.length }] : []),
+    ...(integralizacao ? [{ chave: "integralizacao", rotulo: "Integralização" }] : []),
+    { chave: "dados", rotulo: "Dados acadêmicos" },
+  ];
+  const aba = abas.some((item) => item.chave === consulta.aba) ? consulta.aba! : "visao";
 
   return (
     <div className="flex flex-col gap-6">
@@ -111,13 +116,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
         caminho={`/administracao/estudantes/${id}`}
         consulta={manterVolta}
         atual={aba}
-        abas={[
-          { chave: "visao", rotulo: "Visão geral" },
-          { chave: "estagios", rotulo: "Estágios", contagem: estagios.total },
-          { chave: "atividades", rotulo: "Atividades", contagem: atividades?.length ?? null },
-          { chave: "integralizacao", rotulo: "Integralização" },
-          { chave: "dados", rotulo: "Dados acadêmicos" },
-        ]}
+        abas={abas}
       />
 
       {aba === "visao" && (
@@ -152,8 +151,8 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                 <p className="text-sm text-navy-900/65">Nenhum estágio ativo ou em formalização.</p>
               )}
             </Painel>
-            <Painel titulo="Integralização" verTodos={integralizacao ? { href: `?aba=integralizacao`, rotulo: "Detalhes" } : undefined}>
-              {integralizacao ? (
+            {integralizacao && (
+            <Painel titulo="Integralização" verTodos={{ href: `?aba=integralizacao`, rotulo: "Detalhes" }}>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <Progresso
                     rotulo="Estágio obrigatório"
@@ -168,10 +167,8 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                     formatar={(valor) => `${valor.toLocaleString("pt-BR")} h`}
                   />
                 </div>
-              ) : (
-                <p className="text-sm text-navy-900/65">A integralização fica com a coordenação do curso e o próprio estudante.</p>
-              )}
             </Painel>
+            )}
           </div>
           <div className="flex flex-col gap-4">
             <Painel titulo="Dados acadêmicos" verTodos={{ href: `?aba=dados`, rotulo: "Editar" }}>
@@ -186,8 +183,8 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                 ]}
               />
             </Painel>
+            {atividades && (
             <Painel titulo="Atividades complementares">
-              {atividades ? (
                 <div className="grid grid-cols-3 gap-2 text-center">
                   {[
                     { rotulo: "Em análise", valor: contar("EM_ANALISE") },
@@ -200,10 +197,8 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                     </div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-sm text-navy-900/65">Fora do alcance do seu perfil.</p>
-              )}
             </Painel>
+            )}
           </div>
         </div>
       )}
@@ -234,10 +229,8 @@ export default async function EstudantePage({ params, searchParams }: { params: 
           />
         ))}
 
-      {aba === "atividades" &&
-        (atividades === null ? (
-          <EstadoVazio variante="sem-permissao" titulo="Fora do alcance do seu perfil" descricao="As atividades complementares são lidas pela coordenação do curso e pelo próprio estudante." />
-        ) : atividades.length === 0 ? (
+      {aba === "atividades" && atividades &&
+        (atividades.length === 0 ? (
           <EstadoVazio titulo="Nenhuma atividade cadastrada" descricao="O estudante ainda não registrou atividades complementares." />
         ) : (
           <DataTable
@@ -267,19 +260,16 @@ export default async function EstudantePage({ params, searchParams }: { params: 
           />
         ))}
 
-      {aba === "integralizacao" &&
-        (integralizacao ? (
-          <div className="flex flex-col gap-4">
-            <ProgressoIntegralizacao integralizacao={integralizacao} />
-            <DeclaracoesEstudante
-              identity={identity}
-              estudanteId={id}
-              atividadesCumpridas={integralizacao.apuracao.atividadesAproveitadoMinutos >= integralizacao.apuracao.atividadesExigidoMinutos}
-            />
-          </div>
-        ) : (
-          <EstadoVazio variante="sem-permissao" titulo="Fora do alcance do seu perfil" descricao="A integralização é acompanhada pela coordenação do curso e pelo próprio estudante (M07)." />
-        ))}
+      {aba === "integralizacao" && integralizacao && (
+        <div className="flex flex-col gap-4">
+          <ProgressoIntegralizacao integralizacao={integralizacao} />
+          <DeclaracoesEstudante
+            identity={identity}
+            estudanteId={id}
+            atividadesCumpridas={integralizacao.apuracao.atividadesAproveitadoMinutos >= integralizacao.apuracao.atividadesExigidoMinutos}
+          />
+        </div>
+      )}
 
       {aba === "dados" && <DadosAcademicos id={id} estudante={estudante} identity={identity} />}
 

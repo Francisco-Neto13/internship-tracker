@@ -51,13 +51,16 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
     throw error;
   });
   const { estagio, identificacao, aditivos, acoes } = detalhe;
-  const padrao = estagio.situacao === "EM_FORMALIZACAO" ? "formalizacao" : estagio.situacao === "ATIVO" ? "acompanhamento" : "resumo";
-  const aba = (ABAS as readonly string[]).includes(consulta.aba ?? "") ? consulta.aba! : padrao;
+  // O administrador lê o estágio para consulta, mas frequência, relatórios e afastamentos não são dele (RN-37)
+  const abasDoPerfil: readonly string[] = acoes.acompanha ? ABAS : ["resumo", "formalizacao"];
+  const doCiclo = estagio.situacao === "EM_FORMALIZACAO" ? "formalizacao" : estagio.situacao === "ATIVO" ? "acompanhamento" : "resumo";
+  const padrao = abasDoPerfil.includes(doCiclo) ? doCiclo : "resumo";
+  const aba = abasDoPerfil.includes(consulta.aba ?? "") ? consulta.aba! : padrao;
   const situacao = SITUACAO_ESTAGIO[estagio.situacao];
   const api = `/api/v1/estagios/${id}`;
   const hoje = hojeSaoPaulo();
   const restantes = diasEntre(hoje, estagio.dataFimPrevista);
-  const ordem = ["resumo", "formalizacao", "acompanhamento", "ocorrencias"].sort((a, b) => (a === padrao ? -1 : b === padrao ? 1 : 0));
+  const ordem = [...abasDoPerfil].sort((a, b) => (a === padrao ? -1 : b === padrao ? 1 : 0));
   const rotulos: Record<string, string> = { resumo: "Resumo", formalizacao: "Formalização", acompanhamento: "Acompanhamento", ocorrencias: "Ocorrências" };
   const linkDocumento = "inline-flex items-center gap-1.5 rounded-md border border-navy-900/15 bg-white px-3 h-9 text-sm text-navy-900 hover:bg-nevoa-100 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none";
 
