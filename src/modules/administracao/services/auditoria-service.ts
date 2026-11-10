@@ -1,7 +1,10 @@
 import { withUser } from "@/db/with-user";
+import { rotuloCampo, rotuloOperacao, textoAuditoria } from "@/lib/auditoria-texto";
 import { gerarCsv } from "@/lib/csv";
+import { formatarDataHora } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import type { Identity } from "@/lib/identity";
+import { TABELA_AUDITORIA } from "@/lib/rotulos";
 import {
   countRegistros,
   findRegistros,
@@ -31,19 +34,7 @@ export async function listRegistros(
   }));
 }
 
-const CABECALHO = [
-  "id",
-  "ocorrido_em",
-  "operacao",
-  "tabela",
-  "registro_id",
-  "usuario_id",
-  "autor_nome",
-  "autor_email",
-  "campos_alterados",
-  "dados_anteriores",
-  "dados_novos",
-];
+const CABECALHO = ["Número", "Data e hora", "Operação", "Registro", "Referência do registro", "Referência do autor", "Autor", "E-mail do autor", "Campos alterados", "Antes", "Depois"];
 
 /**
  * RF066: the filtered trail as CSV (src/lib/csv.ts). Counted and read in one transaction,
@@ -68,16 +59,16 @@ export async function exportarRegistros(identity: Identity, filtro: FiltroAudito
     CABECALHO,
     registros.map((registro) => [
       registro.id,
-      registro.ocorridoEm,
-      registro.operacao,
-      registro.tabela,
+      formatarDataHora(registro.ocorridoEm),
+      rotuloOperacao(registro.operacao),
+      TABELA_AUDITORIA[registro.tabela] ?? registro.tabela,
       registro.registroId,
       registro.usuarioId,
-      registro.autorNome,
+      registro.autorNome ?? "Sistema",
       registro.autorEmail,
-      registro.camposAlterados?.join(","),
-      registro.dadosAnteriores,
-      registro.dadosNovos,
+      registro.camposAlterados?.map(rotuloCampo).join(", "),
+      textoAuditoria(registro.dadosAnteriores),
+      textoAuditoria(registro.dadosNovos),
     ]),
   );
 }
