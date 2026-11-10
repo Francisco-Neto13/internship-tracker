@@ -11,6 +11,12 @@ export type ResponsavelRow = typeof responsavelEstagio.$inferSelect & { usuarioN
 export type AssinaturaRow = typeof assinatura.$inferSelect;
 type Papel = ResponsavelRow["papel"];
 
+/** RF031: who decides is app.buscar_contas_responsavel; any other caller receives an empty list. */
+export async function findContasResponsavel(tx: Transaction, estagioId: string, papel: Papel, busca: string): Promise<{ id: string; nome: string; email: string }[]> {
+  const { rows } = await tx.execute<{ id: string; nome: string; email: string }>(sql`select id, nome, email from app.buscar_contas_responsavel(${estagioId}::uuid, ${papel}::public.papel_responsavel, ${busca})`);
+  return rows;
+}
+
 // ---------------------------------------------------------------- plano_atividades
 
 export async function findPlanos(tx: Transaction, estagioId: string): Promise<PlanoRow[]> {

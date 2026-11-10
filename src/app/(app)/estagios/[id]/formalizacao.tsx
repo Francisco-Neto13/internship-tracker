@@ -8,6 +8,7 @@ import { cn } from "@/shared/ui/cn";
 import { FormularioApi } from "@/shared/ui/formulario-api";
 import { Painel } from "@/shared/ui/painel";
 import { StatusBadge } from "@/shared/ui/status-badge";
+import { VincularResponsavel } from "./vincular-responsavel";
 
 // RF015-RF021, RF031-RF035, D9: a formalização como uma trilha de etapas derivadas dos dados
 // (não há estado próprio para cada etapa) e, abaixo, cada etapa com o que já existe e a ação que
@@ -260,32 +261,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                 Vincular responsável
               </summary>
               <div className="mt-4">
-                <FormularioApi
-                  validacao="responsavel"
-                  url={`${api}/responsaveis`}
-                  rotuloEnviar="Vincular responsável"
-confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa a ter acesso ao estágio. Se já houver um responsável nessa função, a substituição fica registrada e não apaga o anterior.", confirmar: "Vincular" }}
-                  embutido
-                  campos={[
-                    {
-                      nome: "papel",
-                      rotulo: "Papel",
-                      tipo: "select",
-                      obrigatorio: true,
-                      opcoes: [
-                        { valor: "ORIENTADOR", rotulo: "Professor orientador" },
-                        { valor: "SUPERVISOR", rotulo: "Supervisor" },
-                      ],
-                    },
-                    {
-                      nome: "usuario_id",
-                      max: LIMITE.codigoConta,
-                      rotulo: "Código da conta",
-                      ajuda:
-                        "Conta com perfil de orientador ou de supervisor desta concedente.",
-                    },
-                  ]}
-                />
+                <VincularResponsavel key={responsaveis.length} estagioId={estagio.id} />
               </div>
             </details>
           )}

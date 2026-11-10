@@ -8,6 +8,7 @@ import {
   encerrarResponsavel,
   findApolices,
   findAssinaturas,
+  findContasResponsavel,
   findPlanoById,
   findPlanos,
   findResponsaveis,
@@ -145,6 +146,11 @@ export async function listResponsaveis(identity: Identity, estagioId: string) {
     await carregarEstagio(tx, estagioId);
     return findResponsaveis(tx, estagioId);
   });
+}
+
+/** RF031: accounts the coordination can bind to this internship, found by name or e-mail. */
+export async function buscarContasResponsavel(identity: Identity, estagioId: string, papel: Papel, busca: string) {
+  return withUser(identity, (tx) => findContasResponsavel(tx, estagioId, papel, busca));
 }
 
 /**

@@ -7,7 +7,7 @@ import { frequenciaBodySchema, homologacaoBodySchema } from "@/modules/acompanha
 import { envioRelatorioBodySchema } from "@/modules/acompanhamento/schemas/relatorio";
 import { cnpjValido } from "@/modules/concedentes/domain/cnpj";
 import { createConcedenteBodySchema, updateConcedenteBodySchema } from "@/modules/concedentes/schemas/concedente";
-import { aditivoBodySchema, apoliceBodySchema, planoBodySchema, responsavelBodySchema, rescisaoBodySchema } from "@/modules/estagios/schemas/estagio";
+import { aditivoBodySchema, apoliceBodySchema, planoBodySchema, rescisaoBodySchema } from "@/modules/estagios/schemas/estagio";
 
 // Rules a form checks while it is filled in (issue #97). A page on the server names one, because a
 // schema cannot cross to the browser as a prop. Each is the schema of the route the form sends to.
@@ -24,7 +24,6 @@ export const VALIDACOES = {
   homologacao: homologacaoBodySchema,
   relatorio: envioRelatorioBodySchema,
   acompanhamento: acompanhamentoBodySchema,
-  responsavel: responsavelBodySchema,
   apolice: apoliceBodySchema,
   plano: planoBodySchema,
   rescisao: rescisaoBodySchema,
