@@ -102,6 +102,15 @@ describe("cadastro (RF049, RF050, RF053)", () => {
     expect((await listFilaAnalise(como(c.coordenador))).map((item) => item.atividade.id)).toContain(atividade.id);
   });
 
+  it("the queue holds only what the caller decides: the student reads the activity but it is not in their queue", async () => {
+    const c = await cenario();
+    const atividade = await cadastrar(c, 10);
+    expect((await getAtividade(como(c.aluno), atividade.id)).atividade.situacao).toBe("EM_ANALISE");
+    expect(await listFilaAnalise(como(c.aluno))).toEqual([]);
+    expect(await listFilaAnalisePagina(como(c.aluno), { page: 1, limit: 10 })).toEqual({ items: [], total: 0 });
+    expect((await listFilaAnalisePagina(como(c.coordenador), { page: 1, limit: 10 })).items.map((item) => item.atividade.id)).toContain(atividade.id);
+  });
+
   it("requires a proof, a finished activity and a category the course counts", async () => {
     const c = await cenario();
     await expect(cadastrar(c, 10, { documentoIds: [] })).rejects.toMatchObject({ code: "COMPROVANTE_OBRIGATORIO" });

@@ -15,7 +15,13 @@ export async function estudanteAtualId(tx: Transaction): Promise<string | null> 
   return rows[0]?.id ?? null;
 }
 
-export type FiltrosAtividade = { estudanteId?: string; categoriaId?: string; situacao?: SituacaoAtividade };
+export type FiltrosAtividade = {
+  estudanteId?: string;
+  categoriaId?: string;
+  situacao?: SituacaoAtividade;
+  /** Only what the caller decides: coordination of the student's course, as in ANALISE_RESTRITA_A_COORDENACAO (RF053) */
+  analisaveis?: boolean;
+};
 
 export async function findAtividades(tx: Transaction, filtros: FiltrosAtividade): Promise<AtividadeRow[]> {
   const linhas = await tx
@@ -34,6 +40,10 @@ function condicoesAtividade(filtros: FiltrosAtividade) {
     filtros.estudanteId ? eq(atividadeComplementar.estudanteId, filtros.estudanteId) : undefined,
     filtros.categoriaId ? eq(atividadeComplementar.categoriaId, filtros.categoriaId) : undefined,
     filtros.situacao ? eq(atividadeComplementar.situacao, filtros.situacao) : undefined,
+    // Literal column: inside the subquery an interpolated one comes out unqualified (AGENTS.md)
+    filtros.analisaveis
+      ? sql`exists (select 1 from public.estudante e where e.id = "atividade_complementar"."estudante_id" and app.coordena_curso(e.curso_id))`
+      : undefined,
   );
 }
 

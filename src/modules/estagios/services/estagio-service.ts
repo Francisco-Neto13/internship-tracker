@@ -4,6 +4,7 @@ import type { Identity } from "@/lib/identity";
 import { parametrosVigentesEm } from "@/modules/academico/services/parametro-service";
 import { exigirDocumento } from "@/shared/documentos/documento-service";
 import { exigirAtivavel } from "../domain/ativacao";
+import { acoesNoEstagio } from "../domain/papeis";
 import { hashTce, validarTce, type DadosTce } from "../domain/tce";
 import { findAditivos } from "../repositories/aditivo-repository";
 import {
@@ -13,6 +14,7 @@ import {
   findEstagioById,
   findEstagios,
   findIdentificacaoEstagio,
+  findPapeisNoEstagio,
   historicoConcedente,
   insertEstagio,
   lockEstagio,
@@ -287,7 +289,7 @@ export function etapasFormalizacao(row: EstagioRow, assinaturas: { parte: string
   };
 }
 
-/** RF015, RF021: the internship with TCE, plans, responsible people, insurance, signatures and amendments. */
+/** RF015, RF021: the internship with TCE, plans, responsible people, insurance, signatures, amendments and what the caller may do. */
 export async function getEstagioDetalhado(identity: Identity, id: string) {
   return withUser(identity, async (tx) => {
     const estagio = await carregar(tx, id);
@@ -299,7 +301,9 @@ export async function getEstagioDetalhado(identity: Identity, id: string) {
       await findAditivos(tx, id),
     ];
     const identificacao = await findIdentificacaoEstagio(tx, estagio);
-    return { estagio, identificacao, planos, responsaveis, apolices, assinaturas, aditivos, etapas: etapasFormalizacao(estagio, assinaturas) };
+    // What the caller does here, so each person sees only their own part (papeis.ts)
+    const acoes = acoesNoEstagio(await findPapeisNoEstagio(tx, id));
+    return { estagio, identificacao, planos, responsaveis, apolices, assinaturas, aditivos, etapas: etapasFormalizacao(estagio, assinaturas), acoes };
   });
 }
 

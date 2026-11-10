@@ -1,6 +1,7 @@
 import { LIMITE } from "@/lib/campos";
 import { Check } from "lucide-react";
 import { formatarData, formatarDataHora } from "@/lib/datas";
+import type { ParteAssinatura } from "@/modules/estagios/domain/papeis";
 import type { getEstagioDetalhado } from "@/modules/estagios/services/estagio-service";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
 import { cn } from "@/shared/ui/cn";
@@ -10,8 +11,8 @@ import { StatusBadge } from "@/shared/ui/status-badge";
 
 // RF015-RF021, RF031-RF035, D9: a formalização como uma trilha de etapas derivadas dos dados
 // (não há estado próprio para cada etapa) e, abaixo, cada etapa com o que já existe e a ação que
-// a conclui. Os botões chamam a API, que decide por perfil e vínculo; a ativação confere todas as
-// guardas de uma vez e devolve a lista do que falta.
+// a conclui, só para quem a faz (`acoes`, de papeis.ts). Os botões chamam a API, que decide por
+// perfil e vínculo; a ativação confere todas as guardas de uma vez e devolve a lista do que falta.
 
 type Detalhe = Awaited<ReturnType<typeof getEstagioDetalhado>>;
 
@@ -39,7 +40,7 @@ function vigente(responsavel: Detalhe["responsaveis"][number]) {
 }
 
 export function TrilhaFormalizacao({ detalhe }: { detalhe: Detalhe }) {
-  const { estagio, etapas, planos, responsaveis, apolices } = detalhe;
+  const { estagio, etapas, planos, responsaveis, apolices, acoes } = detalhe;
   const papeis = new Set(
     responsaveis.filter(vigente).map((responsavel) => responsavel.papel),
   );
@@ -99,6 +100,7 @@ export function TrilhaFormalizacao({ detalhe }: { detalhe: Detalhe }) {
                   .join(", ")}
           </p>
         </div>
+        {acoes.ativar && (
         <BotaoAcao
           url={`/api/v1/estagios/${estagio.id}/ativacao`}
           rotulo="Ativar estágio"
@@ -111,6 +113,7 @@ export function TrilhaFormalizacao({ detalhe }: { detalhe: Detalhe }) {
           }}
           sucesso="Estágio ativado"
         />
+        )}
       </div>
       <ol className="mt-5 grid gap-3 sm:grid-cols-5">
         {passos.map((passo, indice) => (
@@ -145,7 +148,7 @@ export function TrilhaFormalizacao({ detalhe }: { detalhe: Detalhe }) {
 }
 
 export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
-  const { estagio, etapas, planos, responsaveis, apolices, assinaturas } =
+  const { estagio, etapas, planos, responsaveis, apolices, assinaturas, acoes } =
     detalhe;
   const emFormalizacao = estagio.situacao === "EM_FORMALIZACAO";
   const planoAtual = planos[0];
@@ -164,6 +167,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
         >
           <div className="flex flex-wrap gap-2">
             {etapas.tce === "EM_EDICAO" ? (
+              acoes.fecharTce && (
               <BotaoAcao
                 url={`${api}/tce/fechamento`}
                 rotulo="Fechar TCE para assinatura"
@@ -175,9 +179,10 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                   confirmar: "Fechar TCE",
                 }}
               />
+              )
             ) : (
               <>
-                {etapas.partesPendentes.map((parte) => (
+                {etapas.partesPendentes.filter((parte) => acoes.partesQueAssina.includes(parte as ParteAssinatura)).map((parte) => (
                   <BotaoAcao
                     key={parte}
                     url={`${api}/assinaturas`}
@@ -187,6 +192,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                     sucesso="Assinatura registrada"
                   />
                 ))}
+                {acoes.reabrirTce && (
                 <BotaoAcao
                   url={`${api}/tce/reabertura`}
                   rotulo="Reabrir TCE"
@@ -197,6 +203,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
                     pergunta: "Justificativa da reabertura",
                   }}
                 />
+                )}
               </>
             )}
           </div>
@@ -244,7 +251,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
               </li>
             ))}
           </ul>
-          {emFormalizacao && (
+          {emFormalizacao && acoes.vincularResponsavel && (
             <details
               className="border-t border-navy-900/[0.07] px-5 py-4"
               open={responsaveis.filter(vigente).length < 2}
@@ -314,7 +321,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
               </li>
             ))}
           </ul>
-          {estagio.seguroExigido && (
+          {estagio.seguroExigido && acoes.registrarApolice && (
             <details
               className="border-t border-navy-900/[0.07] px-5 py-4"
               open={apolices.length === 0}
@@ -390,14 +397,14 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
               </p>
             )}
             <div className="flex flex-wrap gap-2">
-              {planoAtual.situacao === "RASCUNHO" && (
+              {acoes.elaborarPlano && planoAtual.situacao === "RASCUNHO" && (
                 <BotaoAcao
                   url={`${api}/plano-atividades/envio`}
                   rotulo="Enviar ao orientador"
                   confirmacao={{ titulo: "Enviar o plano ao orientador?", descricao: "O plano vai para a aprovação do orientador. Mudanças depois disso só por devolução ou por uma nova versão.", confirmar: "Enviar" }}
                 />
               )}
-              {planoAtual.situacao === "AGUARDANDO_APROVACAO" && (
+              {acoes.decidirPlano && planoAtual.situacao === "AGUARDANDO_APROVACAO" && (
                 <>
                   <BotaoAcao
                     url={`${api}/plano-atividades/aprovacao`}
@@ -422,7 +429,7 @@ confirmacao={{ titulo: "Vincular este responsável?", descricao: "A pessoa passa
         ) : (
           <p className="text-sm text-navy-900/65">Nenhum plano registrado.</p>
         )}
-        {(!planoAtual ||
+        {acoes.elaborarPlano && (!planoAtual ||
           planoAtual.situacao === "RASCUNHO" ||
           planoAtual.situacao === "DEVOLVIDO" ||
           planoAtual.situacao === "APROVADO") && (

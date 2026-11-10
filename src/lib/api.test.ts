@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { toErrorResponse } from "./api";
+import { corpoOpcional, toErrorResponse } from "./api";
 import { DomainError } from "./errors";
 
 async function bodyOf(response: Response) {
@@ -46,5 +46,23 @@ describe("error translation at the API boundary", () => {
     } finally {
       console.error = original;
     }
+  });
+});
+
+// RF038: the approval opinion is optional, and the action button sends no body when there is none
+describe("optional request body", () => {
+  const post = (body?: string) => new Request("http://localhost/api", { method: "POST", body });
+
+  it("reads an empty body as an empty object", async () => {
+    expect(await corpoOpcional(post())).toEqual({});
+    expect(await corpoOpcional(post("  "))).toEqual({});
+  });
+
+  it("reads a JSON body as usual", async () => {
+    expect(await corpoOpcional(post(JSON.stringify({ parecer: "Bom trabalho" })))).toEqual({ parecer: "Bom trabalho" });
+  });
+
+  it("still refuses malformed JSON", async () => {
+    await expect(corpoOpcional(post("{parecer"))).rejects.toBeInstanceOf(SyntaxError);
   });
 });

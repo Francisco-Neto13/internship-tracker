@@ -33,9 +33,13 @@ const UNICOS: Record<string, Omit<Regra, "kind">> = {
   registro_frequencia_substitui_registro_id_unique: { codigo: "LANCAMENTO_JA_AJUSTADO", mensagem: "Este lançamento já foi substituído.", requisito: "RF029" },
 };
 
-/** Adds rules of other M05 aggregates (relatórios, avaliação) without repeating the plumbing. */
+/**
+ * Adds rules of other M05 aggregates (relatórios, avaliação) without repeating the plumbing. A
+ * code shared by two aggregates (ANALISE_RESTRITA_AO_ORIENTADOR: divergence and report) takes
+ * the caller's message, so the extra rules are tried first.
+ */
 export function tradutorDeErros(regrasExtras: Regra[] = [], unicosExtras: Record<string, Omit<Regra, "kind">> = {}) {
-  const regras = [...REGRAS_DE_GATILHO, ...regrasExtras];
+  const regras = [...regrasExtras, ...REGRAS_DE_GATILHO];
   const unicos = { ...UNICOS, ...unicosExtras };
   return (error: unknown, acao: string): unknown => {
     if (error instanceof DomainError) return error;
