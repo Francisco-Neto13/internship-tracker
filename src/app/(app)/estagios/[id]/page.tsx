@@ -22,7 +22,8 @@ import { OcorrenciasEstagio } from "./ocorrencias";
 
 // Um estágio (M04, M05): quem são as partes, em que situação está e o que falta. A aba inicial
 // segue o momento do ciclo: formalização enquanto o TCE não está ativo, acompanhamento durante
-// o estágio, resumo depois do encerramento. Toda ação vai à API, que decide por perfil e vínculo.
+// o estágio, resumo depois do encerramento. Cada pessoa vê só as ações que lhe cabem neste estágio
+// (`acoes`, de papeis.ts); toda ação vai à API, que decide por perfil e vínculo.
 
 const ABAS = ["resumo", "formalizacao", "acompanhamento", "ocorrencias"] as const;
 const reais = (valor: string | null) => (valor === null ? "Não se aplica" : Number(valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
@@ -50,7 +51,7 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
     if (error instanceof DomainError && error.kind === "NOT_FOUND") notFound();
     throw error;
   });
-  const { estagio, identificacao, aditivos } = detalhe;
+  const { estagio, identificacao, aditivos, acoes } = detalhe;
   const padrao = estagio.situacao === "EM_FORMALIZACAO" ? "formalizacao" : estagio.situacao === "ATIVO" ? "acompanhamento" : "resumo";
   const aba = (ABAS as readonly string[]).includes(consulta.aba ?? "") ? consulta.aba! : padrao;
   const situacao = SITUACAO_ESTAGIO[estagio.situacao];
@@ -148,14 +149,14 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
                       Baixar PDF
                     </a>
                     {aditivo.situacao === "AGUARDANDO_ASSINATURAS" &&
-                      (["ESTUDANTE", "INSTITUICAO", "CONCEDENTE"] as const).map((parte) => (
+                      acoes.partesQueAssina.map((parte) => (
                         <BotaoAcao key={parte} url={`/api/v1/aditivos/${aditivo.id}/assinaturas`} confirmacao={{ titulo: "Assinar o aditivo?", descricao: "Sua identificação, a data, a hora e o hash deste aditivo ficam registrados.", confirmar: "Assinar" }} rotulo={`Assinar (${parte.toLowerCase()})`} corpo={{ parte }} tamanho="sm" />
                       ))}
                   </div>
                 </li>
               ))}
             </ul>
-            {estagio.situacao === "ATIVO" && (
+            {estagio.situacao === "ATIVO" && acoes.proporAditivo && (
               <details className="border-t border-navy-900/[0.07] px-5 py-4">
                 <summary className="cursor-pointer text-sm font-medium text-azul-500 hover:text-navy-700">Propor prorrogação</summary>
                 <div className="mt-4">
@@ -186,7 +187,7 @@ confirmacao={{ titulo: "Propor a prorrogação?", descricao: "O aditivo fica reg
             <p className="text-sm text-navy-900/65">Frequência, relatórios e avaliações começam depois da ativação do estágio.</p>
           </Painel>
         ) : (
-          <AcompanhamentoEstagio identity={identity} estagioId={id} />
+          <AcompanhamentoEstagio identity={identity} estagioId={id} acoes={acoes} />
         ))}
       {aba === "ocorrencias" &&
         (estagio.situacao === "EM_FORMALIZACAO" ? (
@@ -194,7 +195,7 @@ confirmacao={{ titulo: "Propor a prorrogação?", descricao: "O aditivo fica reg
             <p className="text-sm text-navy-900/65">Afastamentos, conclusão e rescisão valem para estágios ativos.</p>
           </Painel>
         ) : (
-          <OcorrenciasEstagio identity={identity} estagio={estagio} />
+          <OcorrenciasEstagio identity={identity} estagio={estagio} acoes={acoes} />
         ))}
     </div>
   );

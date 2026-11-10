@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { expect, test, type APIRequestContext } from "@playwright/test";
-import { dados, erro, SENHA, sessoes } from "./support/api";
+import { dados, erro, SENHA, sessoes, telaDe } from "./support/api";
 
 // Fase 4 end to end through the HTTP API: a new student uploads a proof straight to the
 // bucket (D8), registers a complementary activity, the coordination approves it within the
@@ -78,6 +78,13 @@ test("a complementary activity is registered, approved and counted (Fase 4)", as
   );
   expect(fila.find((item) => item.id === criada.id)?.previa_aproveitamento).toMatchObject({ horas_aproveitaveis: 40, horas_excedentes: 10 });
   expect((await erro(await aluno.post(`/api/v1/atividades-complementares/${criada.id}/aprovacao`), 403)).code).toBe("ANALISE_RESTRITA_A_COORDENACAO");
+  // The queue holds what the caller decides: the student reads the activity, with no queue and no buttons to decide it
+  expect(await dados<unknown[]>(await aluno.get("/api/v1/atividades-complementares/pendentes"))).toEqual([]);
+  const telaAluno = await telaDe(aluno);
+  await telaAluno.goto("/atividades-complementares");
+  await expect(telaAluno.getByText(atividade.descricao).first()).toBeVisible();
+  await expect(telaAluno.getByTestId("fila-analise")).toHaveCount(0);
+  await expect(telaAluno.getByRole("button", { name: "Recusar" })).toHaveCount(0);
   const aprovada = await dados<{ situacao: string; horas_aproveitadas: number; analise: { horas_excedentes: number; motivo_excedente: string } }>(
     await coordenacao.post(`/api/v1/atividades-complementares/${criada.id}/aprovacao`),
     201,

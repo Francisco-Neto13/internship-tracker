@@ -47,6 +47,16 @@ export function dataResponse<T>(
 /** For responses carrying a secret shown once, such as a temporary password (OWASP ASVS V8.2). */
 export const SEM_CACHE = { "Cache-Control": "no-store" } as const;
 
+/**
+ * Body of a route whose fields are all optional: an empty body reads as {}, because the action
+ * button sends none when there is nothing to say (RF038, approval without opinion). Malformed
+ * JSON still throws the SyntaxError that becomes 400.
+ */
+export async function corpoOpcional(request: Request): Promise<unknown> {
+  const texto = await request.text();
+  return texto.trim() === "" ? {} : JSON.parse(texto);
+}
+
 type RouteOptions = {
   /** RF002: reachable while a temporary password is still in use (change password, session). */
   permitirTrocaSenhaPendente?: boolean;

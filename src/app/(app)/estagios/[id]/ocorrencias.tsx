@@ -3,6 +3,7 @@ import { LIMITE } from "@/lib/campos";
 import { formatarDataCurta } from "@/lib/datas";
 import { minutosParaHoras } from "@/lib/horas";
 import type { Identity } from "@/lib/identity";
+import type { AcoesNoEstagio } from "@/modules/estagios/domain/papeis";
 import type { EstagioRow } from "@/modules/estagios/repositories/estagio-repository";
 import { listAfastamentos, listPeriodosAfastamento } from "@/modules/estagios/services/afastamento-service";
 import { getRescisao } from "@/modules/estagios/services/encerramento-service";
@@ -13,13 +14,14 @@ import { StatusBadge } from "@/shared/ui/status-badge";
 import { NovoAfastamento } from "./novo-afastamento";
 
 // Ocorrências de um estágio (Fase 5): afastamentos (RF059, RF060), encerramento por conclusão
-// ou rescisão (RF045, RF063, RF064) e a declaração de conclusão (RF058). Cada ação vai à API,
-// que decide por perfil e vínculo; as que não se desfazem pedem confirmação.
+// ou rescisão (RF045, RF063, RF064) e a declaração de conclusão (RF058). Cada ação aparece só
+// para quem a faz (`acoes`, de papeis.ts) e vai à API, que decide por perfil e vínculo; as que
+// não se desfazem pedem confirmação.
 
 const TIPO_AFASTAMENTO: Record<string, string> = { LICENCA: "Licença", ATESTADO_MEDICO: "Atestado médico", OUTRO: "Outro" };
 const SOLICITANTE: Record<string, string> = { ESTUDANTE: "Estudante", CONCEDENTE: "Concedente", INSTITUICAO: "Instituição" };
 
-export async function OcorrenciasEstagio({ identity, estagio }: { identity: Identity; estagio: EstagioRow }) {
+export async function OcorrenciasEstagio({ identity, estagio, acoes }: { identity: Identity; estagio: EstagioRow; acoes: AcoesNoEstagio }) {
   const id = estagio.id;
   const api = `/api/v1/estagios/${id}`;
   const [afastamentos, periodos, rescisao] = await Promise.all([
@@ -47,7 +49,7 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
         </Painel>
       )}
 
-      {estagio.situacao === "CONCLUIDO" && (
+      {estagio.situacao === "CONCLUIDO" && acoes.emitirDeclaracao && (
         <Painel titulo="Declaração de conclusão" descricao="PDF com código de verificação, guardado como documento do estágio (RF058).">
           <BotaoAcao
             url={`/api/v1/estudantes/${estagio.estudanteId}/declaracoes`}
@@ -89,9 +91,9 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
                 ))}
             {afastamentos.length === 0 && periodos.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhum afastamento.</li>}
           </ul>
-          {estagio.situacao === "ATIVO" && (
+          {estagio.situacao === "ATIVO" && acoes.registrarAfastamento && (
             <details className="border-t border-navy-900/[0.07] px-5 py-4">
-              <summary className="cursor-pointer text-sm font-medium text-azul-500 hover:text-navy-700">Registrar afastamento (coordenação)</summary>
+              <summary className="cursor-pointer text-sm font-medium text-azul-500 hover:text-navy-700">Registrar afastamento</summary>
               <div className="mt-4">
                 <NovoAfastamento estagioId={id} />
               </div>
@@ -100,8 +102,9 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
         </Painel>
       )}
 
-      {estagio.situacao === "ATIVO" && (
-        <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-2">
+      {estagio.situacao === "ATIVO" && (acoes.concluir || acoes.rescindir) && (
+        <div className={acoes.concluir && acoes.rescindir ? "colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-2" : "flex flex-col gap-4"}>
+          {acoes.concluir && (
           <Painel titulo="Concluir estágio" descricao="Exige avaliação final e, se obrigatório, carga mínima homologada e relatório final aprovado; nenhum lançamento pendente (RF045).">
             <BotaoAcao
               url={`${api}/conclusao`}
@@ -115,6 +118,8 @@ export async function OcorrenciasEstagio({ identity, estagio }: { identity: Iden
               sucesso="Estágio concluído"
             />
           </Painel>
+          )}
+          {acoes.rescindir && (
           <Painel titulo="Rescindir estágio" descricao="Encerramento antecipado a pedido de uma das partes; as horas até a data são consolidadas (RF063, RF064).">
             <FormularioApi
               validacao="rescisao"
@@ -137,6 +142,7 @@ confirmacao={{ titulo: "Rescindir o estágio?", descricao: "A rescisão é defin
               ]}
             />
           </Painel>
+          )}
         </div>
       )}
     </div>

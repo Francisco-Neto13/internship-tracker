@@ -8,6 +8,7 @@ import { SITUACAO_RELATORIO } from "@/lib/rotulos";
 import { listAvaliacoes } from "@/modules/acompanhamento/services/avaliacao-service";
 import { getCargaHoraria, listFrequencias } from "@/modules/acompanhamento/services/frequencia-service";
 import { listRelatorios } from "@/modules/acompanhamento/services/relatorio-service";
+import type { AcoesNoEstagio } from "@/modules/estagios/domain/papeis";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { FormularioApi } from "@/shared/ui/formulario-api";
@@ -16,8 +17,9 @@ import { Painel } from "@/shared/ui/painel";
 import { StatusBadge, type StatusTone } from "@/shared/ui/status-badge";
 
 // M05 de um estágio ativo (RF023 a RF043): carga horária, frequência, homologação, relatórios
-// e avaliações. Cada bloco mostra o que o perfil lê (RLS); os formulários chamam a API, que
-// decide quem escreve (estudante lança, supervisor homologa, orientador analisa).
+// e avaliações. Cada bloco mostra o que o perfil lê (RLS), e cada ação aparece só para quem a
+// faz (`acoes`, de papeis.ts): estudante lança e envia, supervisor homologa, orientador analisa
+// e registra o acompanhamento. A API continua decidindo cada escrita.
 
 const FREQUENCIA: Record<string, [string, StatusTone]> = {
   REGISTRADO: ["Aguardando homologação", "pending"],
@@ -39,7 +41,7 @@ async function seVisivel<T>(leitura: Promise<T>): Promise<T | null> {
   }
 }
 
-export async function AcompanhamentoEstagio({ identity, estagioId }: { identity: Identity; estagioId: string }) {
+export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { identity: Identity; estagioId: string; acoes: AcoesNoEstagio }) {
   const [carga, frequencias, relatorios, avaliacoes] = await Promise.all([
     seVisivel(getCargaHoraria(identity, estagioId)),
     seVisivel(listFrequencias(identity, estagioId, {})),
@@ -51,6 +53,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
   }
   const { resumo, divergencia } = carga;
   const lancamentos = frequencias ?? [];
+  const acoesFrequencia = acoes.lancarFrequencia || acoes.homologarFrequencia;
 
   return (
     <div className="flex flex-col gap-4">
@@ -88,7 +91,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
         </div>
       </Painel>
 
-      <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]">
+      <div className={acoesFrequencia ? "colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]" : "flex flex-col"}>
         <Painel titulo="Frequência" descricao={`${lancamentos.length} lançamento(s); os 30 mais recentes`} flush>
           {lancamentos.length === 0 ? (
             <p className="px-5 py-6 text-sm text-navy-900/65" data-testid="frequencias">
@@ -128,7 +131,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
                         <StatusBadge tone={FREQUENCIA[registro.situacao][1]}>{FREQUENCIA[registro.situacao][0]}</StatusBadge>
                       </td>
                       <td className="px-4 py-2.5 text-right">
-                        {(registro.situacao === "REGISTRADO" || registro.situacao === "SINALIZADO") && (
+                        {acoes.cancelarFrequencia && (registro.situacao === "REGISTRADO" || registro.situacao === "SINALIZADO") && (
                           <BotaoAcao
                             url={`/api/v1/frequencias/${registro.id}/cancelamento`}
                             rotulo="Cancelar"
@@ -145,8 +148,10 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
             </div>
           )}
         </Painel>
+        {acoesFrequencia && (
         <div className="flex flex-col gap-4">
-          <Painel titulo="Registrar dia" descricao="Estudante: um lançamento por dia, até o limite diário e semanal (RF023, RF024).">
+          {acoes.lancarFrequencia && (
+          <Painel titulo="Registrar dia" descricao="Um lançamento por dia, até o limite diário e semanal (RF023, RF024).">
             <FormularioApi
               validacao="frequencia"
                   url={`/api/v1/estagios/${estagioId}/frequencias`}
@@ -161,7 +166,9 @@ export async function AcompanhamentoEstagio({ identity, estagioId }: { identity:
               ]}
             />
           </Painel>
-          <Painel titulo="Homologar período" descricao="Supervisor: confirma os dias lançados no período (RF027).">
+          )}
+          {acoes.homologarFrequencia && (
+          <Painel titulo="Homologar período" descricao="Confirme os dias lançados no período (RF027).">
             <FormularioApi
               validacao="homologacao"
                   url={`/api/v1/estagios/${estagioId}/frequencias/homologacao`}
@@ -176,7 +183,9 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
               ]}
             />
           </Painel>
+          )}
         </div>
+        )}
       </div>
 
       {relatorios && (
@@ -195,7 +204,7 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
                   <span className="flex flex-wrap items-center gap-2">
                     <StatusBadge tone={SITUACAO_RELATORIO[relatorio.situacao].tom}>{SITUACAO_RELATORIO[relatorio.situacao].rotulo}</StatusBadge>
                     {relatorio.emAtraso && <StatusBadge tone="danger">Em atraso</StatusBadge>}
-                    {relatorio.situacao === "EM_ANALISE" && (
+                    {acoes.decidirRelatorio && relatorio.situacao === "EM_ANALISE" && (
                       <>
                         <BotaoAcao url={`/api/v1/relatorios/${relatorio.id}/aprovacao`} rotulo="Aprovar" confirmacao={{ titulo: "Aprovar o relatório?", descricao: "A aprovação é definitiva: o relatório não volta para análise e passa a contar para a conclusão do estágio.", confirmar: "Aprovar" }} variante="default" tamanho="sm" sucesso="Relatório aprovado" />
                         <BotaoAcao url={`/api/v1/relatorios/${relatorio.id}/devolucao`} rotulo="Devolver" tamanho="sm" pedirMotivo={{ campo: "parecer", pergunta: "Parecer da devolução", max: LIMITE.parecerRelatorio }} />
@@ -203,7 +212,7 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
                     )}
                   </span>
                 </div>
-                {(relatorio.situacao === "PENDENTE" || relatorio.situacao === "DEVOLVIDO") && (
+                {acoes.enviarRelatorio && (relatorio.situacao === "PENDENTE" || relatorio.situacao === "DEVOLVIDO") && (
                   <details className="rounded-lg border border-navy-900/10 px-4 py-3">
                     <summary className="cursor-pointer text-sm font-medium text-azul-500 hover:text-navy-700">Enviar relatório</summary>
                     <div className="mt-3">
@@ -225,7 +234,7 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
         </Painel>
       )}
 
-      <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <div className={avaliacoes && acoes.registrarAcompanhamento ? "colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-2" : "flex flex-col"}>
         {avaliacoes && (
           <Painel titulo="Avaliações de desempenho" descricao="Pela concedente, por critério (RF042, RF043)." flush>
             <ul className="divide-y divide-navy-900/[0.07]" data-testid="avaliacoes">
@@ -247,6 +256,7 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
             </ul>
           </Painel>
         )}
+        {acoes.registrarAcompanhamento && (
         <Painel titulo="Acompanhamento do orientador" descricao="Visitas, contatos e reuniões (RF033).">
           <FormularioApi
             validacao="acompanhamento"
@@ -262,6 +272,7 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
             ]}
           />
         </Painel>
+        )}
       </div>
     </div>
   );

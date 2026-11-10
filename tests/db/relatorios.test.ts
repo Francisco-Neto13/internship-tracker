@@ -149,7 +149,7 @@ describe("envio e análise (RF037, RF038, RF039)", () => {
     await expect(enviarRelatorio(como(mundo.coordenador), relatorio.id, { conteudo: "x", documentoIds: [] })).rejects.toMatchObject({ code: "ENVIO_RESTRITO_AO_ESTUDANTE" });
     await enviarRelatorio(como(mundo.aluno), relatorio.id, { conteudo: "Atividades", documentoIds: [] });
     for (const pessoa of [mundo.aluno, mundo.coordenador]) {
-      await expect(decidirRelatorio(como(pessoa), relatorio.id, "APROVADO", null)).rejects.toMatchObject({ code: "ANALISE_RESTRITA_AO_ORIENTADOR" });
+      await expect(decidirRelatorio(como(pessoa), relatorio.id, "APROVADO", null)).rejects.toMatchObject({ code: "ANALISE_RESTRITA_AO_ORIENTADOR", requisito: "RF038" });
     }
     const outro = await createMundoEstagio();
     await expect(decidirRelatorio(como(outro.orientador), relatorio.id, "APROVADO", null)).rejects.toMatchObject({ code: "RELATORIO_NAO_ENCONTRADO" });
