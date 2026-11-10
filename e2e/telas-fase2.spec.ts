@@ -24,7 +24,9 @@ test("coordination opens the Fase 2 screens and registers an agreement with its 
   // Course and student edit screens (RF004, RF005)
   await page.goto("/administracao/cursos");
   await page.getByTestId("cursos-lista").getByRole("link").first().click();
-  await expect(page.getByTestId("curso-edicao")).toBeVisible();
+  // RF004: coordination reads the requirements; only the administrator keeps them
+  await expect(page.getByTestId("exigencias")).toBeVisible();
+  await expect(page.getByTestId("curso-edicao")).toHaveCount(0);
   await page.goto("/administracao/estudantes");
   await page.getByTestId("estudantes-lista").getByRole("link").first().click();
   // The academic data form lives in its own tab of the student profile

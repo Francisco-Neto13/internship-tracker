@@ -39,6 +39,10 @@ test("columns end on the same line for the administrator", async ({ page }) => {
   await page.goto("/administracao/parametros");
   await page.getByRole("heading", { level: 1 }).first().waitFor();
   expect(await desalinhados(page)).toEqual([]);
+  await page.goto("/administracao/cursos");
+  await page.getByTestId("cursos-lista").getByRole("link").first().click();
+  await page.getByTestId("curso-edicao").waitFor();
+  expect(await desalinhados(page)).toEqual([]);
 });
 
 test("columns end on the same line for the coordination", async ({ page }) => {
@@ -58,7 +62,7 @@ test("columns end on the same line for the coordination", async ({ page }) => {
   }
   await page.goto("/administracao/cursos");
   await page.getByTestId("cursos-lista").getByRole("link").first().click();
-  await page.getByTestId("curso-edicao").waitFor();
+  await page.getByTestId("exigencias").waitFor();
   expect(await desalinhados(page)).toEqual([]);
 });
 

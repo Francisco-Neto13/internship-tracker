@@ -58,7 +58,7 @@ test("an irreversible action explains itself and can be cancelled", async ({ pag
 });
 
 test("a form with a lasting effect says so before sending, and cancelling sends nothing", async ({ page }) => {
-  await entrar(page, "coordenacao.software@internship.local", 214);
+  await entrar(page, "admin@internship.local", 214);
   await page.goto("/administracao/cursos");
   await page.getByRole("main").getByRole("link", { name: /Engenharia de Software/ }).first().click();
   let enviou = false;

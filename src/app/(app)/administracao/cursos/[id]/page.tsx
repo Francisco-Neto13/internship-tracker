@@ -9,6 +9,7 @@ import { identidadeDaTela } from "@/lib/acesso-tela";
 import { getExigenciasCurso, listCategorias } from "@/modules/academico/services/categoria-service";
 import { getCurso } from "@/modules/academico/services/curso-service";
 import { listEstudantes } from "@/modules/academico/services/estudante-service";
+import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
 import { getPeriodicidades } from "@/modules/academico/services/periodicidade-service";
 import { listEstagios } from "@/modules/estagios/services/estagio-service";
 import { CapaCurso } from "@/shared/ui/capa";
@@ -34,13 +35,16 @@ export default async function CursoPage({ params }: { params: Promise<{ id: stri
     if (error instanceof DomainError && error.kind === "NOT_FOUND") notFound();
     throw error;
   });
-  const [{ categorias }, catalogo, periodicidades, estudantes, estagios] = await Promise.all([
+  const [{ categorias }, catalogo, periodicidades, estudantes, estagios, perfis] = await Promise.all([
     getExigenciasCurso(identity, id),
     listCategorias(identity, { incluirInativas: false }),
     getPeriodicidades(identity, id),
     listEstudantes(identity, { page: 1, limit: 1, cursoId: id, situacao: "MATRICULADO" }),
     listEstagios(identity, { page: 1, limit: 1, cursoId: id, situacao: "ATIVO" }),
+    listPerfisVigentes(identity),
   ]);
+  // curso_atualizacao, exigencia_*: o catálogo é mantido só pelo administrador (RF004)
+  const administrador = perfis.some((vinculo) => vinculo.perfil === "ADMINISTRADOR");
   const somaLimites = categorias.reduce((soma, item) => soma + item.limiteMinutos, 0);
 
   return (
@@ -65,6 +69,7 @@ export default async function CursoPage({ params }: { params: Promise<{ id: stri
 
       <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
         <div className="flex flex-col gap-4">
+          {administrador && (
           <Painel titulo="Dados e exigências" descricao="Mudar uma carga reapura a integralização de todos os estudantes do curso, na mesma hora.">
             <FormularioApi
               validacao="cursoEdicao"
@@ -83,6 +88,7 @@ confirmacao={{ titulo: "Salvar as alterações do curso?", descricao: "Mudar a c
               ]}
             />
           </Painel>
+          )}
           <Painel
             titulo="Categorias de atividades"
             descricao={`Limite de cada categoria no curso (RN-23). Soma dos limites: ${h(somaLimites)}; o total aproveitado nunca passa de ${h(curso.cargaAtividadesComplementaresMinutos)}.`}
@@ -100,7 +106,7 @@ confirmacao={{ titulo: "Salvar as alterações do curso?", descricao: "Mudar a c
                 </li>
               ))}
             </ul>
-            {catalogo.length > 0 && (
+            {administrador && catalogo.length > 0 && (
               <details className="border-t border-navy-900/[0.07] px-5 py-4">
                 <summary className="cursor-pointer text-sm font-medium text-azul-500 hover:text-navy-700">Definir limite de uma categoria</summary>
                 <div className="mt-4">

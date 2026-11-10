@@ -33,7 +33,7 @@ const AREAS: { titulo: string; descricao: string; hrefs: { href: string; alcance
       },
       {
         href: "/administracao/cursos",
-        alcance: "Coordenação altera só os próprios cursos",
+        alcance: "Administrador altera; coordenação consulta as exigências",
         consequencia: "Mudar carga mínima ou exigências reapura a integralização de todos os estudantes do curso.",
       },
     ],
