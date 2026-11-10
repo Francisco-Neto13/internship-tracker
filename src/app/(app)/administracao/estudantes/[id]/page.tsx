@@ -61,13 +61,15 @@ export default async function EstudantePage({ params, searchParams }: { params: 
     if (error instanceof DomainError && error.kind === "NOT_FOUND") notFound();
     throw error;
   });
-  const [perfis, estagios, atividades, integralizacao] = await Promise.all([
+  const [perfis, estagios, atividadesLidas, integralizacao] = await Promise.all([
     listPerfisVigentes(identity),
     listEstagios(identity, { page: 1, limit: 50, estudanteId: id }),
     semAlcance(listAtividades(identity, { estudanteId: id })),
     semAlcance(getIntegralizacao(identity, id)),
   ]);
   const administrador = perfis.some((vinculo) => vinculo.perfil === "ADMINISTRADOR");
+  // Fora do alcance, a RLS devolve lista vazia em vez de recusar; M06 e M07 têm o mesmo alcance
+  const atividades = integralizacao ? atividadesLidas : null;
   const atual = estagios.items.find((estagio) => estagio.situacao === "ATIVO") ?? estagios.items.find((estagio) => estagio.situacao === "EM_FORMALIZACAO");
   const carga = atual?.situacao === "ATIVO" ? await semAlcance(getCargaHoraria(identity, atual.id)) : null;
   const situacao = SITUACAO_ACADEMICA[estudante.situacaoAcademica];
