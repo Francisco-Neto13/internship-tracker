@@ -3,6 +3,7 @@ import { padraoContendo } from "@/db/like";
 import { identidadeEstudante } from "@/db/identidade-estudante";
 import { concedente, convenio, curso, estagio, estudante } from "@/db/schema";
 import type { Transaction } from "@/db/with-user";
+import type { PapeisNoEstagio } from "../domain/papeis";
 
 // No authorization filter: RLS (app.pode_ler_estagio) decides which internships exist for the
 // caller (RF003, RN-37). The SQL helpers below answer yes/no or aggregates, never rows.
@@ -179,4 +180,16 @@ export async function historicoConcedente(tx: Transaction, concedenteId: string)
     sql`select situacao, quantidade from app.historico_estagios_concedente(${concedenteId}::uuid)`,
   );
   return Object.fromEntries(rows.map((row) => [row.situacao, Number(row.quantidade)]));
+}
+
+/** Roles of the caller in one internship, read from the functions the policies and triggers use. */
+export async function findPapeisNoEstagio(tx: Transaction, estagioId: string): Promise<PapeisNoEstagio> {
+  const { rows } = await tx.execute<PapeisNoEstagio>(sql`
+    select app.e_estudante_do_estagio(${estagioId}::uuid) as estudante,
+           app.e_responsavel_vigente(${estagioId}::uuid, 'ORIENTADOR') as orientador,
+           app.e_responsavel_vigente(${estagioId}::uuid, 'SUPERVISOR') as supervisor,
+           app.coordena_curso_do_estagio(${estagioId}::uuid) as coordenacao,
+           app.representa_concedente_do_estagio(${estagioId}::uuid) as concedente
+  `);
+  return rows[0];
 }
