@@ -617,6 +617,8 @@ do repositório pela equipe. Neste repositório, a referência é este arquivo, 
 nos testes. Quando uma regra de negócio não estiver coberta aqui nem no código,
 perguntar em vez de supor.
 
+O projeto tem grafo do Graphify em `graphify-out/` (`graph.json` e `GRAPH_REPORT.md`): depois de mudanças grandes, atualizar com `graphify update .` (só código; se mudarem documentos ou imagens, `/graphify . --update`).
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
