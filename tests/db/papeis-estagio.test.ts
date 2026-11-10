@@ -24,8 +24,8 @@ describe("ações de cada pessoa no estágio", () => {
 
     expect(await acoesDe(mundo.aluno, id)).toEqual(["acompanha", "cancelarFrequencia", "elaborarPlano", "emitirDeclaracao", "enviarRelatorio", "lancarFrequencia"]);
     expect(await acoesDe(mundo.orientador, id)).toEqual(["acompanha", "decidirPlano", "decidirRelatorio", "elaborarPlano", "registrarAcompanhamento"]);
-    expect(await acoesDe(mundo.supervisor, id)).toEqual(["acompanha", "homologarFrequencia"]);
-    expect(await acoesDe(mundo.representante, id)).toEqual(["acompanha", "registrarApolice"]);
+    expect(await acoesDe(mundo.supervisor, id)).toEqual(["acompanha", "avaliar", "homologarFrequencia"]);
+    expect(await acoesDe(mundo.representante, id)).toEqual(["acompanha", "avaliar", "registrarApolice"]);
     expect(await acoesDe(mundo.coordenador, id)).toEqual(
       [
         "acompanha",

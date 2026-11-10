@@ -2,7 +2,7 @@ import { z } from "zod";
 import { LIMITE } from "@/lib/campos";
 import { updateCursoBodySchema } from "@/modules/academico/schemas/curso";
 import { definirExigenciasBodySchema, definirParametrosBodySchema } from "@/modules/academico/schemas/parametros";
-import { acompanhamentoBodySchema } from "@/modules/acompanhamento/schemas/avaliacao";
+import { acompanhamentoBodySchema, criterioBodySchema } from "@/modules/acompanhamento/schemas/avaliacao";
 import { frequenciaBodySchema, homologacaoBodySchema } from "@/modules/acompanhamento/schemas/frequencia";
 import { envioRelatorioBodySchema } from "@/modules/acompanhamento/schemas/relatorio";
 import { cnpjValido } from "@/modules/concedentes/domain/cnpj";
@@ -24,6 +24,7 @@ export const VALIDACOES = {
   homologacao: homologacaoBodySchema,
   relatorio: envioRelatorioBodySchema,
   acompanhamento: acompanhamentoBodySchema,
+  criterio: criterioBodySchema,
   apolice: apoliceBodySchema,
   plano: planoBodySchema,
   rescisao: rescisaoBodySchema,

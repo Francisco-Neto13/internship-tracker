@@ -1,7 +1,10 @@
+import { LIMITE } from "@/lib/campos";
 import { formatarData } from "@/lib/datas";
 import { identidadeDaTela } from "@/lib/acesso-tela";
 import { dataLocal } from "@/modules/academico/domain/parametros";
 import { getParametrosVigentes, listHistoricoParametros } from "@/modules/academico/services/parametro-service";
+import { listCriterios } from "@/modules/acompanhamento/services/avaliacao-service";
+import { BotaoAcao } from "@/shared/ui/botao-acao";
 import { FormularioApi } from "@/shared/ui/formulario-api";
 import { Painel } from "@/shared/ui/painel";
 import { PageHeader } from "@/shared/ui/page-header";
@@ -15,7 +18,7 @@ const horas = (minutos: number) => `${(minutos / 60).toLocaleString("pt-BR")} h`
 
 export default async function ParametrosPage() {
   const identity = await identidadeDaTela("/administracao/parametros");
-  const [vigente, historico] = await Promise.all([getParametrosVigentes(identity), listHistoricoParametros(identity)]);
+  const [vigente, historico, criterios] = await Promise.all([getParametrosVigentes(identity), listHistoricoParametros(identity), listCriterios(identity, false)]);
 
   const grupos: { titulo: string; efeito: string; itens: [string, string][] }[] = [
     {
@@ -113,6 +116,44 @@ confirmacao={{ titulo: "Registrar esta versão dos parâmetros?", descricao: "Pa
               ))}
             </ol>
           )}
+        </Painel>
+      </div>
+
+      <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">
+        <Painel titulo="Critérios de avaliação" descricao="O que o supervisor ou a concedente avalia em cada estagiário. Um critério desativado sai das próximas avaliações; as já feitas não mudam." flush>
+          <ul className="divide-y divide-navy-900/[0.07]" data-testid="criterios-avaliacao">
+            {criterios.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhum critério definido: sem critérios, os estágios não podem ser avaliados.</li>}
+            {criterios.map((criterio) => (
+              <li key={criterio.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm">
+                <span className="min-w-0">
+                  <span className="block font-medium text-navy-900">{criterio.descricao}</span>
+                  <span className="block text-xs text-navy-900/65">
+                    Escala de {criterio.escalaMinima} a {criterio.escalaMaxima}
+                  </span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <StatusBadge tone={criterio.ativo ? "ok" : "neutral"}>{criterio.ativo ? "Ativo" : "Desativado"}</StatusBadge>
+                  <BotaoAcao url={`/api/v1/criterios-avaliacao/${criterio.id}`} metodo="PATCH" corpo={{ ativo: !criterio.ativo }} rotulo={criterio.ativo ? "Desativar" : "Reativar"} variante="ghost" tamanho="sm" />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Painel>
+        <Painel titulo="Novo critério" descricao="A nota de cada critério é convertida para a média de 0 a 10.">
+          <FormularioApi
+            validacao="criterio"
+            url="/api/v1/criterios-avaliacao"
+            rotuloEnviar="Adicionar critério"
+            embutido
+            sucesso="Critério adicionado"
+            testId="novo-criterio"
+            campos={[
+              { nome: "descricao", max: LIMITE.descricaoCriterio, rotulo: "Descrição", tipo: "textarea" },
+              { nome: "escala_minima", rotulo: "Nota mínima", tipo: "number", valorInicial: 0 },
+              { nome: "escala_maxima", rotulo: "Nota máxima", tipo: "number", valorInicial: 10 },
+              { nome: "ordem", rotulo: "Ordem no formulário", tipo: "number", valorInicial: criterios.length + 1 },
+            ]}
+          />
         </Painel>
       </div>
     </div>

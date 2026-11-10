@@ -44,6 +44,9 @@ export const LIMITE = {
   parecerRelatorio: 10_000,
   participantes: 1000,
   observacoesAcompanhamento: 10_000,
+  observacoesAvaliacao: 4000,
+  comentarioAvaliacao: 1000,
+  descricaoCriterio: 500,
   // Atividades complementares
   descricaoAtividade: 500,
   instituicao: 300,

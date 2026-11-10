@@ -39,7 +39,7 @@ const traduzir = tradutorDeErros(
   {
     avaliacao_uma_final: { codigo: "AVALIACAO_FINAL_EXISTENTE", mensagem: "O estágio já tem avaliação final.", requisito: "RF043" },
     resposta_avaliacao_criterio_unique: { codigo: "CRITERIO_REPETIDO", mensagem: "Cada critério recebe uma nota.", requisito: "RF042" },
-    criterio_avaliacao_codigo_unique: { codigo: "CODIGO_DUPLICADO", mensagem: "Já existe critério com este código.", requisito: "RF042" },
+    criterio_avaliacao_codigo_unique: { codigo: "CODIGO_DUPLICADO", mensagem: "Já existe um critério com esta descrição.", requisito: "RF042" },
   },
 );
 

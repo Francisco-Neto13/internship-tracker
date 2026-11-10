@@ -17,6 +17,7 @@ import { ListaDefinicao, Painel } from "@/shared/ui/painel";
 import { PageHeader } from "@/shared/ui/page-header";
 import { StatusBadge } from "@/shared/ui/status-badge";
 import { AcompanhamentoEstagio } from "./acompanhamento";
+import { DesempenhoEstagio } from "./desempenho";
 import { FormalizacaoEstagio, TrilhaFormalizacao } from "./formalizacao";
 import { OcorrenciasEstagio } from "./ocorrencias";
 
@@ -25,7 +26,7 @@ import { OcorrenciasEstagio } from "./ocorrencias";
 // o estágio, resumo depois do encerramento. Cada pessoa vê só as ações que lhe cabem neste estágio
 // (`acoes`, de papeis.ts); toda ação vai à API, que decide por perfil e vínculo.
 
-const ABAS = ["resumo", "formalizacao", "acompanhamento", "ocorrencias"] as const;
+const ABAS = ["resumo", "formalizacao", "acompanhamento", "desempenho", "ocorrencias"] as const;
 const reais = (valor: string | null) => (valor === null ? "Não se aplica" : Number(valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
 const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
 const TIPO_ADITIVO: Record<string, string> = { PRORROGACAO: "Prorrogação", ALTERACAO_CARGA_HORARIA: "Alteração de carga horária", SUBSTITUICAO_SUPERVISOR: "Substituição de supervisor" };
@@ -62,7 +63,7 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
   const hoje = hojeSaoPaulo();
   const restantes = diasEntre(hoje, estagio.dataFimPrevista);
   const ordem = [...abasDoPerfil].sort((a, b) => (a === padrao ? -1 : b === padrao ? 1 : 0));
-  const rotulos: Record<string, string> = { resumo: "Resumo", formalizacao: "Formalização", acompanhamento: "Acompanhamento", ocorrencias: "Ocorrências" };
+  const rotulos: Record<string, string> = { resumo: "Resumo", formalizacao: "Formalização", acompanhamento: "Acompanhamento", desempenho: "Desempenho", ocorrencias: "Ocorrências" };
 
   return (
     <div className="flex flex-col gap-6">
@@ -182,6 +183,14 @@ confirmacao={{ titulo: "Propor a prorrogação?", descricao: "O aditivo fica reg
           </Painel>
         ) : (
           <AcompanhamentoEstagio identity={identity} estagioId={id} acoes={acoes} />
+        ))}
+      {aba === "desempenho" &&
+        (estagio.situacao === "EM_FORMALIZACAO" ? (
+          <Painel titulo="Desempenho">
+            <p className="text-sm text-navy-900/65">As avaliações de desempenho começam depois da ativação do estágio.</p>
+          </Painel>
+        ) : (
+          <DesempenhoEstagio identity={identity} estagioId={id} ativo={estagio.situacao === "ATIVO"} acoes={acoes} />
         ))}
       {aba === "ocorrencias" &&
         (estagio.situacao === "EM_FORMALIZACAO" ? (

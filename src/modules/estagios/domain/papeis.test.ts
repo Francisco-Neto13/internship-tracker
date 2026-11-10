@@ -17,6 +17,7 @@ describe("who acts on each step of the internship", () => {
     ["enviarRelatorio", ["estudante"]],
     ["decidirRelatorio", ["orientador"]],
     ["registrarAcompanhamento", ["orientador"]],
+    ["avaliar", ["supervisor", "concedente"]],
     ["elaborarPlano", ["estudante", "orientador", "coordenacao"]],
     ["decidirPlano", ["orientador"]],
     ["fecharTce", ["coordenacao"]],

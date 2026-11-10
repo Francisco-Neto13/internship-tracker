@@ -6,7 +6,6 @@ import { DomainError } from "@/lib/errors";
 import { minutosParaHoras } from "@/lib/horas";
 import type { Identity } from "@/lib/identity";
 import { SITUACAO_RELATORIO } from "@/lib/rotulos";
-import { listAvaliacoes } from "@/modules/acompanhamento/services/avaliacao-service";
 import { getCargaHoraria, listFrequencias } from "@/modules/acompanhamento/services/frequencia-service";
 import { listRelatorios } from "@/modules/acompanhamento/services/relatorio-service";
 import type { AcoesNoEstagio } from "@/modules/estagios/domain/papeis";
@@ -44,14 +43,13 @@ async function seVisivel<T>(leitura: Promise<T>): Promise<T | null> {
 }
 
 export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { identity: Identity; estagioId: string; acoes: AcoesNoEstagio }) {
-  const [carga, frequencias, relatorios, avaliacoes] = await Promise.all([
+  const [carga, frequencias, relatorios] = await Promise.all([
     seVisivel(getCargaHoraria(identity, estagioId)),
     seVisivel(listFrequencias(identity, estagioId, {})),
     seVisivel(listRelatorios(identity, estagioId)),
-    seVisivel(listAvaliacoes(identity, estagioId)),
   ]);
   if (!carga) {
-    return <EstadoVazio variante="sem-permissao" titulo="Acompanhamento fora do seu alcance" descricao="Frequência, relatórios e avaliações são lidos por quem participa do estágio." />;
+    return <EstadoVazio variante="sem-permissao" titulo="Acompanhamento fora do seu alcance" descricao="Frequência e relatórios são lidos por quem participa do estágio." />;
   }
   const { resumo, divergencia } = carga;
   const lancamentos = frequencias ?? [];
@@ -241,28 +239,7 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
         </Painel>
       )}
 
-      <div className={avaliacoes && acoes.registrarAcompanhamento ? "colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-2" : "flex flex-col"}>
-        {avaliacoes && (
-          <Painel titulo="Avaliações de desempenho" descricao="Pela concedente, por critério (RF042, RF043)." flush>
-            <ul className="divide-y divide-navy-900/[0.07]" data-testid="avaliacoes">
-              {avaliacoes.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhuma avaliação registrada.</li>}
-              {avaliacoes.map((avaliacao) => (
-                <li key={avaliacao.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
-                  <span>
-                    <span className="block font-medium text-navy-900">
-                      {avaliacao.momento === "FINAL" ? "Avaliação final" : `Periódica · ${formatarDataCurta(avaliacao.periodoInicio)} a ${formatarDataCurta(avaliacao.periodoFim)}`}
-                    </span>
-                    <span className="block text-xs text-navy-900/65">{avaliacao.avaliadorNome ?? "Avaliador"}</span>
-                  </span>
-                  <span className="text-lg font-semibold text-navy-900 tabular-nums">
-                    {avaliacao.media ?? "Sem nota"}
-                    <span className="text-xs font-normal text-navy-900/65"> / 10</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Painel>
-        )}
+      <div className="flex flex-col">
         {acoes.registrarAcompanhamento && (
         <Painel titulo="Acompanhamento do orientador" descricao="Visitas, contatos e reuniões (RF033).">
           <FormularioApi

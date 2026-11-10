@@ -50,6 +50,8 @@ export function acoesNoEstagio(papeis: PapeisNoEstagio) {
     decidirRelatorio: orientador,
     // ACOMPANHAMENTO_RESTRITO_AO_ORIENTADOR (RF033)
     registrarAcompanhamento: orientador,
+    // avaliacao_insercao (RF042)
+    avaliar: supervisor || concedente,
     // AFASTAMENTO_RESTRITO (RF059), estagio_atualizacao_coordenacao (RF045), RESCISAO_RESTRITA (RF063)
     registrarAfastamento: coordenacao,
     concluir: coordenacao,
