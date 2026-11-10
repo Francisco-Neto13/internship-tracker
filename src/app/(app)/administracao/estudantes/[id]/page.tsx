@@ -1,14 +1,15 @@
 import { LIMITE } from "@/lib/campos";
 import { ExternalLink, KeyRound } from "lucide-react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import { formatarDataCurta } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { minutosParaHoras } from "@/lib/horas";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
 import { SITUACAO_ACADEMICA, SITUACAO_ATIVIDADE, SITUACAO_ESTAGIO, TIPO_ESTAGIO } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
+import type { Identity } from "@/lib/identity";
 import { getCargaHoraria } from "@/modules/acompanhamento/services/frequencia-service";
 import { TRANSICOES_SITUACAO_ACADEMICA } from "@/modules/academico/domain/situacao-academica";
 import { listCursos } from "@/modules/academico/services/curso-service";
@@ -32,11 +33,9 @@ import { ProgressoIntegralizacao } from "../../../integralizacao/progresso";
 // RF005, RF057: o perfil acadêmico de um estudante, separado da conta de acesso (RF001, que
 // fica em Usuários). Uma página própria com abas, porque reúne cinco assuntos: visão geral,
 // estágios, atividades, integralização e os dados acadêmicos editáveis. O administrador não lê
-// atividades nem integralização (M06/M07 fora do seu alcance): as abas dizem isso em vez de
-// parecer vazias.
+// atividades nem integralização (M06/M07 fora do seu alcance): essas abas não aparecem para ele.
 
 const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
-const ABAS = ["visao", "estagios", "atividades", "integralizacao", "dados"] as const;
 
 /** Volta só para a listagem de estudantes (o parâmetro vem da URL e não pode levar a outro site). */
 function destinoDeVolta(valor: string | undefined) {
@@ -51,31 +50,39 @@ async function semAlcance<T>(consulta: Promise<T>): Promise<T | null> {
 }
 
 export default async function EstudantePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/estudantes");
   const parsed = z.object({ id: z.uuid() }).safeParse(await params);
   if (!parsed.success) notFound();
   const { id } = parsed.data;
   const consulta = lerConsulta(await searchParams);
-  const aba = (ABAS as readonly string[]).includes(consulta.aba ?? "") ? consulta.aba! : "visao";
   const voltar = destinoDeVolta(consulta.voltar);
 
   const estudante = await getEstudante(identity, id).catch((error: unknown) => {
     if (error instanceof DomainError && error.kind === "NOT_FOUND") notFound();
     throw error;
   });
-  const [perfis, estagios, atividades, integralizacao] = await Promise.all([
+  const [perfis, estagios, atividadesLidas, integralizacao] = await Promise.all([
     listPerfisVigentes(identity),
     listEstagios(identity, { page: 1, limit: 50, estudanteId: id }),
     semAlcance(listAtividades(identity, { estudanteId: id })),
     semAlcance(getIntegralizacao(identity, id)),
   ]);
   const administrador = perfis.some((vinculo) => vinculo.perfil === "ADMINISTRADOR");
+  // Fora do alcance, a RLS devolve lista vazia em vez de recusar; M06 e M07 têm o mesmo alcance
+  const atividades = integralizacao ? atividadesLidas : null;
   const atual = estagios.items.find((estagio) => estagio.situacao === "ATIVO") ?? estagios.items.find((estagio) => estagio.situacao === "EM_FORMALIZACAO");
   const carga = atual?.situacao === "ATIVO" ? await semAlcance(getCargaHoraria(identity, atual.id)) : null;
   const situacao = SITUACAO_ACADEMICA[estudante.situacaoAcademica];
   const contar = (codigo: string) => atividades?.filter((atividade) => atividade.situacao === codigo).length ?? 0;
   const manterVolta = { voltar: consulta.voltar };
+  const abas = [
+    { chave: "visao", rotulo: "Visão geral" },
+    { chave: "estagios", rotulo: "Estágios", contagem: estagios.total },
+    ...(atividades ? [{ chave: "atividades", rotulo: "Atividades", contagem: atividades.length }] : []),
+    ...(integralizacao ? [{ chave: "integralizacao", rotulo: "Integralização" }] : []),
+    { chave: "dados", rotulo: "Dados acadêmicos" },
+  ];
+  const aba = abas.some((item) => item.chave === consulta.aba) ? consulta.aba! : "visao";
 
   return (
     <div className="flex flex-col gap-6">
@@ -111,13 +118,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
         caminho={`/administracao/estudantes/${id}`}
         consulta={manterVolta}
         atual={aba}
-        abas={[
-          { chave: "visao", rotulo: "Visão geral" },
-          { chave: "estagios", rotulo: "Estágios", contagem: estagios.total },
-          { chave: "atividades", rotulo: "Atividades", contagem: atividades?.length ?? null },
-          { chave: "integralizacao", rotulo: "Integralização" },
-          { chave: "dados", rotulo: "Dados acadêmicos" },
-        ]}
+        abas={abas}
       />
 
       {aba === "visao" && (
@@ -152,8 +153,8 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                 <p className="text-sm text-navy-900/65">Nenhum estágio ativo ou em formalização.</p>
               )}
             </Painel>
-            <Painel titulo="Integralização" verTodos={integralizacao ? { href: `?aba=integralizacao`, rotulo: "Detalhes" } : undefined}>
-              {integralizacao ? (
+            {integralizacao && (
+            <Painel titulo="Integralização" verTodos={{ href: `?aba=integralizacao`, rotulo: "Detalhes" }}>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <Progresso
                     rotulo="Estágio obrigatório"
@@ -168,10 +169,8 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                     formatar={(valor) => `${valor.toLocaleString("pt-BR")} h`}
                   />
                 </div>
-              ) : (
-                <p className="text-sm text-navy-900/65">A integralização fica com a coordenação do curso e o próprio estudante.</p>
-              )}
             </Painel>
+            )}
           </div>
           <div className="flex flex-col gap-4">
             <Painel titulo="Dados acadêmicos" verTodos={{ href: `?aba=dados`, rotulo: "Editar" }}>
@@ -186,8 +185,8 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                 ]}
               />
             </Painel>
+            {atividades && (
             <Painel titulo="Atividades complementares">
-              {atividades ? (
                 <div className="grid grid-cols-3 gap-2 text-center">
                   {[
                     { rotulo: "Em análise", valor: contar("EM_ANALISE") },
@@ -200,10 +199,8 @@ export default async function EstudantePage({ params, searchParams }: { params: 
                     </div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-sm text-navy-900/65">Fora do alcance do seu perfil.</p>
-              )}
             </Painel>
+            )}
           </div>
         </div>
       )}
@@ -234,10 +231,8 @@ export default async function EstudantePage({ params, searchParams }: { params: 
           />
         ))}
 
-      {aba === "atividades" &&
-        (atividades === null ? (
-          <EstadoVazio variante="sem-permissao" titulo="Fora do alcance do seu perfil" descricao="As atividades complementares são lidas pela coordenação do curso e pelo próprio estudante." />
-        ) : atividades.length === 0 ? (
+      {aba === "atividades" && atividades &&
+        (atividades.length === 0 ? (
           <EstadoVazio titulo="Nenhuma atividade cadastrada" descricao="O estudante ainda não registrou atividades complementares." />
         ) : (
           <DataTable
@@ -267,31 +262,28 @@ export default async function EstudantePage({ params, searchParams }: { params: 
           />
         ))}
 
-      {aba === "integralizacao" &&
-        (integralizacao ? (
-          <div className="flex flex-col gap-4">
-            <ProgressoIntegralizacao integralizacao={integralizacao} />
-            <DeclaracoesEstudante
-              identity={identity}
-              estudanteId={id}
-              atividadesCumpridas={integralizacao.apuracao.atividadesAproveitadoMinutos >= integralizacao.apuracao.atividadesExigidoMinutos}
-            />
-          </div>
-        ) : (
-          <EstadoVazio variante="sem-permissao" titulo="Fora do alcance do seu perfil" descricao="A integralização é acompanhada pela coordenação do curso e pelo próprio estudante (M07)." />
-        ))}
+      {aba === "integralizacao" && integralizacao && (
+        <div className="flex flex-col gap-4">
+          <ProgressoIntegralizacao integralizacao={integralizacao} />
+          <DeclaracoesEstudante
+            identity={identity}
+            estudanteId={id}
+            atividadesCumpridas={integralizacao.apuracao.atividadesAproveitadoMinutos >= integralizacao.apuracao.atividadesExigidoMinutos}
+          />
+        </div>
+      )}
 
       {aba === "dados" && <DadosAcademicos id={id} estudante={estudante} identity={identity} />}
 
       <p className="text-xs text-navy-900/65">
         <ExternalLink className="mr-1 inline size-3" aria-hidden />
-        Perfil acadêmico (RF005). Conta, perfis e senha ficam em Usuários e acesso.
+        Perfil acadêmico. Conta, perfis e senha ficam em Usuários e acesso.
       </p>
     </div>
   );
 }
 
-async function DadosAcademicos({ id, estudante, identity }: { id: string; estudante: Awaited<ReturnType<typeof getEstudante>>; identity: NonNullable<Awaited<ReturnType<typeof getIdentity>>> }) {
+async function DadosAcademicos({ id, estudante, identity }: { id: string; estudante: Awaited<ReturnType<typeof getEstudante>>; identity: Identity }) {
   const { items: cursos } = await listCursos(identity, { page: 1, limit: 100 });
   const situacoes = [estudante.situacaoAcademica, ...TRANSICOES_SITUACAO_ACADEMICA[estudante.situacaoAcademica]];
   return (

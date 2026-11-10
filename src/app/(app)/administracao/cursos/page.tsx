@@ -1,9 +1,8 @@
 import { Briefcase, GraduationCap, Plus } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
 import { minutosParaHoras } from "@/lib/horas";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
 import { BarraFiltros } from "@/shared/ui/barra-filtros";
@@ -21,8 +20,7 @@ import { CursoForm } from "./curso-form";
 const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
 
 export default async function CursosPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/cursos");
   const consulta = lerConsulta(await searchParams);
   const { pagina, porPagina } = lerPaginacao(consulta);
   const [{ items, total }, perfis] = await Promise.all([
@@ -38,7 +36,7 @@ export default async function CursosPage({ searchParams }: { searchParams: Promi
         description="Exigências curriculares de estágio e de atividades complementares, categorias e periodicidade de relatórios."
         acoes={
           administrador && (
-            <Dialogo gatilho={{ rotulo: "Novo curso", icone: <Plus className="size-4" aria-hidden /> }} titulo="Novo curso" descricao="Código, nome e as cargas exigidas para integralizar (RF004).">
+            <Dialogo gatilho={{ rotulo: "Novo curso", icone: <Plus className="size-4" aria-hidden /> }} titulo="Novo curso" descricao="Código, nome e as cargas exigidas para integralizar.">
               <CursoForm />
             </Dialogo>
           )

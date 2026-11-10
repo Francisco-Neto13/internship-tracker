@@ -1,11 +1,11 @@
 import { GraduationCap } from "lucide-react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarDataHora } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { SITUACAO_ACADEMICA, SITUACAO_USUARIO } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { listEstudantes } from "@/modules/academico/services/estudante-service";
 import { catalogoPerfis } from "@/modules/acesso/domain/catalogo-perfis";
@@ -24,8 +24,7 @@ import { DadosConta, PerfisConta, SegurancaConta } from "./usuario-acoes";
 // leva até ele: são registros distintos, com permissões distintas.
 
 export default async function UsuarioPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/usuarios");
   const parsed = idParamSchema.safeParse(await params);
   if (!parsed.success) notFound();
   const { id } = parsed.data;
@@ -72,7 +71,7 @@ export default async function UsuarioPage({ params, searchParams }: { params: Pr
           <Painel titulo="Dados da conta" descricao="Nome exibido e e-mail usado no login.">
             <DadosConta usuario={{ id: usuario.id, nome: usuario.nome, email: usuario.email }} />
           </Painel>
-          <Painel titulo="Perfis e vínculos" descricao="O perfil sozinho não dá acesso: coordenação vale para o curso, supervisor e concedente para a organização escolhida (RF003).">
+          <Painel titulo="Perfis e vínculos" descricao="O perfil sozinho não dá acesso: coordenação vale para o curso, supervisor e concedente para a organização escolhida.">
             <PerfisConta
               usuarioId={usuario.id}
               perfis={usuario.perfis.map((vinculo) => ({ perfil: vinculo.perfil, curso_id: vinculo.cursoId, concedente_id: vinculo.concedenteId }))}

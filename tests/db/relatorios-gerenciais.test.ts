@@ -102,7 +102,7 @@ describe("exportação (RF068)", () => {
     const csv = (await exportarRelatorio(como(mundo.coordenador), "estagiarios-ativos", filtro, "csv")) as string;
     const [cabecalho, linha] = csv.replace(/^﻿/, "").trim().split("\r\n");
     expect(cabecalho).toBe('"Curso";"Concedente";"Tipo";"Estagiários"');
-    expect(linha).toBe(`"${mundo.curso.nome}";"${mundo.concedente.razaoSocial}";"OBRIGATORIO";"1"`);
+    expect(linha).toBe(`"${mundo.curso.nome}";"${mundo.concedente.razaoSocial}";"Obrigatório";"1"`);
 
     const pdf = (await exportarRelatorio(como(mundo.coordenador), "pendencias-integralizacao", filtro, "pdf")) as Uint8Array;
     expect(Buffer.from(pdf.slice(0, 5)).toString()).toBe("%PDF-");

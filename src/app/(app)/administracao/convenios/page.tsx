@@ -1,8 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { diasEntre, formatarData, prazoEmPalavras } from "@/lib/datas";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { dataLocal } from "@/modules/academico/domain/parametros";
 import { getParametrosVigentes } from "@/modules/academico/services/parametro-service";
 import { listConveniosAVencer } from "@/modules/concedentes/services/convenio-service";
@@ -16,8 +15,7 @@ import { StatusBadge } from "@/shared/ui/status-badge";
 // pela urgência. Registro e renovação ficam na página da concedente (RF009, RF011).
 
 export default async function ConveniosPage() {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/convenios");
   const hoje = dataLocal();
   const { antecedenciaAlertaConvenioDias: dias } = await getParametrosVigentes(identity, hoje);
   const itens = await listConveniosAVencer(identity, hoje, dias);
@@ -31,7 +29,7 @@ export default async function ConveniosPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Convênios a vencer"
-        description={`Convênios que vencem nos próximos ${dias} dias sem renovação registrada (RF012). O prazo de alerta é um parâmetro institucional; registro e renovação ficam na página da concedente.`}
+        description={`Convênios que vencem nos próximos ${dias} dias sem renovação registrada. O prazo de alerta é um parâmetro institucional; registro e renovação ficam na página da concedente.`}
       />
       {itens.length === 0 ? (
         <EstadoVazio titulo="Nenhum convênio a vencer" descricao={`Nenhum convênio no seu alcance vence nos próximos ${dias} dias.`} />

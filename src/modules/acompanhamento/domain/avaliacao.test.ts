@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { conferirRespostas, mediaNormalizada } from "./avaliacao";
+import { codigoDoCriterio, conferirRespostas, mediaNormalizada } from "./avaliacao";
+
+describe("codigoDoCriterio (RF042)", () => {
+  it("derives the code the schema accepts from the description", () => {
+    expect(codigoDoCriterio("Pontualidade e assiduidade")).toBe("PONTUALIDADE_E_ASSIDUIDADE");
+    expect(codigoDoCriterio("  Comunicação / trabalho em equipe! ")).toBe("COMUNICACAO_TRABALHO_EM_EQUIPE");
+    expect(codigoDoCriterio("x".repeat(60))).toHaveLength(40);
+    expect(codigoDoCriterio("!!!")).toBe("CRITERIO");
+  });
+});
 
 const criterios = [
   { id: "a", escalaMinima: 1, escalaMaxima: 5, ativo: true },

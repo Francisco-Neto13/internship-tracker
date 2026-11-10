@@ -1,5 +1,6 @@
 import { minutosParaHoras } from "@/lib/horas";
 import type { DocumentoPdf, SecaoPdf } from "@/lib/pdf";
+import { SITUACAO_ESTAGIO } from "@/lib/rotulos";
 
 // RF022, RN-04, RN-06: TCE, amendment and activity plan rendered from the data in force, in
 // the institutional model (sections of fields). The PDF is a rendering, not the signed object:
@@ -43,8 +44,11 @@ const reais = (valor: string | null) => (valor === null ? "Não se aplica" : `R$
 const cnpj = (valor: string | null) => (valor ? valor.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, "$1.$2.$3/$4-$5") : "Não informado");
 const TIPO = { OBRIGATORIO: "Obrigatório", NAO_OBRIGATORIO: "Não obrigatório" } as const;
 const PARTE: Record<string, string> = { ESTUDANTE: "Estudante", INSTITUICAO: "Instituição de ensino", CONCEDENTE: "Concedente" };
+const SITUACAO_PLANO: Record<string, string> = { RASCUNHO: "Rascunho", AGUARDANDO_APROVACAO: "Aguardando o orientador", APROVADO: "Aprovado", DEVOLVIDO: "Devolvido", SUBSTITUIDO: "Substituído" };
+const SITUACAO_ADITIVO: Record<string, string> = { AGUARDANDO_ASSINATURAS: "Aguardando assinaturas", VIGENTE: "Vigente", CANCELADO: "Cancelado" };
+const matriculaDe = (id: IdentificacaoEstagio) => `matrícula ${id.matricula ?? "não informada"}`;
 
-function partes(id: IdentificacaoEstagio): SecaoPdf {
+export function partes(id: IdentificacaoEstagio): SecaoPdf {
   return {
     titulo: "Partes",
     campos: [
@@ -59,7 +63,7 @@ function partes(id: IdentificacaoEstagio): SecaoPdf {
 function assinaturas(lista: Assinatura[], hash: string | null): SecaoPdf {
   const validas = hash ? lista.filter((item) => item.hashDocumento === hash) : [];
   return {
-    titulo: "Assinaturas (RF019)",
+    titulo: "Assinaturas",
     campos: validas.length
       ? validas.map((item) => [PARTE[item.parte] ?? item.parte, `${item.signatarioNome}, em ${instante(item.criadoEm)}`] as [string, string])
       : [["Situação", hash ? "Nenhuma assinatura sobre o hash vigente" : "Documento em edição: ainda não assinável"]],
@@ -69,7 +73,7 @@ function assinaturas(lista: Assinatura[], hash: string | null): SecaoPdf {
 export function documentoTce(estagio: Estagio, id: IdentificacaoEstagio, extras: { responsaveis: Responsavel[]; apolice: Apolice | null; assinaturas: Assinatura[] }): DocumentoPdf {
   return {
     titulo: "Termo de Compromisso de Estágio",
-    subtitulo: `Lei 11.788/2008 · situação ${estagio.situacao} · ${estagio.hashTce ? `SHA-256 ${estagio.hashTce}` : "TCE em edição"}`,
+    subtitulo: `Lei 11.788/2008 · situação: ${SITUACAO_ESTAGIO[estagio.situacao]?.rotulo.toLowerCase() ?? estagio.situacao} · ${estagio.hashTce ? `SHA-256 ${estagio.hashTce}` : "TCE em edição"}`,
     secoes: [
       partes(id),
       {
@@ -98,14 +102,14 @@ export function documentoTce(estagio: Estagio, id: IdentificacaoEstagio, extras:
           ? [
               ["Seguradora", extras.apolice.seguradora],
               ["Apólice", extras.apolice.numeroApolice],
-              ["Contratante", extras.apolice.contratante],
+              ["Contratante", PARTE[extras.apolice.contratante] ?? extras.apolice.contratante],
               ["Vigência", `${data(extras.apolice.vigenciaInicio)} a ${data(extras.apolice.vigenciaFim)}`],
             ]
           : [["Situação", estagio.seguroExigido ? "Pendente" : "Não exigida"]],
       },
       assinaturas(extras.assinaturas.filter((item) => item.aditivoId === null), estagio.hashTce),
     ],
-    rodape: `Internship Tracker · TCE ${estagio.id}`,
+    rodape: `Internship Tracker · TCE · ${matriculaDe(id)}`,
   };
 }
 
@@ -118,16 +122,16 @@ type Plano = {
   decididoEm: Date | null;
 };
 
-export function documentoPlano(plano: Plano, id: IdentificacaoEstagio, estagioId: string, orientador: string | null): DocumentoPdf {
+export function documentoPlano(plano: Plano, id: IdentificacaoEstagio, orientador: string | null): DocumentoPdf {
   return {
     titulo: "Plano de Atividades do Estagiário",
-    subtitulo: `Lei 11.788/2008, art. 7º, parágrafo único · versão ${plano.versao} · ${plano.situacao}`,
+    subtitulo: `Lei 11.788/2008, art. 7º, parágrafo único · versão ${plano.versao} · ${SITUACAO_PLANO[plano.situacao] ?? plano.situacao}`,
     secoes: [
       partes(id),
       { titulo: "Atividades previstas", paragrafos: [plano.atividadesPrevistas] },
       { titulo: "Compatibilidade com o curso", paragrafos: [plano.justificativaCompatibilidade] },
       {
-        titulo: "Decisão do professor orientador (RF017)",
+        titulo: "Decisão do professor orientador",
         campos: [
           ["Orientador", orientador ?? "Não informado"],
           ["Decidido em", plano.decididoEm ? instante(plano.decididoEm) : "Aguardando"],
@@ -135,7 +139,37 @@ export function documentoPlano(plano: Plano, id: IdentificacaoEstagio, estagioId
         ],
       },
     ],
-    rodape: `Internship Tracker · plano de atividades do estágio ${estagioId}`,
+    rodape: `Internship Tracker · plano de atividades · ${matriculaDe(id)}`,
+  };
+}
+
+type Rescisao = { dataRescisao: string; solicitante: string; motivo: string; minutosCumpridosConsolidados: number; minutosHomologadosConsolidados: number; criadoEm: Date };
+
+/** RF063, RF064: the end of the internship before its term, with the hours consolidated up to it. */
+export function documentoRescisao(rescisao: Rescisao, id: IdentificacaoEstagio, decididoPor: string | null): DocumentoPdf {
+  return {
+    titulo: "Termo de Rescisão de Estágio",
+    subtitulo: `Lei 11.788/2008 · registrado em ${instante(rescisao.criadoEm)}`,
+    secoes: [
+      partes(id),
+      {
+        titulo: "Rescisão",
+        campos: [
+          ["Data da rescisão", data(rescisao.dataRescisao)],
+          ["Solicitada por", PARTE[rescisao.solicitante] ?? rescisao.solicitante],
+          ["Registrada por", decididoPor ?? "Não informado"],
+        ],
+        paragrafos: [rescisao.motivo],
+      },
+      {
+        titulo: "Horas consolidadas até a rescisão",
+        campos: [
+          ["Horas cumpridas", horas(rescisao.minutosCumpridosConsolidados)],
+          ["Horas homologadas", horas(rescisao.minutosHomologadosConsolidados)],
+        ],
+      },
+    ],
+    rodape: `Internship Tracker · termo de rescisão · ${matriculaDe(id)}`,
   };
 }
 
@@ -168,13 +202,13 @@ export function documentoAditivo(aditivo: Aditivo, id: IdentificacaoEstagio, nov
   if (novoSupervisor) alteracoes.push(["Novo supervisor", novoSupervisor]);
   return {
     titulo: `Termo Aditivo nº ${aditivo.numero}`,
-    subtitulo: `${TIPO_ADITIVO[aditivo.tipo] ?? aditivo.tipo} · ${aditivo.situacao} · SHA-256 ${aditivo.hashConteudo}`,
+    subtitulo: `${TIPO_ADITIVO[aditivo.tipo] ?? aditivo.tipo} · ${SITUACAO_ADITIVO[aditivo.situacao] ?? aditivo.situacao} · SHA-256 ${aditivo.hashConteudo}`,
     secoes: [
       partes(id),
-      { titulo: "Alterações (RN-06)", campos: alteracoes, paragrafos: [aditivo.justificativa] },
+      { titulo: "Alterações", campos: alteracoes, paragrafos: [aditivo.justificativa] },
       { campos: [["Efetivado em", aditivo.efetivadoEm ? instante(aditivo.efetivadoEm) : "Aguardando as três assinaturas"]] },
       assinaturas(lista.filter((item) => item.aditivoId === aditivo.id), aditivo.hashConteudo),
     ],
-    rodape: `Internship Tracker · aditivo ${aditivo.id}`,
+    rodape: `Internship Tracker · termo aditivo nº ${aditivo.numero} · ${matriculaDe(id)}`,
   };
 }

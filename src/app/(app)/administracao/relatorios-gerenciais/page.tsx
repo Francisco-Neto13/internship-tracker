@@ -1,15 +1,14 @@
-import { TIPO_ESTAGIO } from "@/lib/rotulos";
-import { Download } from "lucide-react";
+import { SITUACAO_CONCEDENTE, TIPO_ESTAGIO } from "@/lib/rotulos";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { TIPOS_RELATORIO, type TipoRelatorio } from "@/modules/administracao/domain/relatorios-gerenciais";
 import { relatorioQuerySchema } from "@/modules/administracao/schemas/relatorios-gerenciais";
 import { gerarRelatorio, tituloRelatorio } from "@/modules/administracao/services/relatorio-gerencial-service";
 import { listConcedentes } from "@/modules/concedentes/services/concedente-service";
 import { Abas } from "@/shared/ui/abas";
+import { BaixarArquivo } from "@/shared/ui/baixar-arquivo";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { cn } from "@/shared/ui/cn";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
@@ -47,8 +46,7 @@ const DESCRICAO: Record<TipoRelatorio, string> = {
 };
 
 export default async function RelatoriosGerenciaisPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/relatorios-gerenciais");
   const bruto = lerConsulta(await searchParams);
   const tipo: TipoRelatorio = (TIPOS_RELATORIO as readonly string[]).includes(bruto.tipo ?? "") ? (bruto.tipo as TipoRelatorio) : "estagiarios-ativos";
   const parsed = relatorioQuerySchema.safeParse(bruto);
@@ -60,7 +58,8 @@ export default async function RelatoriosGerenciaisPage({ searchParams }: { searc
   ]);
   const colunas = Object.keys(ROTULOS).filter((chave) => linhas.some((linha) => chave in linha));
   const filtros = Object.fromEntries(Object.entries(bruto).filter(([chave]) => chave !== "tipo"));
-  const exportar = (formato: "csv" | "pdf") => `/api/v1/relatorios-gerenciais/${tipo}/exportacao?${new URLSearchParams({ ...filtros, formato })}`;
+  // Filtro inválido é ignorado na tabela: a exportação faz o mesmo, em vez de responder erro
+  const exportar = (formato: "csv" | "pdf") => `/api/v1/relatorios-gerenciais/${tipo}/exportacao?${new URLSearchParams({ ...(parsed.success ? filtros : {}), formato })}`;
   const total = (coluna: string) => linhas.reduce((soma, linha) => soma + Number(linha[coluna] ?? 0), 0);
 
   return (
@@ -70,14 +69,8 @@ export default async function RelatoriosGerenciaisPage({ searchParams }: { searc
         description="Visão da operação para decisão, com filtros por curso, concedente e período. Somente leitura."
         acoes={
           <>
-            <a href={exportar("csv")} className={buttonVariants({ variant: "outline" })}>
-              <Download className="size-4" aria-hidden />
-              Exportar CSV
-            </a>
-            <a href={exportar("pdf")} className={buttonVariants({ variant: "outline" })}>
-              <Download className="size-4" aria-hidden />
-              Exportar PDF
-            </a>
+            <BaixarArquivo url={exportar("csv")} rotulo="Exportar CSV" />
+            <BaixarArquivo url={exportar("pdf")} rotulo="Exportar PDF" />
           </>
         }
       />
@@ -157,7 +150,7 @@ export default async function RelatoriosGerenciaisPage({ searchParams }: { searc
                       const numero = typeof linha[coluna] === "number";
                       return (
                         <td key={coluna} className={cn("px-4 py-2.5 text-navy-900", numero && "text-right tabular-nums")}>
-                          {linha[coluna] === null ? "Sem dado" : numero ? Number(linha[coluna]).toLocaleString("pt-BR") : coluna === "tipo" ? (TIPO_ESTAGIO[String(linha[coluna])] ?? String(linha[coluna])) : String(linha[coluna])}
+                          {linha[coluna] === null ? "Sem dado" : numero ? Number(linha[coluna]).toLocaleString("pt-BR") : coluna === "tipo" ? (TIPO_ESTAGIO[String(linha[coluna])] ?? String(linha[coluna])) : coluna === "situacao" ? (SITUACAO_CONCEDENTE[String(linha[coluna])]?.rotulo ?? String(linha[coluna])) : String(linha[coluna])}
                         </td>
                       );
                     })}

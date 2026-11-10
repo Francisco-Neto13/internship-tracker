@@ -4,6 +4,7 @@ import { PDFDocument } from "pdf-lib";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as schema from "@/db/schema";
 import { GET as verificar } from "@/app/api/v1/declaracoes/verificacao/[codigo]/route";
+import VerificarDeclaracaoPage from "@/app/verificar/[codigo]/page";
 import { criarCriterio, listCriterios, registrarAvaliacao } from "@/modules/acompanhamento/services/avaliacao-service";
 import { homologarFrequencia, registrarFrequencia } from "@/modules/acompanhamento/services/frequencia-service";
 import { cadastrarAtividade, decidirAtividade } from "@/modules/atividades/services/atividade-service";
@@ -92,6 +93,13 @@ describe("declarações (RF058)", () => {
     expect((await resposta.json()).data).toMatchObject({ tipo: "CONCLUSAO_ESTAGIO", sha256: documento.sha256 });
     const inexistente = await verificar(new Request("http://localhost"), { params: Promise.resolve({ codigo: "AAAA-AAAA-AAAA-AAAA" }) });
     expect(inexistente.status).toBe(404);
+
+    // The page people open: names, never the code of the type
+    const tela = JSON.stringify(await VerificarDeclaracaoPage({ params: Promise.resolve({ codigo: declaracao.codigoVerificacao }) }));
+    expect(tela).toContain("Declaração autêntica");
+    expect(tela).toContain("Conclusão de estágio");
+    expect(tela).toContain(documento.sha256);
+    expect(tela).not.toContain("CONCLUSAO_ESTAGIO");
 
     expect((await listDeclaracoes(como(outro.coordenador), outro.estudante.id)).map((item) => item.id)).toEqual([declaracao.id]);
     expect(await listDeclaracoes(como(mundo.coordenador), outro.estudante.id)).toEqual([]);

@@ -161,7 +161,7 @@ begin
   perform app.notificar_estagio(
     new.estagio_id, array['ORIENTADOR'], 'DIVERGENCIA_CARGA_HORARIA',
     'Divergência de carga horária',
-    format('As horas registradas divergem das previstas além da tolerância de %s%%.', new.tolerancia_percentual),
+    format('As horas registradas divergem das previstas além da tolerância de %s%%.', replace(trim_scale(new.tolerancia_percentual)::text, '.', ',')),
     format('RF028:%s', new.id)
   );
   return null;
@@ -205,7 +205,7 @@ begin
     v_usuario, 'ATIVIDADE_ANALISADA',
     case new.decisao when 'APROVADA' then 'Atividade aprovada' when 'RECUSADA' then 'Atividade recusada' else 'Atividade devolvida' end,
     case new.decisao
-      when 'APROVADA' then format('A coordenação aprovou a atividade: %s h aproveitadas.', new.horas_aproveitadas_minutos / 60.0)
+      when 'APROVADA' then format('A coordenação aprovou a atividade: %s h aproveitadas.', replace(trim_scale(round(new.horas_aproveitadas_minutos / 60.0, 2))::text, '.', ','))
       when 'RECUSADA' then 'A coordenação recusou a atividade; veja o motivo na atividade.'
       else 'A coordenação devolveu a atividade para complementação.'
     end,

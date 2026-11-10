@@ -49,7 +49,8 @@ const data = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slic
 const horas = (minutos: number) => `${String(minutosParaHoras(minutos)).replace(".", ",")} h`;
 const cnpj = (valor: string) => valor.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, "$1.$2.$3/$4-$5");
 
-export function documentoDeclaracao(dados: DadosDeclaracao, codigo: string, emitidaEm: string): DocumentoPdf {
+/** `origem`: address of the system, so whoever holds the paper knows where to check it. */
+export function documentoDeclaracao(dados: DadosDeclaracao, codigo: string, emitidaEm: string, origem = ""): DocumentoPdf {
   const identificacao: [string, string][] = [
     ["Estudante", dados.nome],
     ["Matrícula", dados.matricula],
@@ -58,7 +59,7 @@ export function documentoDeclaracao(dados: DadosDeclaracao, codigo: string, emit
   const verificacao = {
     titulo: "Autenticidade",
     paragrafos: [
-      `Código de verificação: ${codigo}. Confira em /api/v1/declaracoes/verificacao/${codigo}, que informa o tipo, o estudante, o curso, a data de emissão e o SHA-256 deste arquivo.`,
+      `Código de verificação: ${codigo}. Confira em ${origem}/verificar/${codigo}, que informa o tipo, o estudante, o curso, a data de emissão e o SHA-256 deste arquivo.`,
     ],
   };
   if (dados.tipo === "CONCLUSAO_ESTAGIO") {

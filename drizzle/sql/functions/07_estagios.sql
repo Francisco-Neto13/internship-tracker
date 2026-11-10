@@ -591,3 +591,57 @@ grant execute on function app.dias_usados_no_par(uuid, uuid, uuid) to app_runtim
 grant execute on function app.tem_outro_estagio_ativo(uuid, uuid) to app_runtime;
 grant execute on function app.historico_estagios_concedente(uuid) to app_runtime;
 grant execute on function app.efetivar_aditivo(uuid) to app_runtime;
+
+-- RF031: accounts the coordination of this internship can bind, by name or e-mail. Only those
+-- app.validar_responsavel accepts: a current advisor, or a supervisor of this concedente. The
+-- policies of usuario stay closed: this answers name and e-mail, and only to that coordination.
+create or replace function app.buscar_contas_responsavel(p_estagio_id uuid, p_papel public.papel_responsavel, p_busca text)
+returns table (id uuid, nome text, email text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select u.id, u.nome, u.email
+  from public.usuario u
+  join public.estagio g on g.id = p_estagio_id
+  where app.coordena_curso_do_estagio(p_estagio_id)
+    and length(trim(p_busca)) >= 2
+    and u.situacao = 'ATIVO'
+    and exists (
+      select 1 from public.vinculo_perfil v
+      where v.usuario_id = u.id
+        and v.vigencia_inicio <= now() and (v.vigencia_fim is null or v.vigencia_fim > now())
+        and (
+          (p_papel = 'ORIENTADOR' and v.perfil = 'PROFESSOR_ORIENTADOR')
+          or (p_papel = 'SUPERVISOR' and v.perfil = 'SUPERVISOR' and v.concedente_id = g.concedente_id)
+        )
+    )
+    and (
+      u.nome ilike '%' || replace(replace(replace(trim(p_busca), '\', '\\'), '%', '\%'), '_', '\_') || '%'
+      or u.email ilike '%' || replace(replace(replace(trim(p_busca), '\', '\\'), '%', '\%'), '_', '\_') || '%'
+    )
+  order by u.nome, u.email
+  limit 20
+$$;
+
+revoke all on function app.buscar_contas_responsavel(uuid, public.papel_responsavel, text) from public;
+grant execute on function app.buscar_contas_responsavel(uuid, public.papel_responsavel, text) to app_runtime;
+
+-- RF031: the coordination names who it bound. Only names, only for the coordination of the course:
+-- the policies of usuario stay closed for the other people of the internship
+create or replace function app.nomes_responsaveis(p_estagio_id uuid)
+returns table (usuario_id uuid, nome text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select distinct u.id, u.nome
+  from public.responsavel_estagio r
+  join public.usuario u on u.id = r.usuario_id
+  where r.estagio_id = p_estagio_id and app.coordena_curso_do_estagio(p_estagio_id)
+$$;
+
+revoke all on function app.nomes_responsaveis(uuid) from public;
+grant execute on function app.nomes_responsaveis(uuid) to app_runtime;

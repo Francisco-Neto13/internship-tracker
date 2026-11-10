@@ -1,16 +1,15 @@
 import { LIMITE } from "@/lib/campos";
-import { Download } from "lucide-react";
-import { redirect } from "next/navigation";
 import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarDataHora } from "@/lib/datas";
-import { descreverOperacao, OPERACAO_AUDITORIA, TABELA_AUDITORIA } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
-import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
+import { descreverOperacao, TABELA_AUDITORIA } from "@/lib/rotulos";
+import { identidadeDaTela } from "@/lib/acesso-tela";
+import { rotuloCampo, rotuloOperacao, valorAuditoria } from "@/lib/auditoria-texto";
 import { listAuditoriaQuerySchema, toFiltroAuditoria } from "@/modules/administracao/schemas/auditoria";
 import { listRegistros } from "@/modules/administracao/services/auditoria-service";
 import { Avatar } from "@/shared/ui/avatar";
 import { BarraFiltros } from "@/shared/ui/barra-filtros";
-import { Button, buttonVariants } from "@/shared/ui/button";
+import { BaixarArquivo } from "@/shared/ui/baixar-arquivo";
+import { Button } from "@/shared/ui/button";
 import { DataTable, type DataTableColumn } from "@/shared/ui/data-table";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { Input } from "@/shared/ui/input";
@@ -27,10 +26,7 @@ type Registro = Awaited<ReturnType<typeof listRegistros>>["items"][number];
 const TOM: Record<string, StatusTone> = { INSERT: "ok", UPDATE: "pending", DELETE: "danger", LEITURA: "neutral" };
 
 function valor(dados: unknown, campo: string) {
-  if (!dados || typeof dados !== "object") return "Não informado";
-  const bruto = (dados as Record<string, unknown>)[campo];
-  if (bruto === null || bruto === undefined) return "Não informado";
-  return typeof bruto === "object" ? JSON.stringify(bruto) : String(bruto);
+  return valorAuditoria(campo, dados && typeof dados === "object" ? (dados as Record<string, unknown>)[campo] : null);
 }
 
 function Alteracao({ registro }: { registro: Registro }) {
@@ -39,7 +35,7 @@ function Alteracao({ registro }: { registro: Registro }) {
   return (
     <details className="relative z-10 text-xs">
       <summary className="cursor-pointer text-azul-500 hover:text-navy-700">
-        {registro.operacao === "INSERT" ? `${campos.length} campos` : campos.slice(0, 3).join(", ") + (campos.length > 3 ? ` +${campos.length - 3}` : "")}
+        {registro.operacao === "INSERT" ? `${campos.length} campos` : campos.slice(0, 3).map(rotuloCampo).join(", ") + (campos.length > 3 ? ` +${campos.length - 3}` : "")}
       </summary>
       <table className="mt-2 w-full max-w-xl text-left">
         <thead className="text-navy-900/65">
@@ -49,10 +45,10 @@ function Alteracao({ registro }: { registro: Registro }) {
             <th className="py-1 font-medium">{registro.operacao === "INSERT" ? "Valor" : "Depois"}</th>
           </tr>
         </thead>
-        <tbody className="font-mono">
+        <tbody>
           {campos.map((campo) => (
             <tr key={campo} className="border-t border-navy-900/[0.07] align-top">
-              <td className="py-1 pr-3 text-navy-900/70">{campo}</td>
+              <td className="py-1 pr-3 text-navy-900/70">{rotuloCampo(campo)}</td>
               {registro.operacao !== "INSERT" && <td className="max-w-48 truncate py-1 pr-3 text-navy-900/65">{valor(registro.dadosAnteriores, campo)}</td>}
               <td className="max-w-48 truncate py-1 text-navy-900">{valor(registro.dadosNovos, campo)}</td>
             </tr>
@@ -88,8 +84,8 @@ const COLUNAS: DataTableColumn<Registro>[] = [
       <span className="flex flex-col gap-1">
         <span className="text-navy-900">{descreverOperacao(registro.tabela, registro.operacao)}</span>
         <span className="flex items-center gap-2">
-          <StatusBadge tone={TOM[registro.operacao] ?? "neutral"}>{registro.operacao}</StatusBadge>
-          <span className="font-mono text-xs text-navy-900/65">{registro.registroId.slice(0, 8)}</span>
+          <StatusBadge tone={TOM[registro.operacao] ?? "neutral"}>{rotuloOperacao(registro.operacao)}</StatusBadge>
+          <span className="text-xs text-navy-900/65">Referência {registro.registroId.slice(0, 8)}</span>
         </span>
       </span>
     ),
@@ -98,27 +94,11 @@ const COLUNAS: DataTableColumn<Registro>[] = [
 ];
 
 export default async function AuditoriaPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/auditoria");
   const brutos = lerConsulta(await searchParams);
   const { pagina, porPagina } = lerPaginacao(brutos, 50);
   const consulta = listAuditoriaQuerySchema.safeParse({ ...brutos, page: pagina, limit: porPagina });
   const query = consulta.success ? consulta.data : listAuditoriaQuerySchema.parse({ page: pagina, limit: porPagina });
-  const perfis = await listPerfisVigentes(identity);
-  const ehAdministrador = perfis.some((vinculo) => vinculo.perfil === "ADMINISTRADOR");
-
-  if (!ehAdministrador) {
-    return (
-      <div className="flex flex-col gap-6">
-        <PageHeader title="Auditoria" description="Trilha de operações relevantes, somente leitura (RF065, RF066)." />
-        <EstadoVazio
-          variante="sem-permissao"
-          titulo="Restrito ao perfil Administrador"
-          descricao="A trilha de auditoria só fica visível para quem tem o perfil Administrador. Isto é a política de acesso funcionando, não um erro."
-        />
-      </div>
-    );
-  }
 
   const { items, total } = await listRegistros(identity, toFiltroAuditoria(query), { page: query.page, limit: query.limit });
   const { tabela, registro_id, usuario_id, operacao, de, ate } = query;
@@ -128,18 +108,15 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Auditoria"
-        description="Toda operação relevante, com autor, data e o que mudou. Somente leitura: a trilha não aceita alteração nem exclusão (RN-28)."
+        description="Toda operação relevante, com autor, data e o que mudou. Somente leitura: a trilha não aceita alteração nem exclusão."
         acoes={
-          <a href={`/api/v1/auditoria/exportacao?${filtros}`} className={buttonVariants({ variant: "outline" })}>
-            <Download className="size-4" aria-hidden />
-            Exportar CSV
-          </a>
+          <BaixarArquivo url={`/api/v1/auditoria/exportacao?${filtros}`} rotulo="Exportar CSV" />
         }
       />
       <BarraFiltros
         filtros={[
           { chave: "tabela", rotulo: "Registro", todos: "Todos os registros", opcoes: Object.entries(TABELA_AUDITORIA).map(([valor, rotulo]) => ({ valor, rotulo })) },
-          { chave: "operacao", rotulo: "Operação", todos: "Todas as operações", opcoes: ["INSERT", "UPDATE", "DELETE", "LEITURA"].map((valor) => ({ valor, rotulo: OPERACAO_AUDITORIA[valor] })) },
+          { chave: "operacao", rotulo: "Operação", todos: "Todas as operações", opcoes: ["INSERT", "UPDATE", "DELETE", "LEITURA"].map((valor) => ({ valor, rotulo: rotuloOperacao(valor) })) },
         ]}
       />
       <details className="surface-card px-5 py-4" open={Boolean(de || ate || registro_id || usuario_id)}>
@@ -156,11 +133,11 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
             <Input id="filtro-ate" name="ate" type="date" defaultValue={ate} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="filtro-registro">Código do registro</Label>
+            <Label htmlFor="filtro-registro">Referência completa do registro</Label>
             <Input id="filtro-registro" name="registro_id" maxLength={LIMITE.registroAuditoria} defaultValue={registro_id} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="filtro-usuario">Código do autor</Label>
+            <Label htmlFor="filtro-usuario">Referência completa do autor</Label>
             <Input id="filtro-usuario" name="usuario_id" maxLength={LIMITE.codigoConta} defaultValue={usuario_id} />
           </div>
           {!consulta.success && (

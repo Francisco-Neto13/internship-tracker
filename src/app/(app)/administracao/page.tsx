@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { redirect } from "next/navigation";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { ROTULO_PERFIL, type Perfil } from "@/modules/acesso/schemas/perfil";
 import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
 import { itensVisiveis, type NavItem } from "@/shared/ui/navigation";
@@ -19,7 +18,7 @@ const AREAS: { titulo: string; descricao: string; hrefs: { href: string; alcance
       {
         href: "/administracao/usuarios",
         alcance: "Somente administrador",
-        consequencia: "Inativar ou retirar um perfil corta o acesso na requisição seguinte (RNF-03). Contas não são apagadas.",
+        consequencia: "Inativar ou retirar um perfil corta o acesso na requisição seguinte. Contas não são apagadas.",
       },
     ],
   },
@@ -34,7 +33,7 @@ const AREAS: { titulo: string; descricao: string; hrefs: { href: string; alcance
       },
       {
         href: "/administracao/cursos",
-        alcance: "Coordenação altera só os próprios cursos",
+        alcance: "Administrador altera; coordenação consulta as exigências",
         consequencia: "Mudar carga mínima ou exigências reapura a integralização de todos os estudantes do curso.",
       },
     ],
@@ -51,7 +50,7 @@ const AREAS: { titulo: string; descricao: string; hrefs: { href: string; alcance
       {
         href: "/administracao/convenios",
         alcance: "Coordenação e administrador",
-        consequencia: "Sem convênio vigente na data de início, o estágio não é ativado (RF010).",
+        consequencia: "Sem convênio vigente na data de início, o estágio não é ativado.",
       },
     ],
   },
@@ -72,7 +71,7 @@ const AREAS: { titulo: string; descricao: string; hrefs: { href: string; alcance
     hrefs: [
       { href: "/administracao/relatorios-gerenciais", alcance: "Administrador vê todos os cursos; coordenação, os seus", consequencia: "Somente leitura, com exportação em CSV e PDF." },
       { href: "/administracao/guarda-documental", alcance: "Somente administrador", consequencia: "Eliminar remove o arquivo de forma definitiva; o registro e o hash permanecem." },
-      { href: "/administracao/auditoria", alcance: "Somente administrador", consequencia: "Somente leitura: a trilha não aceita alteração nem exclusão (RN-28)." },
+      { href: "/administracao/auditoria", alcance: "Somente administrador", consequencia: "Somente leitura: a trilha não aceita alteração nem exclusão." },
     ],
   },
 ];
@@ -111,8 +110,7 @@ function Cartao({ item, alcance, consequencia }: { item: NavItem; alcance: strin
 }
 
 export default async function AdministracaoPage() {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao");
   const perfis = (await listPerfisVigentes(identity)).map((vinculo) => vinculo.perfil as Perfil);
   const visiveis = new Map(itensVisiveis(perfis).map((item) => [item.href, item]));
   const areas = AREAS.map((area) => ({ ...area, itens: area.hrefs.flatMap((entrada) => (visiveis.has(entrada.href) ? [{ ...entrada, item: visiveis.get(entrada.href)! }] : [])) })).filter(

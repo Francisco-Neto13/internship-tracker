@@ -2,10 +2,11 @@ import { withUser, type Transaction } from "@/db/with-user";
 import { DomainError } from "@/lib/errors";
 import type { Identity } from "@/lib/identity";
 import { gerarPdfDocumento } from "@/lib/pdf";
-import { documentoAditivo, documentoPlano, documentoTce } from "../domain/documentos";
+import { documentoAditivo, documentoPlano, documentoRescisao, documentoTce } from "../domain/documentos";
 import { findAditivoById } from "../repositories/aditivo-repository";
 import { findEstagioById, findIdentificacaoEstagio } from "../repositories/estagio-repository";
 import { findApolices, findAssinaturas, findPlanos, findResponsaveis, nomeDoUsuario } from "../repositories/formalizacao-repository";
+import { findRescisao } from "../repositories/rescisao-repository";
 import { estagioNaoEncontrado } from "./erros";
 
 // RF022: PDFs of the TCE, the activity plan and an amendment, generated on request from the
@@ -21,9 +22,7 @@ async function carregar(tx: Transaction, estagioId: string) {
 export async function pdfTce(identity: Identity, estagioId: string): Promise<Uint8Array> {
   const documento = await withUser(identity, async (tx) => {
     const { estagio, identificacao } = await carregar(tx, estagioId);
-    const responsaveis = await Promise.all(
-      (await findResponsaveis(tx, estagioId)).map(async (item) => ({ ...item, nome: await nomeDoUsuario(tx, item.usuarioId) })),
-    );
+    const responsaveis = (await findResponsaveis(tx, estagioId)).map((item) => ({ ...item, nome: item.usuarioNome ?? null }));
     const apolices = await findApolices(tx, estagioId);
     return documentoTce(estagio, identificacao, { responsaveis, apolice: apolices.at(-1) ?? null, assinaturas: await findAssinaturas(tx, estagioId) });
   });
@@ -33,13 +32,24 @@ export async function pdfTce(identity: Identity, estagioId: string): Promise<Uin
 /** The latest version of the plan (the approved one once there is one). */
 export async function pdfPlano(identity: Identity, estagioId: string): Promise<Uint8Array> {
   const documento = await withUser(identity, async (tx) => {
-    const { estagio, identificacao } = await carregar(tx, estagioId);
+    const { identificacao } = await carregar(tx, estagioId);
     const planos = await findPlanos(tx, estagioId);
     const plano = planos.filter((item) => item.situacao === "APROVADO").at(-1) ?? planos.at(-1);
     if (!plano) {
       throw new DomainError({ code: "PLANO_NAO_ENCONTRADO", kind: "NOT_FOUND", message: "O estágio ainda não tem plano de atividades.", requisito: "RF016" });
     }
-    return documentoPlano(plano, identificacao, estagio.id, plano.decididoPorUsuarioId ? await nomeDoUsuario(tx, plano.decididoPorUsuarioId) : null);
+    return documentoPlano(plano, identificacao, plano.decididoPorUsuarioId ? await nomeDoUsuario(tx, plano.decididoPorUsuarioId) : null);
+  });
+  return gerarPdfDocumento(documento);
+}
+
+/** RF063, RF064: the termination term; whoever cannot read the termination gets not found. */
+export async function pdfRescisao(identity: Identity, estagioId: string): Promise<Uint8Array> {
+  const documento = await withUser(identity, async (tx) => {
+    const { identificacao } = await carregar(tx, estagioId);
+    const rescisao = await findRescisao(tx, estagioId);
+    if (!rescisao) throw new DomainError({ code: "RESCISAO_NAO_ENCONTRADA", kind: "NOT_FOUND", message: "O estágio não foi rescindido.", requisito: "RF063" });
+    return documentoRescisao(rescisao, identificacao, await nomeDoUsuario(tx, rescisao.decididoPorUsuarioId));
   });
   return gerarPdfDocumento(documento);
 }

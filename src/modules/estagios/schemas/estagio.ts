@@ -106,6 +106,7 @@ export const planoBodySchema = z.object({
 });
 
 export const responsavelBodySchema = z.object({ papel: z.enum(["ORIENTADOR", "SUPERVISOR"]), usuario_id: z.uuid() });
+export const contasResponsavelQuerySchema = z.object({ papel: z.enum(["ORIENTADOR", "SUPERVISOR"]), busca: z.string().trim().min(2).max(LIMITE.busca) });
 export const substituicaoOrientadorBodySchema = z.object({ usuario_id: z.uuid(), motivo: z.string().trim().min(1).max(2000) });
 
 export const apoliceBodySchema = z.object({

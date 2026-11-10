@@ -1,6 +1,7 @@
 import { dataSchema } from "@/lib/campos";
 import { LIMITE } from "@/lib/campos";
 import { z } from "zod";
+import { codigoDoCriterio } from "../domain/avaliacao";
 
 // Contracts of evaluation (RF042, RF043), criteria (RF042) and follow-up (RF033)
 
@@ -8,17 +9,18 @@ const texto = (max: number) => z.string().trim().min(1).max(max);
 
 export const criterioBodySchema = z
   .object({
-    codigo: z.string().trim().min(1).max(40).regex(/^[A-Z0-9_]+$/, "Use letras maiúsculas, números e _"),
-    descricao: texto(500),
+    // Optional: the screen sends only the description, and the code comes from it
+    codigo: z.string().trim().min(1).max(40).regex(/^[A-Z0-9_]+$/, "Use letras maiúsculas, números e _").optional(),
+    descricao: texto(LIMITE.descricaoCriterio),
     escala_minima: z.number().int().min(0).max(99),
     escala_maxima: z.number().int().min(1).max(100),
     ordem: z.number().int().min(0).max(999).default(0),
   })
-  .transform((body) => ({ codigo: body.codigo, descricao: body.descricao, escalaMinima: body.escala_minima, escalaMaxima: body.escala_maxima, ordem: body.ordem }));
+  .transform((body) => ({ codigo: body.codigo ?? codigoDoCriterio(body.descricao), descricao: body.descricao, escalaMinima: body.escala_minima, escalaMaxima: body.escala_maxima, ordem: body.ordem }));
 
 export const alterarCriterioBodySchema = z
   .object({
-    descricao: texto(500).optional(),
+    descricao: texto(LIMITE.descricaoCriterio).optional(),
     escala_minima: z.number().int().min(0).max(99).optional(),
     escala_maxima: z.number().int().min(1).max(100).optional(),
     ordem: z.number().int().min(0).max(999).optional(),
@@ -36,9 +38,9 @@ export const avaliacaoBodySchema = z
     momento: z.enum(["PERIODICA", "FINAL"]),
     periodo_inicio: dataSchema.nullish(),
     periodo_fim: dataSchema.nullish(),
-    observacoes: texto(4000).nullish(),
+    observacoes: texto(LIMITE.observacoesAvaliacao).nullish(),
     respostas: z
-      .array(z.object({ criterio_id: z.uuid(), nota: z.number().int(), comentario: texto(1000).nullish() }))
+      .array(z.object({ criterio_id: z.uuid(), nota: z.number().int(), comentario: texto(LIMITE.comentarioAvaliacao).nullish() }))
       .min(1)
       .max(50),
   })

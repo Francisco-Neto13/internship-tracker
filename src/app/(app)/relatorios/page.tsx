@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarData, hojeSaoPaulo, prazoEmPalavras } from "@/lib/datas";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listRelatoriosPendentesPagina } from "@/modules/acompanhamento/services/relatorio-service";
 import { Avatar } from "@/shared/ui/avatar";
 import { cn } from "@/shared/ui/cn";
@@ -24,8 +23,7 @@ const VISOES = [
 ] as const;
 
 export default async function RelatoriosPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/relatorios");
   const consulta = lerConsulta(await searchParams);
   const visao = VISOES.find((item) => item.chave === consulta.visao) ?? VISOES[0];
   const { pagina, porPagina } = lerPaginacao(consulta);
@@ -34,7 +32,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Relatórios" description="Relatórios em análise ou com o período encerrado, por prazo de entrega. O envio e a análise acontecem na página de cada estágio (RF036-RF041)." />
+      <PageHeader title="Relatórios" description="Relatórios em análise ou com o período encerrado, por prazo de entrega. O envio e a análise acontecem na página de cada estágio." />
       <nav aria-label="Filtrar relatórios" className="flex flex-wrap gap-2">
         {VISOES.map((item) => {
           const quantidade = contagens[item.chave];

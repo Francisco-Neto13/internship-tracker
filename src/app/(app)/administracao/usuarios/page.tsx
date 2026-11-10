@@ -1,9 +1,8 @@
 import { KeyRound, UserPlus } from "lucide-react";
-import { redirect } from "next/navigation";
 import { comConsulta, lerConsulta, lerPaginacao, opcao, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarDataCurta } from "@/lib/datas";
 import { SITUACAO_USUARIO } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { catalogoPerfis } from "@/modules/acesso/domain/catalogo-perfis";
 import { ROTULO_PERFIL, type Perfil } from "@/modules/acesso/schemas/perfil";
@@ -27,8 +26,7 @@ const PERFIS = Object.keys(ROTULO_PERFIL) as Perfil[];
 const SITUACOES = ["ATIVO", "INATIVO"] as const;
 
 export default async function UsuariosPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/usuarios");
   const consulta = lerConsulta(await searchParams);
   const { pagina, porPagina } = lerPaginacao(consulta);
 
@@ -111,7 +109,7 @@ export default async function UsuariosPage({ searchParams }: { searchParams: Pro
           <Dialogo
             gatilho={{ rotulo: "Novo usuário", icone: <UserPlus className="size-4" aria-hidden /> }}
             titulo="Novo usuário"
-            descricao="A conta nasce com senha provisória de 72 horas, exibida uma única vez (RF001, RF002)."
+            descricao="A conta nasce com senha provisória de 72 horas, exibida uma única vez."
             largura="lg"
           >
             <UsuarioForm

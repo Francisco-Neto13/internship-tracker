@@ -86,11 +86,13 @@ describe("audit trail export (RF066)", () => {
 
     expect(csv.startsWith(BOM)).toBe(true);
     expect(linhas[0]).toBe(
-      `${BOM}"id";"ocorrido_em";"operacao";"tabela";"registro_id";"usuario_id";"autor_nome";"autor_email";"campos_alterados";"dados_anteriores";"dados_novos"`,
+      `${BOM}"Número";"Data e hora";"Operação";"Registro";"Referência do registro";"Referência do autor";"Autor";"E-mail do autor";"Campos alterados";"Antes";"Depois"`,
     );
+    expect(csv).toContain('"Estudante"');
+    expect(csv).toContain('"Alterado"');
     expect(linhas.filter(Boolean)).toHaveLength(3);
     expect(csv).toContain(`"${s.administrador.nome}"`);
-    // the formula sits inside the JSON of the row, so no cell starts with "="
+    // the formula sits inside the text of the row, so no cell starts with "="
     expect(linhas.some((linha) => linha.split(";").some((celula) => celula.startsWith('"=')))).toBe(false);
   });
 

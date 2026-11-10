@@ -53,6 +53,9 @@ describe("eventos (RF028, RF035, RF070)", () => {
     await registrarFrequencia(como(mundo.aluno), id, { data: "2026-08-03", duracaoMinutos: 360, observacao: null });
     expect(await tiposDe(mundo.orientador)).toContain("DIVERGENCIA_CARGA_HORARIA");
     expect(await tiposDe(mundo.supervisor)).not.toContain("DIVERGENCIA_CARGA_HORARIA");
+    const divergencia = (await listNotificacoes(como(mundo.orientador), { apenasNaoLidas: false, limite: 50 })).itens.find((item) => item.tipo === "DIVERGENCIA_CARGA_HORARIA")!;
+    expect(divergencia.mensagem).toMatch(/tolerância de \d+(,\d+)?%\./);
+    expect(divergencia.mensagem).not.toMatch(/\.0+%/);
 
     const [relatorio] = await listRelatorios(como(mundo.aluno), id);
     await enviarRelatorio(como(mundo.aluno), relatorio.id, { conteudo: "Texto reservado do relatório", documentoIds: [] });
