@@ -230,8 +230,24 @@ export const NAVEGACAO: NavItem[] = [
   },
 ];
 
+/** Telas sem item próprio no menu, ou que um perfil abre só por link. */
+const ROTAS_SEM_MENU: Pick<NavItem, "href" | "perfis">[] = [
+  // RF015, UC01: quem registra o TCE é a coordenação
+  { href: "/estagios/novo", perfis: ["COORDENACAO"] },
+  // estagio_leitura: o administrador chega pelo perfil do estudante e pelo curso, para consulta
+  { href: "/estagios", perfis: ["ESTUDANTE", "PROFESSOR_ORIENTADOR", "SUPERVISOR", "COORDENACAO", "CONCEDENTE", "ADMINISTRADOR"] },
+];
+
 function pertence(perfisDoItem: NavItem["perfis"], perfisDoUsuario: Set<Perfil>): boolean {
   return perfisDoItem === "todos" || perfisDoItem.some((perfil) => perfisDoUsuario.has(perfil));
+}
+
+const cobre = (item: Pick<NavItem, "href">, pathname: string) => pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+/** Se o perfil abre a tela (RF003). O href mais longo decide; rota fora do registro não é restrita. */
+export function podeAbrir(pathname: string, perfisDoUsuario: Perfil[]): boolean {
+  const [rota] = [...ROTAS_SEM_MENU, ...NAVEGACAO].filter((item) => cobre(item, pathname)).sort((a, b) => b.href.length - a.href.length);
+  return !rota || pertence(rota.perfis, new Set(perfisDoUsuario));
 }
 
 /** NAVEGACAO filtrada pelos perfis vigentes do usuário (RF003). */
@@ -251,5 +267,5 @@ export function gruposVisiveis(perfisDoUsuario: Perfil[]) {
  * estudante (/administracao/estudantes/{id}) continue sob "Estudantes", e não sob "Administração".
  */
 export function encontrarItem(pathname: string): NavItem | undefined {
-  return NAVEGACAO.filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`)).sort((a, b) => b.href.length - a.href.length)[0];
+  return NAVEGACAO.filter((item) => cobre(item, pathname)).sort((a, b) => b.href.length - a.href.length)[0];
 }

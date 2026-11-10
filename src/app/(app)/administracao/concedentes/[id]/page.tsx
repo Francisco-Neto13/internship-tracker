@@ -1,13 +1,13 @@
 import { BaixarDocumento } from "@/shared/ui/baixar-documento";
 import { LIMITE } from "@/lib/campos";
 import { Briefcase, FileSignature, Percent } from "lucide-react";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarDataCurta, formatarDataHora } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { formatarCnpj, SITUACAO_CONCEDENTE, SITUACAO_ESTAGIO } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { dataLocal } from "@/modules/academico/domain/parametros";
 import { getConcedente, listHistoricoSituacao } from "@/modules/concedentes/services/concedente-service";
 import { listConveniosDaConcedente } from "@/modules/concedentes/services/convenio-service";
@@ -26,8 +26,7 @@ import { NovoConvenio } from "./novo-convenio";
 // suspensões. Suspender pede motivo e diz o efeito.
 
 export default async function ConcedentePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/concedentes");
   const parsed = z.object({ id: z.uuid() }).safeParse(await params);
   if (!parsed.success) notFound();
   const { id } = parsed.data;

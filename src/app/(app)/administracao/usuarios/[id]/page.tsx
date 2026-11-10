@@ -1,11 +1,11 @@
 import { GraduationCap } from "lucide-react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarDataHora } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { SITUACAO_ACADEMICA, SITUACAO_USUARIO } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { listEstudantes } from "@/modules/academico/services/estudante-service";
 import { catalogoPerfis } from "@/modules/acesso/domain/catalogo-perfis";
@@ -24,8 +24,7 @@ import { DadosConta, PerfisConta, SegurancaConta } from "./usuario-acoes";
 // leva até ele: são registros distintos, com permissões distintas.
 
 export default async function UsuarioPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/usuarios");
   const parsed = idParamSchema.safeParse(await params);
   if (!parsed.success) notFound();
   const { id } = parsed.data;

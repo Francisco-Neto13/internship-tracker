@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { dataLocal } from "@/modules/academico/domain/parametros";
 import { listEstudantes } from "@/modules/academico/services/estudante-service";
 import { listConcedentes } from "@/modules/concedentes/services/concedente-service";
@@ -11,8 +10,7 @@ import { NovoEstagioForm } from "./novo-estagio-form";
 // RF015: o TCE nasce em edição, em página própria (são treze campos em quatro assuntos, que não
 // cabem bem num diálogo). Depois de criado, a formalização segue na página do estágio.
 export default async function NovoEstagioPage() {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/estagios/novo");
   const [{ items: estudantes }, { items: concedentes }] = await Promise.all([
     listEstudantes(identity, { page: 1, limit: 100, situacao: "MATRICULADO", ordem: "nome" }),
     listConcedentes(identity, { page: 1, limit: 100, situacao: "ATIVA" }),

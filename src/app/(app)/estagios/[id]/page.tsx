@@ -1,13 +1,13 @@
 import { LIMITE } from "@/lib/campos";
 import { FileDown } from "lucide-react";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
 import { diasEntre, formatarData, formatarDataCurta, hojeSaoPaulo } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { minutosParaHoras } from "@/lib/horas";
 import { SITUACAO_ESTAGIO, TIPO_ESTAGIO } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { getEstagioDetalhado } from "@/modules/estagios/services/estagio-service";
 import { Abas } from "@/shared/ui/abas";
 import { Avatar } from "@/shared/ui/avatar";
@@ -40,8 +40,7 @@ function destinoDeVolta(valor: string | undefined) {
 }
 
 export default async function EstagioPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/estagios");
   const parsed = z.object({ id: z.uuid() }).safeParse(await params);
   if (!parsed.success) notFound();
   const { id } = parsed.data;

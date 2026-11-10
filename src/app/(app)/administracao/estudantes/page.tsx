@@ -1,8 +1,7 @@
 import { Plus } from "lucide-react";
-import { redirect } from "next/navigation";
 import { comConsulta, lerConsulta, lerPaginacao, opcao, uuidOu, type SearchParamsBrutos } from "@/lib/consulta";
 import { SITUACAO_ACADEMICA } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { listEstudantes } from "@/modules/academico/services/estudante-service";
 import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
@@ -25,8 +24,7 @@ const SITUACOES = ["MATRICULADO", "TRANCADO", "FORMADO", "DESLIGADO"] as const;
 type Estudante = Awaited<ReturnType<typeof listEstudantes>>["items"][number];
 
 export default async function EstudantesPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/estudantes");
   const consulta = lerConsulta(await searchParams);
   const { pagina, porPagina } = lerPaginacao(consulta);
 

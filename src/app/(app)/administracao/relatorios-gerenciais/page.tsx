@@ -1,9 +1,8 @@
 import { TIPO_ESTAGIO } from "@/lib/rotulos";
 import { Download } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { TIPOS_RELATORIO, type TipoRelatorio } from "@/modules/administracao/domain/relatorios-gerenciais";
 import { relatorioQuerySchema } from "@/modules/administracao/schemas/relatorios-gerenciais";
@@ -47,8 +46,7 @@ const DESCRICAO: Record<TipoRelatorio, string> = {
 };
 
 export default async function RelatoriosGerenciaisPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/relatorios-gerenciais");
   const bruto = lerConsulta(await searchParams);
   const tipo: TipoRelatorio = (TIPOS_RELATORIO as readonly string[]).includes(bruto.tipo ?? "") ? (bruto.tipo as TipoRelatorio) : "estagiarios-ativos";
   const parsed = relatorioQuerySchema.safeParse(bruto);

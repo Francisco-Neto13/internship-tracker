@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { redirect } from "next/navigation";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { ROTULO_PERFIL, type Perfil } from "@/modules/acesso/schemas/perfil";
 import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
 import { itensVisiveis, type NavItem } from "@/shared/ui/navigation";
@@ -111,8 +110,7 @@ function Cartao({ item, alcance, consequencia }: { item: NavItem; alcance: strin
 }
 
 export default async function AdministracaoPage() {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao");
   const perfis = (await listPerfisVigentes(identity)).map((vinculo) => vinculo.perfil as Perfil);
   const visiveis = new Map(itensVisiveis(perfis).map((item) => [item.href, item]));
   const areas = AREAS.map((area) => ({ ...area, itens: area.hrefs.flatMap((entrada) => (visiveis.has(entrada.href) ? [{ ...entrada, item: visiveis.get(entrada.href)! }] : [])) })).filter(

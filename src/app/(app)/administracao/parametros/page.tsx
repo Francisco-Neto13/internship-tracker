@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
 import { formatarData } from "@/lib/datas";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { dataLocal } from "@/modules/academico/domain/parametros";
 import { getParametrosVigentes, listHistoricoParametros } from "@/modules/academico/services/parametro-service";
 import { FormularioApi } from "@/shared/ui/formulario-api";
@@ -15,8 +14,7 @@ import { StatusBadge } from "@/shared/ui/status-badge";
 const horas = (minutos: number) => `${(minutos / 60).toLocaleString("pt-BR")} h`;
 
 export default async function ParametrosPage() {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/parametros");
   const [vigente, historico] = await Promise.all([getParametrosVigentes(identity), listHistoricoParametros(identity)]);
 
   const grupos: { titulo: string; efeito: string; itens: [string, string][] }[] = [

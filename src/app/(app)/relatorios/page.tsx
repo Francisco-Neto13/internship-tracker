@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarData, hojeSaoPaulo, prazoEmPalavras } from "@/lib/datas";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listRelatoriosPendentesPagina } from "@/modules/acompanhamento/services/relatorio-service";
 import { Avatar } from "@/shared/ui/avatar";
 import { cn } from "@/shared/ui/cn";
@@ -24,8 +23,7 @@ const VISOES = [
 ] as const;
 
 export default async function RelatoriosPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/relatorios");
   const consulta = lerConsulta(await searchParams);
   const visao = VISOES.find((item) => item.chave === consulta.visao) ?? VISOES[0];
   const { pagina, porPagina } = lerPaginacao(consulta);

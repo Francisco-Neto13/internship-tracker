@@ -1,11 +1,11 @@
 import { LIMITE } from "@/lib/campos";
 import { Briefcase, GraduationCap } from "lucide-react";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import { DomainError } from "@/lib/errors";
 import { minutosParaHoras } from "@/lib/horas";
 import { TIPO_ESTAGIO } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { getExigenciasCurso, listCategorias } from "@/modules/academico/services/categoria-service";
 import { getCurso } from "@/modules/academico/services/curso-service";
 import { listEstudantes } from "@/modules/academico/services/estudante-service";
@@ -25,8 +25,7 @@ import { StatusBadge } from "@/shared/ui/status-badge";
 const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
 
 export default async function CursoPage({ params }: { params: Promise<{ id: string }> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/cursos");
   const parsed = z.object({ id: z.uuid() }).safeParse(await params);
   if (!parsed.success) notFound();
   const { id } = parsed.data;

@@ -12,7 +12,6 @@ test("coordination opens the Fase 2 screens and registers an agreement with its 
   await expect(page).toHaveURL(/\/dashboard$/);
 
   for (const [rota, titulo] of [
-    ["/administracao/parametros", "Parâmetros institucionais"],
     ["/administracao/convenios", "Convênios a vencer"],
     ["/estagios", "Estágios"],
     ["/administracao/cursos", "Cursos"],

@@ -1,11 +1,9 @@
 import { LIMITE } from "@/lib/campos";
 import { Download } from "lucide-react";
-import { redirect } from "next/navigation";
 import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarDataHora } from "@/lib/datas";
 import { descreverOperacao, OPERACAO_AUDITORIA, TABELA_AUDITORIA } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
-import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listAuditoriaQuerySchema, toFiltroAuditoria } from "@/modules/administracao/schemas/auditoria";
 import { listRegistros } from "@/modules/administracao/services/auditoria-service";
 import { Avatar } from "@/shared/ui/avatar";
@@ -98,27 +96,11 @@ const COLUNAS: DataTableColumn<Registro>[] = [
 ];
 
 export default async function AuditoriaPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/auditoria");
   const brutos = lerConsulta(await searchParams);
   const { pagina, porPagina } = lerPaginacao(brutos, 50);
   const consulta = listAuditoriaQuerySchema.safeParse({ ...brutos, page: pagina, limit: porPagina });
   const query = consulta.success ? consulta.data : listAuditoriaQuerySchema.parse({ page: pagina, limit: porPagina });
-  const perfis = await listPerfisVigentes(identity);
-  const ehAdministrador = perfis.some((vinculo) => vinculo.perfil === "ADMINISTRADOR");
-
-  if (!ehAdministrador) {
-    return (
-      <div className="flex flex-col gap-6">
-        <PageHeader title="Auditoria" description="Trilha de operações relevantes, somente leitura (RF065, RF066)." />
-        <EstadoVazio
-          variante="sem-permissao"
-          titulo="Restrito ao perfil Administrador"
-          descricao="A trilha de auditoria só fica visível para quem tem o perfil Administrador. Isto é a política de acesso funcionando, não um erro."
-        />
-      </div>
-    );
-  }
 
   const { items, total } = await listRegistros(identity, toFiltroAuditoria(query), { page: query.page, limit: query.limit });
   const { tabela, registro_id, usuario_id, operacao, de, ate } = query;

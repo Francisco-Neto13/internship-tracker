@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarData, hojeSaoPaulo, prazoEmPalavras } from "@/lib/datas";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listDocumentosEmGuarda } from "@/modules/administracao/services/guarda-service";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
 import { cn } from "@/shared/ui/cn";
@@ -32,8 +31,7 @@ const TIPO_DOCUMENTO: Record<string, string> = {
 const ESCOPO: Record<string, string> = { ESTAGIO: "Estágio", CONCEDENTE: "Concedente", ESTUDANTE: "Estudante" };
 
 export default async function GuardaDocumentalPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/guarda-documental");
   const consulta = lerConsulta(await searchParams);
   const hoje = hojeSaoPaulo();
   const proximos = consulta.visao === "proximos";

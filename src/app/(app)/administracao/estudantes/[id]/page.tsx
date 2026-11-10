@@ -1,14 +1,15 @@
 import { LIMITE } from "@/lib/campos";
 import { ExternalLink, KeyRound } from "lucide-react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import { formatarDataCurta } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { minutosParaHoras } from "@/lib/horas";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
 import { SITUACAO_ACADEMICA, SITUACAO_ATIVIDADE, SITUACAO_ESTAGIO, TIPO_ESTAGIO } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
+import type { Identity } from "@/lib/identity";
 import { getCargaHoraria } from "@/modules/acompanhamento/services/frequencia-service";
 import { TRANSICOES_SITUACAO_ACADEMICA } from "@/modules/academico/domain/situacao-academica";
 import { listCursos } from "@/modules/academico/services/curso-service";
@@ -51,8 +52,7 @@ async function semAlcance<T>(consulta: Promise<T>): Promise<T | null> {
 }
 
 export default async function EstudantePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/estudantes");
   const parsed = z.object({ id: z.uuid() }).safeParse(await params);
   if (!parsed.success) notFound();
   const { id } = parsed.data;
@@ -291,7 +291,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
   );
 }
 
-async function DadosAcademicos({ id, estudante, identity }: { id: string; estudante: Awaited<ReturnType<typeof getEstudante>>; identity: NonNullable<Awaited<ReturnType<typeof getIdentity>>> }) {
+async function DadosAcademicos({ id, estudante, identity }: { id: string; estudante: Awaited<ReturnType<typeof getEstudante>>; identity: Identity }) {
   const { items: cursos } = await listCursos(identity, { page: 1, limit: 100 });
   const situacoes = [estudante.situacaoAcademica, ...TRANSICOES_SITUACAO_ACADEMICA[estudante.situacaoAcademica]];
   return (
