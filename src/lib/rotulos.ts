@@ -44,6 +44,14 @@ export const SITUACAO_RELATORIO: Record<string, { rotulo: string; tom: StatusTon
   DEVOLVIDO: { rotulo: "Devolvido", tom: "pending" },
 };
 
+export const SITUACAO_FREQUENCIA: Record<string, { rotulo: string; tom: StatusTone }> = {
+  REGISTRADO: { rotulo: "Aguardando homologação", tom: "pending" },
+  SINALIZADO: { rotulo: "Acima do limite", tom: "danger" },
+  HOMOLOGADO: { rotulo: "Homologado", tom: "ok" },
+  SUBSTITUIDO: { rotulo: "Substituído", tom: "neutral" },
+  CANCELADO: { rotulo: "Cancelado", tom: "neutral" },
+};
+
 export const TIPO_DECLARACAO: Record<string, string> = { CONCLUSAO_ESTAGIO: "Conclusão de estágio", INTEGRALIZACAO_ATIVIDADES: "Integralização de atividades complementares" };
 
 const TODOS: Record<string, string> = Object.fromEntries(

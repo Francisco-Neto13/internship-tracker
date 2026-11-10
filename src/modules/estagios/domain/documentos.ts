@@ -143,6 +143,36 @@ export function documentoPlano(plano: Plano, id: IdentificacaoEstagio, orientado
   };
 }
 
+type Rescisao = { dataRescisao: string; solicitante: string; motivo: string; minutosCumpridosConsolidados: number; minutosHomologadosConsolidados: number; criadoEm: Date };
+
+/** RF063, RF064: the end of the internship before its term, with the hours consolidated up to it. */
+export function documentoRescisao(rescisao: Rescisao, id: IdentificacaoEstagio, decididoPor: string | null): DocumentoPdf {
+  return {
+    titulo: "Termo de Rescisão de Estágio",
+    subtitulo: `Lei 11.788/2008 · registrado em ${instante(rescisao.criadoEm)}`,
+    secoes: [
+      partes(id),
+      {
+        titulo: "Rescisão",
+        campos: [
+          ["Data da rescisão", data(rescisao.dataRescisao)],
+          ["Solicitada por", PARTE[rescisao.solicitante] ?? rescisao.solicitante],
+          ["Registrada por", decididoPor ?? "Não informado"],
+        ],
+        paragrafos: [rescisao.motivo],
+      },
+      {
+        titulo: "Horas consolidadas até a rescisão",
+        campos: [
+          ["Horas cumpridas", horas(rescisao.minutosCumpridosConsolidados)],
+          ["Horas homologadas", horas(rescisao.minutosHomologadosConsolidados)],
+        ],
+      },
+    ],
+    rodape: `Internship Tracker · termo de rescisão · ${matriculaDe(id)}`,
+  };
+}
+
 type Aditivo = {
   id: string;
   numero: number;

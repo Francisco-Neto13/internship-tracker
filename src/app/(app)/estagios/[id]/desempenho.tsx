@@ -3,6 +3,7 @@ import { formatarDataCurta, formatarDataHora } from "@/lib/datas";
 import type { Identity } from "@/lib/identity";
 import { listAvaliacoes, listCriterios } from "@/modules/acompanhamento/services/avaliacao-service";
 import type { AcoesNoEstagio } from "@/modules/estagios/domain/papeis";
+import { BaixarArquivo } from "@/shared/ui/baixar-arquivo";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { Indicador, Progresso } from "@/shared/ui/indicador";
 import { Painel } from "@/shared/ui/painel";
@@ -40,7 +41,12 @@ export async function DesempenhoEstagio({ identity, estagioId, ativo, acoes }: {
               key={avaliacao.id}
               titulo={avaliacao.momento === "FINAL" ? "Avaliação final" : `Periódica · ${formatarDataCurta(avaliacao.periodoInicio)} a ${formatarDataCurta(avaliacao.periodoFim)}`}
               descricao={`${avaliacao.avaliadorNome ?? "Avaliador"} · ${formatarDataHora(avaliacao.criadoEm)}`}
-              acoes={<StatusBadge tone="neutral">{avaliacao.media === null || avaliacao.media === undefined ? "Sem nota" : `Média ${nota(avaliacao.media)} / 10`}</StatusBadge>}
+              acoes={
+                <>
+                  <StatusBadge tone="neutral">{avaliacao.media === null || avaliacao.media === undefined ? "Sem nota" : `Média ${nota(avaliacao.media)} / 10`}</StatusBadge>
+                  <BaixarArquivo url={`/api/v1/estagios/${estagioId}/avaliacoes/${avaliacao.id}/pdf`} rotulo="Baixar PDF" tamanho="sm" />
+                </>
+              }
             >
               <div className="flex flex-col gap-4">
                 {avaliacao.respostas.map((resposta) => {

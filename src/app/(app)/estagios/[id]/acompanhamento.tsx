@@ -5,30 +5,23 @@ import { formatarData, formatarDataCurta } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { minutosParaHoras } from "@/lib/horas";
 import type { Identity } from "@/lib/identity";
-import { SITUACAO_RELATORIO } from "@/lib/rotulos";
+import { SITUACAO_FREQUENCIA, SITUACAO_RELATORIO } from "@/lib/rotulos";
 import { getCargaHoraria, listFrequencias } from "@/modules/acompanhamento/services/frequencia-service";
 import { listRelatorios } from "@/modules/acompanhamento/services/relatorio-service";
 import type { AcoesNoEstagio } from "@/modules/estagios/domain/papeis";
+import { BaixarArquivo } from "@/shared/ui/baixar-arquivo";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
 import { buttonVariants } from "@/shared/ui/button";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { FormularioApi } from "@/shared/ui/formulario-api";
 import { Progresso } from "@/shared/ui/indicador";
 import { Painel } from "@/shared/ui/painel";
-import { StatusBadge, type StatusTone } from "@/shared/ui/status-badge";
+import { StatusBadge } from "@/shared/ui/status-badge";
 
 // M05 de um estágio ativo (RF023 a RF043): carga horária, frequência, homologação, relatórios
 // e avaliações. Cada bloco mostra o que o perfil lê (RLS), e cada ação aparece só para quem a
 // faz (`acoes`, de papeis.ts): estudante lança e envia, supervisor homologa, orientador analisa
 // e registra o acompanhamento. A API continua decidindo cada escrita.
-
-const FREQUENCIA: Record<string, [string, StatusTone]> = {
-  REGISTRADO: ["Aguardando homologação", "pending"],
-  SINALIZADO: ["Acima do limite", "danger"],
-  HOMOLOGADO: ["Homologado", "ok"],
-  SUBSTITUIDO: ["Substituído", "neutral"],
-  CANCELADO: ["Cancelado", "neutral"],
-};
 
 const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
 
@@ -92,7 +85,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { id
       </Painel>
 
       <div className={acoesFrequencia ? "colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]" : "flex flex-col"}>
-        <Painel titulo="Frequência" descricao={`${lancamentos.length} lançamento(s); os 30 mais recentes`} flush>
+        <Painel titulo="Frequência" descricao={`${lancamentos.length} lançamento(s); os 30 mais recentes`} acoes={lancamentos.length > 0 && <BaixarArquivo url={`/api/v1/estagios/${estagioId}/frequencias/pdf`} rotulo="Folha (PDF)" tamanho="sm" />} flush>
           {lancamentos.length === 0 ? (
             <p className="px-5 py-6 text-sm text-navy-900/65" data-testid="frequencias">
               Nenhum lançamento ainda.
@@ -128,7 +121,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { id
                         {registro.horaEntrada ? `${registro.horaEntrada.slice(0, 5)} às ${registro.horaSaida?.slice(0, 5)}` : "Sem horário"}
                       </td>
                       <td className="px-4 py-2.5">
-                        <StatusBadge tone={FREQUENCIA[registro.situacao][1]}>{FREQUENCIA[registro.situacao][0]}</StatusBadge>
+                        <StatusBadge tone={SITUACAO_FREQUENCIA[registro.situacao].tom}>{SITUACAO_FREQUENCIA[registro.situacao].rotulo}</StatusBadge>
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         {acoes.cancelarFrequencia && (registro.situacao === "REGISTRADO" || registro.situacao === "SINALIZADO") && (

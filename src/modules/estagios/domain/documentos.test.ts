@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { documentoAditivo, documentoPlano, documentoTce } from "./documentos";
+import { documentoAditivo, documentoPlano, documentoRescisao, documentoTce } from "./documentos";
 
 // The documents people receive carry the names of the screens, never codes or internal ids.
 
@@ -22,6 +22,16 @@ describe("institutional documents (RF022)", () => {
     semCodigos(documento);
     expect(documento.subtitulo).toContain("em formalização");
     expect(JSON.stringify(documento)).toContain('["Contratante","Concedente"]');
+  });
+
+  it("the termination term states who asked and the hours, by name and in hours", () => {
+    const rescisao = { dataRescisao: "2026-09-10", solicitante: "CONCEDENTE", motivo: "Encerramento do projeto", minutosCumpridosConsolidados: 330, minutosHomologadosConsolidados: 300, criadoEm: new Date("2026-09-10T15:00:00Z") };
+    const documento = documentoRescisao(rescisao, id, "Coordenação");
+    semCodigos(documento);
+    const texto = JSON.stringify(documento);
+    expect(texto).toContain('["Solicitada por","Concedente"]');
+    expect(texto).toContain('["Horas cumpridas","5,5 h"]');
+    expect(texto).toContain("10/09/2026");
   });
 
   it("the plan and the amendment show their situation by name", () => {

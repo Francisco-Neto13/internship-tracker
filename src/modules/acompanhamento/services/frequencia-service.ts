@@ -2,7 +2,10 @@ import { sql } from "drizzle-orm";
 import { withUser, type Transaction } from "@/db/with-user";
 import { DomainError } from "@/lib/errors";
 import type { Identity } from "@/lib/identity";
+import { gerarPdfTabela } from "@/lib/pdf";
+import { getEstagioDetalhado } from "@/modules/estagios/services/estagio-service";
 import { avaliarDivergencia, diaAnterior, resumoCarga } from "../domain/carga";
+import { folhaFrequencia } from "../domain/documento-acompanhamento";
 import { avaliarJornada, duracaoDoHorario, semanaIso, type AvaliacaoJornada } from "../domain/jornada";
 import {
   abrirDivergencia,
@@ -147,6 +150,12 @@ export async function listFrequencias(identity: Identity, estagioId: string, fil
     await carregarEstagioAcompanhado(tx, estagioId);
     return findFrequencias(tx, estagioId, filtros);
   });
+}
+
+/** RF026: the attendance sheet as a PDF, for whoever follows the internship. */
+export async function pdfFrequencia(identity: Identity, estagioId: string): Promise<Uint8Array> {
+  const [lancamentos, carga, { identificacao, estagio }] = await Promise.all([listFrequencias(identity, estagioId, {}), getCargaHoraria(identity, estagioId), getEstagioDetalhado(identity, estagioId)]);
+  return gerarPdfTabela(folhaFrequencia(lancamentos, carga.resumo, identificacao, estagio));
 }
 
 /**

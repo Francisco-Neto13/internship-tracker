@@ -1,3 +1,4 @@
+import { BaixarArquivo } from "@/shared/ui/baixar-arquivo";
 import { BaixarDocumento } from "@/shared/ui/baixar-documento";
 import { LIMITE } from "@/lib/campos";
 import { formatarDataCurta } from "@/lib/datas";
@@ -33,7 +34,7 @@ export async function OcorrenciasEstagio({ identity, estagio, acoes }: { identit
   return (
     <div className="flex flex-col gap-4">
       {rescisao && (
-        <Painel titulo="Rescisão" descricao="Horas consolidadas até a data da rescisão (RF064).">
+        <Painel titulo="Rescisão" descricao="Horas consolidadas até a data da rescisão (RF064)." acoes={<BaixarArquivo url={`${api}/rescisao/pdf`} rotulo="Termo (PDF)" tamanho="sm" />}>
           <div data-testid="rescisao-registrada">
             <ListaDefinicao
               colunas={3}
