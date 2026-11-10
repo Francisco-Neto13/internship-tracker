@@ -1,5 +1,6 @@
 import { LIMITE } from "@/lib/campos";
 import { AlertTriangle } from "lucide-react";
+import Link from "next/link";
 import { formatarData, formatarDataCurta } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { minutosParaHoras } from "@/lib/horas";
@@ -10,6 +11,7 @@ import { getCargaHoraria, listFrequencias } from "@/modules/acompanhamento/servi
 import { listRelatorios } from "@/modules/acompanhamento/services/relatorio-service";
 import type { AcoesNoEstagio } from "@/modules/estagios/domain/papeis";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
+import { buttonVariants } from "@/shared/ui/button";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { FormularioApi } from "@/shared/ui/formulario-api";
 import { Progresso } from "@/shared/ui/indicador";
@@ -204,6 +206,11 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
                   <span className="flex flex-wrap items-center gap-2">
                     <StatusBadge tone={SITUACAO_RELATORIO[relatorio.situacao].tom}>{SITUACAO_RELATORIO[relatorio.situacao].rotulo}</StatusBadge>
                     {relatorio.emAtraso && <StatusBadge tone="danger">Em atraso</StatusBadge>}
+                    {relatorio.situacao !== "PENDENTE" && (
+                      <Link href={`/estagios/${estagioId}/relatorios/${relatorio.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                        Ler relatório
+                      </Link>
+                    )}
                     {acoes.decidirRelatorio && relatorio.situacao === "EM_ANALISE" && (
                       <>
                         <BotaoAcao url={`/api/v1/relatorios/${relatorio.id}/aprovacao`} rotulo="Aprovar" confirmacao={{ titulo: "Aprovar o relatório?", descricao: "A aprovação é definitiva: o relatório não volta para análise e passa a contar para a conclusão do estágio.", confirmar: "Aprovar" }} variante="default" tamanho="sm" sucesso="Relatório aprovado" />
