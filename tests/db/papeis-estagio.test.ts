@@ -22,12 +22,13 @@ describe("ações de cada pessoa no estágio", () => {
     const mundo = await createMundoEstagio();
     const id = await estagioAtivo(mundo);
 
-    expect(await acoesDe(mundo.aluno, id)).toEqual(["cancelarFrequencia", "elaborarPlano", "emitirDeclaracao", "enviarRelatorio", "lancarFrequencia"]);
-    expect(await acoesDe(mundo.orientador, id)).toEqual(["decidirPlano", "decidirRelatorio", "elaborarPlano", "registrarAcompanhamento"]);
-    expect(await acoesDe(mundo.supervisor, id)).toEqual(["homologarFrequencia"]);
-    expect(await acoesDe(mundo.representante, id)).toEqual(["registrarApolice"]);
+    expect(await acoesDe(mundo.aluno, id)).toEqual(["acompanha", "cancelarFrequencia", "elaborarPlano", "emitirDeclaracao", "enviarRelatorio", "lancarFrequencia"]);
+    expect(await acoesDe(mundo.orientador, id)).toEqual(["acompanha", "decidirPlano", "decidirRelatorio", "elaborarPlano", "registrarAcompanhamento"]);
+    expect(await acoesDe(mundo.supervisor, id)).toEqual(["acompanha", "homologarFrequencia"]);
+    expect(await acoesDe(mundo.representante, id)).toEqual(["acompanha", "registrarApolice"]);
     expect(await acoesDe(mundo.coordenador, id)).toEqual(
       [
+        "acompanha",
         "ativar",
         "cancelarFrequencia",
         "concluir",
