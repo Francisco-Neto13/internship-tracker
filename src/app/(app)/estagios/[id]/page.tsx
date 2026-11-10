@@ -1,22 +1,23 @@
 import { LIMITE } from "@/lib/campos";
-import { FileDown } from "lucide-react";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
 import { diasEntre, formatarData, formatarDataCurta, hojeSaoPaulo } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { minutosParaHoras } from "@/lib/horas";
 import { SITUACAO_ESTAGIO, TIPO_ESTAGIO } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { getEstagioDetalhado } from "@/modules/estagios/services/estagio-service";
 import { Abas } from "@/shared/ui/abas";
 import { Avatar } from "@/shared/ui/avatar";
+import { BaixarArquivo } from "@/shared/ui/baixar-arquivo";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
 import { FormularioApi } from "@/shared/ui/formulario-api";
 import { ListaDefinicao, Painel } from "@/shared/ui/painel";
 import { PageHeader } from "@/shared/ui/page-header";
 import { StatusBadge } from "@/shared/ui/status-badge";
 import { AcompanhamentoEstagio } from "./acompanhamento";
+import { DesempenhoEstagio } from "./desempenho";
 import { FormalizacaoEstagio, TrilhaFormalizacao } from "./formalizacao";
 import { OcorrenciasEstagio } from "./ocorrencias";
 
@@ -25,10 +26,11 @@ import { OcorrenciasEstagio } from "./ocorrencias";
 // o estágio, resumo depois do encerramento. Cada pessoa vê só as ações que lhe cabem neste estágio
 // (`acoes`, de papeis.ts); toda ação vai à API, que decide por perfil e vínculo.
 
-const ABAS = ["resumo", "formalizacao", "acompanhamento", "ocorrencias"] as const;
+const ABAS = ["resumo", "formalizacao", "acompanhamento", "desempenho", "ocorrencias"] as const;
 const reais = (valor: string | null) => (valor === null ? "Não se aplica" : Number(valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
 const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
 const TIPO_ADITIVO: Record<string, string> = { PRORROGACAO: "Prorrogação", ALTERACAO_CARGA_HORARIA: "Alteração de carga horária", SUBSTITUICAO_SUPERVISOR: "Substituição de supervisor" };
+const PARTE: Record<string, string> = { ESTUDANTE: "Estudante", INSTITUICAO: "Instituição", CONCEDENTE: "Concedente" };
 const SITUACAO_ADITIVO: Record<string, { rotulo: string; tom: "ok" | "pending" | "neutral" }> = {
   AGUARDANDO_ASSINATURAS: { rotulo: "Aguardando assinaturas", tom: "pending" },
   VIGENTE: { rotulo: "Vigente", tom: "ok" },
@@ -40,8 +42,7 @@ function destinoDeVolta(valor: string | undefined) {
 }
 
 export default async function EstagioPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/estagios");
   const parsed = z.object({ id: z.uuid() }).safeParse(await params);
   if (!parsed.success) notFound();
   const { id } = parsed.data;
@@ -52,15 +53,17 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
     throw error;
   });
   const { estagio, identificacao, aditivos, acoes } = detalhe;
-  const padrao = estagio.situacao === "EM_FORMALIZACAO" ? "formalizacao" : estagio.situacao === "ATIVO" ? "acompanhamento" : "resumo";
-  const aba = (ABAS as readonly string[]).includes(consulta.aba ?? "") ? consulta.aba! : padrao;
+  // O administrador lê o estágio para consulta, mas frequência, relatórios e afastamentos não são dele (RN-37)
+  const abasDoPerfil: readonly string[] = acoes.acompanha ? ABAS : ["resumo", "formalizacao"];
+  const doCiclo = estagio.situacao === "EM_FORMALIZACAO" ? "formalizacao" : estagio.situacao === "ATIVO" ? "acompanhamento" : "resumo";
+  const padrao = abasDoPerfil.includes(doCiclo) ? doCiclo : "resumo";
+  const aba = abasDoPerfil.includes(consulta.aba ?? "") ? consulta.aba! : padrao;
   const situacao = SITUACAO_ESTAGIO[estagio.situacao];
   const api = `/api/v1/estagios/${id}`;
   const hoje = hojeSaoPaulo();
   const restantes = diasEntre(hoje, estagio.dataFimPrevista);
-  const ordem = ["resumo", "formalizacao", "acompanhamento", "ocorrencias"].sort((a, b) => (a === padrao ? -1 : b === padrao ? 1 : 0));
-  const rotulos: Record<string, string> = { resumo: "Resumo", formalizacao: "Formalização", acompanhamento: "Acompanhamento", ocorrencias: "Ocorrências" };
-  const linkDocumento = "inline-flex items-center gap-1.5 rounded-md border border-navy-900/15 bg-white px-3 h-9 text-sm text-navy-900 hover:bg-nevoa-100 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none";
+  const ordem = [...abasDoPerfil].sort((a, b) => (a === padrao ? -1 : b === padrao ? 1 : 0));
+  const rotulos: Record<string, string> = { resumo: "Resumo", formalizacao: "Formalização", acompanhamento: "Acompanhamento", desempenho: "Desempenho", ocorrencias: "Ocorrências" };
 
   return (
     <div className="flex flex-col gap-6">
@@ -90,14 +93,8 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
         }
         acoes={
           <div className="flex flex-wrap gap-2" data-testid="documentos-estagio">
-            <a className={linkDocumento} href={`${api}/tce/pdf`}>
-              <FileDown className="size-4" aria-hidden />
-              TCE (PDF)
-            </a>
-            <a className={linkDocumento} href={`${api}/plano-atividades/pdf`}>
-              <FileDown className="size-4" aria-hidden />
-              Plano (PDF)
-            </a>
+            <BaixarArquivo url={`${api}/tce/pdf`} rotulo="TCE (PDF)" tamanho="sm" />
+            {detalhe.planos.length > 0 && <BaixarArquivo url={`${api}/plano-atividades/pdf`} rotulo="Plano (PDF)" tamanho="sm" />}
           </div>
         }
       />
@@ -133,7 +130,7 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
               ]}
             />
           </Painel>
-          <Painel titulo="Aditivos" descricao="Mudanças no TCE depois da ativação, com as três assinaturas (RF020)." flush>
+          <Painel titulo="Aditivos" descricao="Mudanças no TCE depois da ativação, com as três assinaturas." flush>
             <ul className="divide-y divide-navy-900/[0.07]">
               {aditivos.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhum aditivo.</li>}
               {aditivos.map((aditivo) => (
@@ -145,12 +142,10 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
                     <StatusBadge tone={SITUACAO_ADITIVO[aditivo.situacao]?.tom ?? "neutral"}>{SITUACAO_ADITIVO[aditivo.situacao]?.rotulo ?? aditivo.situacao}</StatusBadge>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <a className="text-xs font-medium text-azul-500 hover:text-navy-700" href={`/api/v1/aditivos/${aditivo.id}/pdf`}>
-                      Baixar PDF
-                    </a>
+                    <BaixarArquivo url={`/api/v1/aditivos/${aditivo.id}/pdf`} rotulo="Baixar PDF" tamanho="sm" />
                     {aditivo.situacao === "AGUARDANDO_ASSINATURAS" &&
                       acoes.partesQueAssina.map((parte) => (
-                        <BotaoAcao key={parte} url={`/api/v1/aditivos/${aditivo.id}/assinaturas`} confirmacao={{ titulo: "Assinar o aditivo?", descricao: "Sua identificação, a data, a hora e o hash deste aditivo ficam registrados.", confirmar: "Assinar" }} rotulo={`Assinar (${parte.toLowerCase()})`} corpo={{ parte }} tamanho="sm" />
+                        <BotaoAcao key={parte} url={`/api/v1/aditivos/${aditivo.id}/assinaturas`} confirmacao={{ titulo: "Assinar o aditivo?", descricao: "Sua identificação, a data, a hora e o hash deste aditivo ficam registrados.", confirmar: "Assinar" }} rotulo={`Assinar como ${PARTE[parte]}`} corpo={{ parte }} tamanho="sm" />
                       ))}
                   </div>
                 </li>
@@ -188,6 +183,14 @@ confirmacao={{ titulo: "Propor a prorrogação?", descricao: "O aditivo fica reg
           </Painel>
         ) : (
           <AcompanhamentoEstagio identity={identity} estagioId={id} acoes={acoes} />
+        ))}
+      {aba === "desempenho" &&
+        (estagio.situacao === "EM_FORMALIZACAO" ? (
+          <Painel titulo="Desempenho">
+            <p className="text-sm text-navy-900/65">As avaliações de desempenho começam depois da ativação do estágio.</p>
+          </Painel>
+        ) : (
+          <DesempenhoEstagio identity={identity} estagioId={id} ativo={estagio.situacao === "ATIVO"} acoes={acoes} />
         ))}
       {aba === "ocorrencias" &&
         (estagio.situacao === "EM_FORMALIZACAO" ? (

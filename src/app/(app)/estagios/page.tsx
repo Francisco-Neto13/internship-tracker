@@ -1,10 +1,9 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { comConsulta, lerConsulta, lerPaginacao, opcao, uuidOu, type SearchParamsBrutos } from "@/lib/consulta";
 import { diasEntre, formatarDataCurta, hojeSaoPaulo } from "@/lib/datas";
 import { identificarEstagio, SITUACAO_ESTAGIO, TIPO_ESTAGIO } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listCursos } from "@/modules/academico/services/curso-service";
 import { listPerfisVigentes } from "@/modules/acesso/services/perfil-service";
 import { listEstagios } from "@/modules/estagios/services/estagio-service";
@@ -45,8 +44,7 @@ function Andamento({ estagio, hoje }: { estagio: Estagio; hoje: string }) {
 }
 
 export default async function EstagiosPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/estagios");
   const consulta = lerConsulta(await searchParams);
   const { pagina, porPagina } = lerPaginacao(consulta);
   const perfis = (await listPerfisVigentes(identity)).map((vinculo) => vinculo.perfil);

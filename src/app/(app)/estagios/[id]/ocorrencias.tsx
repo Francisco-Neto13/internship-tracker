@@ -1,3 +1,4 @@
+import { BaixarArquivo } from "@/shared/ui/baixar-arquivo";
 import { BaixarDocumento } from "@/shared/ui/baixar-documento";
 import { LIMITE } from "@/lib/campos";
 import { formatarDataCurta } from "@/lib/datas";
@@ -33,7 +34,7 @@ export async function OcorrenciasEstagio({ identity, estagio, acoes }: { identit
   return (
     <div className="flex flex-col gap-4">
       {rescisao && (
-        <Painel titulo="Rescisão" descricao="Horas consolidadas até a data da rescisão (RF064).">
+        <Painel titulo="Rescisão" descricao="Horas consolidadas até a data da rescisão." acoes={<BaixarArquivo url={`${api}/rescisao/pdf`} rotulo="Termo (PDF)" tamanho="sm" />}>
           <div data-testid="rescisao-registrada">
             <ListaDefinicao
               colunas={3}
@@ -50,7 +51,7 @@ export async function OcorrenciasEstagio({ identity, estagio, acoes }: { identit
       )}
 
       {estagio.situacao === "CONCLUIDO" && acoes.emitirDeclaracao && (
-        <Painel titulo="Declaração de conclusão" descricao="PDF com código de verificação, guardado como documento do estágio (RF058).">
+        <Painel titulo="Declaração de conclusão" descricao="PDF com código de verificação, guardado como documento do estágio.">
           <BotaoAcao
             url={`/api/v1/estudantes/${estagio.estudanteId}/declaracoes`}
             rotulo="Emitir declaração de conclusão"
@@ -63,7 +64,7 @@ export async function OcorrenciasEstagio({ identity, estagio, acoes }: { identit
       )}
 
       {estagio.situacao !== "EM_FORMALIZACAO" && (
-        <Painel titulo="Afastamentos" descricao="Estendem o término previsto pelos mesmos dias corridos, até o teto de 2 anos na concedente (RF060)." flush>
+        <Painel titulo="Afastamentos" descricao="Estendem o término previsto pelos mesmos dias corridos, até o teto de 2 anos na concedente." flush>
           <ul className="divide-y divide-navy-900/[0.07]" data-testid="afastamentos">
             {afastamentos.length > 0
               ? afastamentos.map((item) => (
@@ -105,7 +106,7 @@ export async function OcorrenciasEstagio({ identity, estagio, acoes }: { identit
       {estagio.situacao === "ATIVO" && (acoes.concluir || acoes.rescindir) && (
         <div className={acoes.concluir && acoes.rescindir ? "colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-2" : "flex flex-col gap-4"}>
           {acoes.concluir && (
-          <Painel titulo="Concluir estágio" descricao="Exige avaliação final e, se obrigatório, carga mínima homologada e relatório final aprovado; nenhum lançamento pendente (RF045).">
+          <Painel titulo="Concluir estágio" descricao="Exige avaliação final e, se obrigatório, carga mínima homologada e relatório final aprovado; nenhum lançamento pendente.">
             <BotaoAcao
               url={`${api}/conclusao`}
               rotulo="Concluir estágio"
@@ -120,7 +121,7 @@ export async function OcorrenciasEstagio({ identity, estagio, acoes }: { identit
           </Painel>
           )}
           {acoes.rescindir && (
-          <Painel titulo="Rescindir estágio" descricao="Encerramento antecipado a pedido de uma das partes; as horas até a data são consolidadas (RF063, RF064).">
+          <Painel titulo="Rescindir estágio" descricao="Encerramento antecipado a pedido de uma das partes; as horas até a data são consolidadas.">
             <FormularioApi
               validacao="rescisao"
                   url={`${api}/rescisao`}

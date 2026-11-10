@@ -1,7 +1,10 @@
 import { withUser } from "@/db/with-user";
 import { DomainError } from "@/lib/errors";
 import type { Identity } from "@/lib/identity";
+import { gerarPdfDocumento } from "@/lib/pdf";
+import { getEstagioDetalhado } from "@/modules/estagios/services/estagio-service";
 import { conferirRespostas } from "../domain/avaliacao";
+import { documentoAvaliacao } from "../domain/documento-acompanhamento";
 import {
   findAcompanhamentoById,
   findAcompanhamentos,
@@ -39,7 +42,7 @@ const traduzir = tradutorDeErros(
   {
     avaliacao_uma_final: { codigo: "AVALIACAO_FINAL_EXISTENTE", mensagem: "O estágio já tem avaliação final.", requisito: "RF043" },
     resposta_avaliacao_criterio_unique: { codigo: "CRITERIO_REPETIDO", mensagem: "Cada critério recebe uma nota.", requisito: "RF042" },
-    criterio_avaliacao_codigo_unique: { codigo: "CODIGO_DUPLICADO", mensagem: "Já existe critério com este código.", requisito: "RF042" },
+    criterio_avaliacao_codigo_unique: { codigo: "CODIGO_DUPLICADO", mensagem: "Já existe um critério com esta descrição.", requisito: "RF042" },
   },
 );
 
@@ -160,6 +163,14 @@ export async function registrarAvaliacao(
   } catch (error) {
     throw traduzir(error, "avaliar o estágio");
   }
+}
+
+/** RF042, RF043: an evaluation as a PDF, for whoever reads the internship. */
+export async function pdfAvaliacao(identity: Identity, estagioId: string, avaliacaoId: string): Promise<Uint8Array> {
+  const [avaliacoes, criterios, { identificacao }] = await Promise.all([listAvaliacoes(identity, estagioId), listCriterios(identity, false), getEstagioDetalhado(identity, estagioId)]);
+  const avaliacao = avaliacoes.find((item) => item.id === avaliacaoId);
+  if (!avaliacao) throw new DomainError({ code: "AVALIACAO_NAO_ENCONTRADA", kind: "NOT_FOUND", message: "Avaliação não encontrada.", requisito: "RF042" });
+  return gerarPdfDocumento(documentoAvaliacao(avaliacao, criterios, identificacao));
 }
 
 /** RF014: average of the final evaluations of the concedente's internships, 0 to 10. */

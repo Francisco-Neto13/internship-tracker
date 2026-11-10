@@ -25,6 +25,8 @@ export function acoesNoEstagio(papeis: PapeisNoEstagio) {
   // app.pode_assinar (RF019): each party signs for itself
   const assina: Record<ParteAssinatura, boolean> = { ESTUDANTE: estudante, INSTITUICAO: coordenacao, CONCEDENTE: concedente };
   return {
+    // app.pode_ler_estagio: the administrator reads the internship for reports, not its follow-up (RN-37)
+    acompanha: estudante || orientador || supervisor || coordenacao || concedente,
     // estagio_atualizacao_*: the student edits the open TCE but cannot close, reopen or activate it (RF015, D9)
     fecharTce: coordenacao,
     reabrirTce: coordenacao,
@@ -48,6 +50,8 @@ export function acoesNoEstagio(papeis: PapeisNoEstagio) {
     decidirRelatorio: orientador,
     // ACOMPANHAMENTO_RESTRITO_AO_ORIENTADOR (RF033)
     registrarAcompanhamento: orientador,
+    // avaliacao_insercao (RF042)
+    avaliar: supervisor || concedente,
     // AFASTAMENTO_RESTRITO (RF059), estagio_atualizacao_coordenacao (RF045), RESCISAO_RESTRITA (RF063)
     registrarAfastamento: coordenacao,
     concluir: coordenacao,

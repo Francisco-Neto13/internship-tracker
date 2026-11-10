@@ -5,7 +5,7 @@ import { withUser } from "@/db/with-user";
 import { PERIODICIDADE_PADRAO } from "@/modules/academico/domain/periodicidade";
 import { definirPeriodicidades, getPeriodicidades } from "@/modules/academico/services/periodicidade-service";
 import type { VisaoRelatorio } from "@/modules/acompanhamento/domain/relatorio";
-import { decidirRelatorio, enviarRelatorio, getRelatorio, listRelatorios, listRelatoriosPendentes, listRelatoriosPendentesPagina } from "@/modules/acompanhamento/services/relatorio-service";
+import { decidirRelatorio, enviarRelatorio, getRelatorio, listRelatorios, listRelatoriosPendentes, listRelatoriosPendentesPagina, pdfRelatorio } from "@/modules/acompanhamento/services/relatorio-service";
 import { assinarAditivo, criarAditivo } from "@/modules/estagios/services/aditivo-service";
 import { closeOwnerDatabase, createDocumentoDoEstagio, createMundoEstagio, createUsuario, grantPerfil, owner } from "./fixtures";
 import { como, estagioAtivo, type Mundo } from "./estagio-helpers";
@@ -153,6 +153,23 @@ describe("envio e análise (RF037, RF038, RF039)", () => {
     }
     const outro = await createMundoEstagio();
     await expect(decidirRelatorio(como(outro.orientador), relatorio.id, "APROVADO", null)).rejects.toMatchObject({ code: "RELATORIO_NAO_ENCONTRADO" });
+  });
+
+  it("renders the report as a PDF for whoever reads it, and has no document before it is sent", async () => {
+    const mundo = await createMundoEstagio();
+    const id = await estagioAtivo(mundo);
+    const relatorio = await primeiroPeriodico(mundo, id);
+    await expect(pdfRelatorio(como(mundo.aluno), relatorio.id)).rejects.toMatchObject({ code: "RELATORIO_NAO_ENVIADO" });
+
+    await enviarRelatorio(como(mundo.aluno), relatorio.id, { conteudo: "Atividades do semestre", documentoIds: [] });
+    for (const pessoa of [mundo.aluno, mundo.orientador, mundo.coordenador]) {
+      const pdf = await pdfRelatorio(como(pessoa), relatorio.id);
+      expect(Buffer.from(pdf.slice(0, 5)).toString()).toBe("%PDF-");
+    }
+    // DER §4.5: supervisor and concedente do not read reports
+    for (const pessoa of [mundo.supervisor, mundo.representante]) {
+      await expect(pdfRelatorio(como(pessoa), relatorio.id)).rejects.toMatchObject({ code: "RELATORIO_NAO_ENCONTRADO" });
+    }
   });
 });
 

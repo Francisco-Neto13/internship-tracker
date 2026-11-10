@@ -1,33 +1,27 @@
 import { LIMITE } from "@/lib/campos";
 import { AlertTriangle } from "lucide-react";
+import Link from "next/link";
 import { formatarData, formatarDataCurta } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { minutosParaHoras } from "@/lib/horas";
 import type { Identity } from "@/lib/identity";
-import { SITUACAO_RELATORIO } from "@/lib/rotulos";
-import { listAvaliacoes } from "@/modules/acompanhamento/services/avaliacao-service";
+import { SITUACAO_FREQUENCIA, SITUACAO_RELATORIO } from "@/lib/rotulos";
 import { getCargaHoraria, listFrequencias } from "@/modules/acompanhamento/services/frequencia-service";
 import { listRelatorios } from "@/modules/acompanhamento/services/relatorio-service";
 import type { AcoesNoEstagio } from "@/modules/estagios/domain/papeis";
+import { BaixarArquivo } from "@/shared/ui/baixar-arquivo";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
+import { buttonVariants } from "@/shared/ui/button";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { FormularioApi } from "@/shared/ui/formulario-api";
 import { Progresso } from "@/shared/ui/indicador";
 import { Painel } from "@/shared/ui/painel";
-import { StatusBadge, type StatusTone } from "@/shared/ui/status-badge";
+import { StatusBadge } from "@/shared/ui/status-badge";
 
 // M05 de um estágio ativo (RF023 a RF043): carga horária, frequência, homologação, relatórios
 // e avaliações. Cada bloco mostra o que o perfil lê (RLS), e cada ação aparece só para quem a
 // faz (`acoes`, de papeis.ts): estudante lança e envia, supervisor homologa, orientador analisa
 // e registra o acompanhamento. A API continua decidindo cada escrita.
-
-const FREQUENCIA: Record<string, [string, StatusTone]> = {
-  REGISTRADO: ["Aguardando homologação", "pending"],
-  SINALIZADO: ["Acima do limite", "danger"],
-  HOMOLOGADO: ["Homologado", "ok"],
-  SUBSTITUIDO: ["Substituído", "neutral"],
-  CANCELADO: ["Cancelado", "neutral"],
-};
 
 const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
 
@@ -42,14 +36,13 @@ async function seVisivel<T>(leitura: Promise<T>): Promise<T | null> {
 }
 
 export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { identity: Identity; estagioId: string; acoes: AcoesNoEstagio }) {
-  const [carga, frequencias, relatorios, avaliacoes] = await Promise.all([
+  const [carga, frequencias, relatorios] = await Promise.all([
     seVisivel(getCargaHoraria(identity, estagioId)),
     seVisivel(listFrequencias(identity, estagioId, {})),
     seVisivel(listRelatorios(identity, estagioId)),
-    seVisivel(listAvaliacoes(identity, estagioId)),
   ]);
   if (!carga) {
-    return <EstadoVazio variante="sem-permissao" titulo="Acompanhamento fora do seu alcance" descricao="Frequência, relatórios e avaliações são lidos por quem participa do estágio." />;
+    return <EstadoVazio variante="sem-permissao" titulo="Acompanhamento fora do seu alcance" descricao="Frequência e relatórios são lidos por quem participa do estágio." />;
   }
   const { resumo, divergencia } = carga;
   const lancamentos = frequencias ?? [];
@@ -57,7 +50,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { id
 
   return (
     <div className="flex flex-col gap-4">
-      <Painel titulo="Carga horária" descricao="Só a carga homologada pelo supervisor conta (RF026).">
+      <Painel titulo="Carga horária" descricao="Só a carga homologada pelo supervisor conta.">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]" data-testid="carga-horaria">
           <div className="flex flex-col gap-4">
             <Progresso
@@ -92,7 +85,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { id
       </Painel>
 
       <div className={acoesFrequencia ? "colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]" : "flex flex-col"}>
-        <Painel titulo="Frequência" descricao={`${lancamentos.length} lançamento(s); os 30 mais recentes`} flush>
+        <Painel titulo="Frequência" descricao={`${lancamentos.length} lançamento(s); os 30 mais recentes`} acoes={lancamentos.length > 0 && <BaixarArquivo url={`/api/v1/estagios/${estagioId}/frequencias/pdf`} rotulo="Folha (PDF)" tamanho="sm" />} flush>
           {lancamentos.length === 0 ? (
             <p className="px-5 py-6 text-sm text-navy-900/65" data-testid="frequencias">
               Nenhum lançamento ainda.
@@ -128,7 +121,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { id
                         {registro.horaEntrada ? `${registro.horaEntrada.slice(0, 5)} às ${registro.horaSaida?.slice(0, 5)}` : "Sem horário"}
                       </td>
                       <td className="px-4 py-2.5">
-                        <StatusBadge tone={FREQUENCIA[registro.situacao][1]}>{FREQUENCIA[registro.situacao][0]}</StatusBadge>
+                        <StatusBadge tone={SITUACAO_FREQUENCIA[registro.situacao].tom}>{SITUACAO_FREQUENCIA[registro.situacao].rotulo}</StatusBadge>
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         {acoes.cancelarFrequencia && (registro.situacao === "REGISTRADO" || registro.situacao === "SINALIZADO") && (
@@ -151,7 +144,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { id
         {acoesFrequencia && (
         <div className="flex flex-col gap-4">
           {acoes.lancarFrequencia && (
-          <Painel titulo="Registrar dia" descricao="Um lançamento por dia, até o limite diário e semanal (RF023, RF024).">
+          <Painel titulo="Registrar dia" descricao="Um lançamento por dia, até o limite diário e semanal.">
             <FormularioApi
               validacao="frequencia"
                   url={`/api/v1/estagios/${estagioId}/frequencias`}
@@ -168,7 +161,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { id
           </Painel>
           )}
           {acoes.homologarFrequencia && (
-          <Painel titulo="Homologar período" descricao="Confirme os dias lançados no período (RF027).">
+          <Painel titulo="Homologar período" descricao="Confirme os dias lançados no período.">
             <FormularioApi
               validacao="homologacao"
                   url={`/api/v1/estagios/${estagioId}/frequencias/homologacao`}
@@ -189,7 +182,7 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
       </div>
 
       {relatorios && (
-        <Painel titulo="Relatórios" descricao="Periódicos e final, gerados na ativação; o atraso é calculado pelo prazo (RF036-RF041)." flush>
+        <Painel titulo="Relatórios" descricao="Periódicos e final, gerados na ativação; o atraso é calculado pelo prazo." flush>
           <ul className="divide-y divide-navy-900/[0.07]" data-testid="relatorios">
             {relatorios.map((relatorio) => (
               <li key={relatorio.id} className="flex flex-col gap-3 px-5 py-4">
@@ -204,6 +197,11 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
                   <span className="flex flex-wrap items-center gap-2">
                     <StatusBadge tone={SITUACAO_RELATORIO[relatorio.situacao].tom}>{SITUACAO_RELATORIO[relatorio.situacao].rotulo}</StatusBadge>
                     {relatorio.emAtraso && <StatusBadge tone="danger">Em atraso</StatusBadge>}
+                    {relatorio.situacao !== "PENDENTE" && (
+                      <Link href={`/estagios/${estagioId}/relatorios/${relatorio.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                        Ler relatório
+                      </Link>
+                    )}
                     {acoes.decidirRelatorio && relatorio.situacao === "EM_ANALISE" && (
                       <>
                         <BotaoAcao url={`/api/v1/relatorios/${relatorio.id}/aprovacao`} rotulo="Aprovar" confirmacao={{ titulo: "Aprovar o relatório?", descricao: "A aprovação é definitiva: o relatório não volta para análise e passa a contar para a conclusão do estágio.", confirmar: "Aprovar" }} variante="default" tamanho="sm" sucesso="Relatório aprovado" />
@@ -234,30 +232,9 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
         </Painel>
       )}
 
-      <div className={avaliacoes && acoes.registrarAcompanhamento ? "colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-2" : "flex flex-col"}>
-        {avaliacoes && (
-          <Painel titulo="Avaliações de desempenho" descricao="Pela concedente, por critério (RF042, RF043)." flush>
-            <ul className="divide-y divide-navy-900/[0.07]" data-testid="avaliacoes">
-              {avaliacoes.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhuma avaliação registrada.</li>}
-              {avaliacoes.map((avaliacao) => (
-                <li key={avaliacao.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
-                  <span>
-                    <span className="block font-medium text-navy-900">
-                      {avaliacao.momento === "FINAL" ? "Avaliação final" : `Periódica · ${formatarDataCurta(avaliacao.periodoInicio)} a ${formatarDataCurta(avaliacao.periodoFim)}`}
-                    </span>
-                    <span className="block text-xs text-navy-900/65">{avaliacao.avaliadorNome ?? "Avaliador"}</span>
-                  </span>
-                  <span className="text-lg font-semibold text-navy-900 tabular-nums">
-                    {avaliacao.media ?? "Sem nota"}
-                    <span className="text-xs font-normal text-navy-900/65"> / 10</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Painel>
-        )}
+      <div className="flex flex-col">
         {acoes.registrarAcompanhamento && (
-        <Painel titulo="Acompanhamento do orientador" descricao="Visitas, contatos e reuniões (RF033).">
+        <Painel titulo="Acompanhamento do orientador" descricao="Visitas, contatos e reuniões.">
           <FormularioApi
             validacao="acompanhamento"
                   url={`/api/v1/estagios/${estagioId}/acompanhamentos`}

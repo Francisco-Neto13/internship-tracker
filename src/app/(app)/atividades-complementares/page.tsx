@@ -1,13 +1,12 @@
 import { BaixarDocumento } from "@/shared/ui/baixar-documento";
 import { LIMITE } from "@/lib/campos";
 import { Building, CalendarRange, Clock } from "lucide-react";
-import { redirect } from "next/navigation";
 import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarDataCurta, haQuantoTempo } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { minutosParaHoras } from "@/lib/horas";
 import { SITUACAO_ATIVIDADE } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listAtividadesPagina, listFilaAnalisePagina } from "@/modules/atividades/services/atividade-service";
 import { getMinhaIntegralizacao } from "@/modules/integralizacao/services/integralizacao-service";
 import { Avatar } from "@/shared/ui/avatar";
@@ -28,8 +27,7 @@ import { NovaAtividade } from "./nova-atividade";
 const h = (minutos: number | null) => (minutos === null ? "Sem dado" : `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`);
 
 export default async function AtividadesComplementaresPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/atividades-complementares");
   const consulta = lerConsulta(await searchParams);
   const paginaMinhas = lerPaginacao(consulta);
   const paginaFila = lerPaginacao(consulta, 20, "pagina_fila");
@@ -116,7 +114,7 @@ export default async function AtividadesComplementaresPage({ searchParams }: { s
               </Painel>
             )}
           </div>
-          <Painel titulo="Registrar atividade" descricao="Comprovante em PDF, JPEG ou PNG; o mesmo arquivo não vale para duas atividades (RF052).">
+          <Painel titulo="Registrar atividade" descricao="Comprovante em PDF, JPEG ou PNG; o mesmo arquivo não vale para duas atividades.">
             {integralizacao.categorias.length > 0 ? (
               <NovaAtividade
                 estudanteId={integralizacao.estudanteId}

@@ -1,13 +1,13 @@
 import { BaixarDocumento } from "@/shared/ui/baixar-documento";
 import { LIMITE } from "@/lib/campos";
 import { Briefcase, FileSignature, Percent } from "lucide-react";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarDataCurta, formatarDataHora } from "@/lib/datas";
 import { DomainError } from "@/lib/errors";
 import { formatarCnpj, SITUACAO_CONCEDENTE, SITUACAO_ESTAGIO } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { dataLocal } from "@/modules/academico/domain/parametros";
 import { getConcedente, listHistoricoSituacao } from "@/modules/concedentes/services/concedente-service";
 import { listConveniosDaConcedente } from "@/modules/concedentes/services/convenio-service";
@@ -26,8 +26,7 @@ import { NovoConvenio } from "./novo-convenio";
 // suspensões. Suspender pede motivo e diz o efeito.
 
 export default async function ConcedentePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/concedentes");
   const parsed = z.object({ id: z.uuid() }).safeParse(await params);
   if (!parsed.success) notFound();
   const { id } = parsed.data;
@@ -90,7 +89,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
           rotulo="Taxa de conclusão"
           valor={historico.taxaConclusao === null ? null : Math.round(historico.taxaConclusao * 100)}
           formatar={(valor) => `${valor}%`}
-          contexto="concluídos entre os encerrados (RF014)"
+          contexto="concluídos entre os encerrados"
           motivoSemValor="Nenhum estágio encerrado ainda"
           icone={Percent}
         />
@@ -98,7 +97,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
 
       <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
         <div className="flex flex-col gap-4">
-          <Painel titulo="Convênios" descricao="Sem convênio vigente na data de início, o estágio não é ativado (RF010)." flush>
+          <Painel titulo="Convênios" descricao="Sem convênio vigente na data de início, o estágio não é ativado." flush>
             <ul className="divide-y divide-navy-900/[0.07]" data-testid="convenios">
               {convenios.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhum convênio registrado.</li>}
               {ordenados.map((convenio) => {
@@ -122,7 +121,7 @@ export default async function ConcedentePage({ params, searchParams }: { params:
               })}
             </ul>
           </Painel>
-          <Painel titulo="Registrar convênio" descricao="Número, primeira vigência e o convênio assinado em PDF, enviado direto ao armazenamento (D8).">
+          <Painel titulo="Registrar convênio" descricao="Número, primeira vigência e o convênio assinado em PDF, enviado direto ao armazenamento.">
             <NovoConvenio concedenteId={id} />
           </Painel>
         </div>

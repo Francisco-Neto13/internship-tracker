@@ -11,6 +11,12 @@ export type ResponsavelRow = typeof responsavelEstagio.$inferSelect & { usuarioN
 export type AssinaturaRow = typeof assinatura.$inferSelect;
 type Papel = ResponsavelRow["papel"];
 
+/** RF031: who decides is app.buscar_contas_responsavel; any other caller receives an empty list. */
+export async function findContasResponsavel(tx: Transaction, estagioId: string, papel: Papel, busca: string): Promise<{ id: string; nome: string; email: string }[]> {
+  const { rows } = await tx.execute<{ id: string; nome: string; email: string }>(sql`select id, nome, email from app.buscar_contas_responsavel(${estagioId}::uuid, ${papel}::public.papel_responsavel, ${busca})`);
+  return rows;
+}
+
 // ---------------------------------------------------------------- plano_atividades
 
 export async function findPlanos(tx: Transaction, estagioId: string): Promise<PlanoRow[]> {
@@ -62,7 +68,10 @@ export async function findResponsaveis(tx: Transaction, estagioId: string): Prom
     .leftJoin(usuario, eq(usuario.id, responsavelEstagio.usuarioId))
     .where(eq(responsavelEstagio.estagioId, estagioId))
     .orderBy(asc(responsavelEstagio.papel), asc(responsavelEstagio.vigenciaInicio), asc(responsavelEstagio.criadoEm));
-  return linhas.map((linha) => ({ ...linha.responsavel, usuarioNome: linha.usuarioNome }));
+  // The policy of usuario hides advisors and supervisors; the coordination gets their names here
+  const { rows } = await tx.execute<{ usuario_id: string; nome: string }>(sql`select usuario_id, nome from app.nomes_responsaveis(${estagioId}::uuid)`);
+  const nomes = new Map(rows.map((row) => [row.usuario_id, row.nome]));
+  return linhas.map((linha) => ({ ...linha.responsavel, usuarioNome: linha.usuarioNome ?? nomes.get(linha.responsavel.usuarioId) ?? null }));
 }
 
 /** Designation of the role not ended (current or starting later), excluding annulled ones. */

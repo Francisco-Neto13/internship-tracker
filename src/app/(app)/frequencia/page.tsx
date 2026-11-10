@@ -1,8 +1,7 @@
-import { redirect } from "next/navigation";
 import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarDataCurta } from "@/lib/datas";
 import { minutosParaHoras } from "@/lib/horas";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listEstagiosDivergentes } from "@/modules/acompanhamento/services/frequencia-service";
 import { listEstagios } from "@/modules/estagios/services/estagio-service";
 import { Avatar } from "@/shared/ui/avatar";
@@ -20,8 +19,7 @@ import { StatusBadge } from "@/shared/ui/status-badge";
 const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
 
 export default async function FrequenciaPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/frequencia");
   const consulta = lerConsulta(await searchParams);
   const { pagina, porPagina } = lerPaginacao(consulta);
   const [{ items, total }, divergentes] = await Promise.all([

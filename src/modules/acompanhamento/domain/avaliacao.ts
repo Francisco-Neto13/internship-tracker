@@ -32,6 +32,12 @@ export function conferirRespostas(criterios: Criterio[], respostas: Resposta[]):
   return problemas;
 }
 
+/** RF042: the stable code of a criterion, from its description ("Pontualidade e assiduidade" -> PONTUALIDADE_E_ASSIDUIDADE). */
+export function codigoDoCriterio(descricao: string): string {
+  const codigo = descricao.normalize("NFD").replace(/\p{M}/gu, "").toUpperCase().replace(/[^A-Z0-9]+/g, "_").slice(0, 40).replace(/^_+|_+$/g, "");
+  return codigo || "CRITERIO";
+}
+
 /** Mean of the grades normalized to 0..10, two decimals; null without grades. */
 export function mediaNormalizada(itens: { nota: number; escalaMinima: number; escalaMaxima: number }[]): number | null {
   if (itens.length === 0) return null;

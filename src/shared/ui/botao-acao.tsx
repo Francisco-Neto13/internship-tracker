@@ -15,6 +15,7 @@ import { mensagemDaApi } from "./formulario-api";
 
 export function BotaoAcao({
   url,
+  metodo = "POST",
   rotulo,
   corpo,
   pedirMotivo,
@@ -24,6 +25,7 @@ export function BotaoAcao({
   sucesso,
 }: {
   url: string;
+  metodo?: "POST" | "PATCH";
   rotulo: string;
   corpo?: Record<string, unknown>;
   /** Campo e pergunta, para transições que exigem justificativa. */
@@ -56,7 +58,7 @@ export function BotaoAcao({
     setEnviando(true);
     try {
       const response = await fetch(url, {
-        method: "POST",
+        method: metodo,
         headers: { "Content-Type": "application/json" },
         body: Object.keys(dados).length > 0 ? JSON.stringify(dados) : undefined,
       });

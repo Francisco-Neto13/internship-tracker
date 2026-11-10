@@ -8,7 +8,8 @@ import { dados, SENHA, type sessoes } from "./api";
 
 type Sessao = ReturnType<typeof sessoes>;
 
-export async function criarEstagioAtivoDesdeAgosto(browser: Browser, sessao: Sessao, prefixo: string) {
+/** The internship with its TCE in edition, before responsible people, plan and signatures. */
+export async function criarEstagioEmFormalizacao(browser: Browser, sessao: Sessao, prefixo: string) {
   const admin = await sessao(browser, "admin@internship.local", SENHA);
   const curso = (await dados<{ id: string; codigo: string }[]>(await admin.get("/api/v1/cursos"))).find((item) => item.codigo === "ENG-SOFT")!;
   const buscarId = async (email: string) => (await dados<{ id: string }[]>(await admin.get(`/api/v1/usuarios?busca=${email}`)))[0].id;
@@ -44,12 +45,16 @@ export async function criarEstagioAtivoDesdeAgosto(browser: Browser, sessao: Ses
     }),
     201,
   );
-  const id = estagio.id;
+  return { id: estagio.id, estudanteId: estudante.id, concedenteId: concedente.id, email, senhaProvisoria: novo.senha_provisoria, admin, coordenacao, buscarId };
+}
+
+export async function criarEstagioAtivoDesdeAgosto(browser: Browser, sessao: Sessao, prefixo: string) {
+  const { id, estudanteId, concedenteId, email, senhaProvisoria, admin, coordenacao, buscarId } = await criarEstagioEmFormalizacao(browser, sessao, prefixo);
   await dados(await coordenacao.post(`/api/v1/estagios/${id}/responsaveis`, { data: { papel: "ORIENTADOR", usuario_id: await buscarId("orientador@internship.local") } }), 201);
   await dados(await coordenacao.post(`/api/v1/estagios/${id}/responsaveis`, { data: { papel: "SUPERVISOR", usuario_id: await buscarId("supervisor@exemplo-software.local") } }), 201);
 
-  const aluno = await sessao(browser, email, novo.senha_provisoria);
-  await dados(await aluno.post("/api/v1/auth/senha", { data: { senha_atual: novo.senha_provisoria, nova_senha: `frase segura do ${prefixo} e2e` } }));
+  const aluno = await sessao(browser, email, senhaProvisoria);
+  await dados(await aluno.post("/api/v1/auth/senha", { data: { senha_atual: senhaProvisoria, nova_senha: `frase segura do ${prefixo} e2e` } }));
   await dados(await aluno.put(`/api/v1/estagios/${id}/plano-atividades`, { data: { atividades_previstas: "Sistemas web", justificativa_compatibilidade: "Engenharia de software" } }));
   await dados(await aluno.post(`/api/v1/estagios/${id}/plano-atividades/envio`));
   const orientador = await sessao(browser, "orientador@internship.local", SENHA);
@@ -68,5 +73,5 @@ export async function criarEstagioAtivoDesdeAgosto(browser: Browser, sessao: Ses
   await dados(await coordenacao.post(`/api/v1/estagios/${id}/ativacao`));
 
   const supervisor = await sessao(browser, "supervisor@exemplo-software.local", SENHA);
-  return { id, estudanteId: estudante.id, aluno, orientador, supervisor, coordenacao, concedenteRh, admin };
+  return { id, estudanteId, concedenteId, aluno, orientador, supervisor, coordenacao, concedenteRh, admin };
 }

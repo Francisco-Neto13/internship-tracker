@@ -146,6 +146,9 @@ ferramenta.
 - Colunas lado a lado usam `colunas-alinhadas` (`globals.css`) e terminam na mesma linha; `e2e/alinhamento.spec.ts` mede. Coluna é `flex flex-col`, e o último painel cresce.
 - Tela de login: o percurso real do estágio é o herói, e o formulário vem primeiro no documento (`src/app/(auth)/login`). Cada frase de `percurso-estagio.tsx` espelha uma regra do sistema: se a regra mudar, o texto muda junto. O formulário cabe em 1280×720 sem rolagem, com teste. A tela não tem largura máxima: título, cartão e percurso crescem com o monitor, e o teste mede o vão até 2560 px. Breakpoint arbitrário em `rem`: misturado com `px`, o Tailwind não garante a ordem e a regra maior pode perder.
 - Documento enviado precisa de caminho de volta na tela: `BaixarDocumento`, onde quem decide ou consulta o registro o vê (RF071).
+- Tela restrita por perfil começa com `identidadeDaTela(rota)` (`src/lib/acesso-tela.ts`), que lê o registro do menu e leva a `/sem-acesso`. Rota nova entra em `NAVEGACAO` ou em `ROTAS_SEM_MENU`, e na matriz de `e2e/visibilidade-por-perfil.spec.ts`. Aba ou formulário que o perfil não usa não aparece: não mostrar a aba só para dizer que está fora do alcance.
+- Arquivo gerado por rota `/api/v1` baixa com `BaixarArquivo`, nunca por link direto: num link, a recusa da API abre o JSON na tela. PDF e CSV mostram nomes de `rotulos.ts` e datas de `datas.ts`, não códigos nem UUID.
+- Texto que a pessoa lê não cita RF, RN nem DER: a rastreabilidade fica nos comentários e no campo `requisito` da API. Escolher uma pessoa é por nome (`BuscaConta`), nunca por código interno. A auditoria aparece em palavras por `src/lib/auditoria-texto.ts`; os valores exatos ficam no banco e na API.
 - Limite e formato de campo saem de `src/lib/campos.ts`, lido pelo schema Zod e pela tela (issue #97): a tela só ajuda, o servidor decide. Campo de texto sem limite não passa no lint nem compila em `FormularioApi`. Senha não usa `maxLength`, porque colar cortaria sem avisar: o formulário confere. CNPJ aceita letras nos 12 primeiros caracteres (IN RFB 2.229/2024).
 - Formulário avisa o erro ao sair do campo, com o schema da rota que recebe o envio (`useValidacao`, `src/shared/ui/validacoes.ts`; `FormularioApi` exige `validacao`). Salvar confere tudo e leva ao primeiro erro, sem enviar. Schema que lê `@/db/schema` não vai ao navegador: ali, escrever a regra em `validacoes.ts` com os valores de `LIMITE`.
 - Ação de um clique cujo efeito é caro ou impossível de desfazer pede confirmação dizendo a consequência
@@ -277,7 +280,7 @@ Funções auxiliares ficam no schema `app`, em `security definer` com `search_pa
 `app.estagios_legiveis(academico)`, `app.pode_ler_relatorios(estagio_id)`, `app.hoje()` (data em
 America/Sao_Paulo), `app.parametros_em(data)`, `app.travar_estagio(estagio_id)`,
 `app.impedimentos_conclusao(estagio_id)`, `app.registrar_leitura_documento(documento_id)`,
-`app.estudantes_legiveis()`, `app.identidades_estudante()`, `app.buscar_contas_estudante(busca)`, `app.solicitar_recuperacao_senha(email)`, `app.calcular_integralizacao(estudante_id)`,
+`app.estudantes_legiveis()`, `app.identidades_estudante()`, `app.buscar_contas_estudante(busca)`, `app.buscar_contas_responsavel(estagio_id, papel, busca)`, `app.solicitar_recuperacao_senha(email)`, `app.calcular_integralizacao(estudante_id)`,
 `app.apurar_integralizacao(estudante_id, gatilho)`, `app.notificar(...)` e `app.rotina_diaria()`,
 `app.periodos_afastamento(estagio_id)`, `app.teto_duracao_estagio(estagio_id)`,
 `app.definir_guarda_estagio(estagio_id, data)`, `app.eliminar_documento(documento_id)`,
@@ -616,6 +619,8 @@ do repositório pela equipe. Neste repositório, a referência é este arquivo, 
 `drizzle/sql`, contratos da API em `src/modules/*/schemas` e comportamento esperado
 nos testes. Quando uma regra de negócio não estiver coberta aqui nem no código,
 perguntar em vez de supor.
+
+O projeto tem grafo do Graphify em `graphify-out/` (`graph.json` e `GRAPH_REPORT.md`): depois de mudanças grandes, atualizar com `graphify update .` (só código; se mudarem documentos ou imagens, `/graphify . --update`).
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -1,7 +1,10 @@
 import { withUser, type Transaction } from "@/db/with-user";
 import { DomainError } from "@/lib/errors";
 import type { Identity } from "@/lib/identity";
+import { gerarPdfDocumento } from "@/lib/pdf";
+import { getEstagioDetalhado } from "@/modules/estagios/services/estagio-service";
 import { exigirDocumento } from "@/shared/documentos/documento-service";
+import { documentoRelatorio } from "../domain/documento-relatorio";
 import { enviadoComAtraso, pendenteDe, relatorioEmAtraso, type VisaoRelatorio } from "../domain/relatorio";
 import { hoje } from "../repositories/frequencia-repository";
 import {
@@ -85,6 +88,16 @@ export async function getRelatorio(identity: Identity, id: string) {
       })),
     };
   });
+}
+
+/** RF037 to RF039: the report as a PDF, for whoever reads it; a report not yet sent has no document. */
+export async function pdfRelatorio(identity: Identity, id: string): Promise<Uint8Array> {
+  const { relatorio, versoes } = await getRelatorio(identity, id);
+  if (versoes.length === 0) {
+    throw new DomainError({ code: "RELATORIO_NAO_ENVIADO", kind: "NOT_FOUND", message: "O relatório ainda não foi enviado.", requisito: "RF037" });
+  }
+  const { identificacao } = await getEstagioDetalhado(identity, relatorio.estagioId);
+  return gerarPdfDocumento(documentoRelatorio(relatorio, versoes, identificacao));
 }
 
 /**

@@ -1,9 +1,8 @@
 import { LIMITE, UFS } from "@/lib/campos";
 import { Plus } from "lucide-react";
-import { redirect } from "next/navigation";
 import { comConsulta, lerConsulta, lerPaginacao, opcao, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarCnpj, SITUACAO_CONCEDENTE } from "@/lib/rotulos";
-import { getIdentity } from "@/lib/session";
+import { identidadeDaTela } from "@/lib/acesso-tela";
 import { listConcedentes } from "@/modules/concedentes/services/concedente-service";
 import { Avatar } from "@/shared/ui/avatar";
 import { BarraFiltros } from "@/shared/ui/barra-filtros";
@@ -22,8 +21,7 @@ type Concedente = Awaited<ReturnType<typeof listConcedentes>>["items"][number];
 const SITUACOES = ["ATIVA", "SUSPENSA"] as const;
 
 export default async function ConcedentesPage({ searchParams }: { searchParams: Promise<SearchParamsBrutos> }) {
-  const identity = await getIdentity();
-  if (!identity) redirect("/login");
+  const identity = await identidadeDaTela("/administracao/concedentes");
   const consulta = lerConsulta(await searchParams);
   const { pagina, porPagina } = lerPaginacao(consulta);
   const { items, total } = await listConcedentes(identity, {
@@ -65,7 +63,7 @@ export default async function ConcedentesPage({ searchParams }: { searchParams: 
         title="Concedentes"
         description="Organizações que recebem estagiários. Suspensa não ativa estágios novos; os em andamento seguem."
         acoes={
-          <Dialogo gatilho={{ rotulo: "Nova concedente", icone: <Plus className="size-4" aria-hidden /> }} titulo="Nova concedente" descricao="Dados da organização e do representante legal (RF007)." largura="lg">
+          <Dialogo gatilho={{ rotulo: "Nova concedente", icone: <Plus className="size-4" aria-hidden /> }} titulo="Nova concedente" descricao="Dados da organização e do representante legal." largura="lg">
             <FormularioApi
               validacao="concedenteNovo"
                   url="/api/v1/concedentes"

@@ -22,3 +22,12 @@ Thumbs.db
 
 # documentação de trabalho pessoal — versão reduzida entra depois
 documentation/
+
+# graphify: versiona só o que outro computador precisa; o resto é cache, exportação ou caminho local
+graphify-out/*
+!graphify-out/graph.json
+!graphify-out/GRAPH_REPORT.md
+!graphify-out/manifest.json
+!graphify-out/.graphify_labels.json
+# os ganchos gravam o caminho absoluto do graphify desta máquina
+.claude/settings.json
