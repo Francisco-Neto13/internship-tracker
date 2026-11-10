@@ -44,6 +44,8 @@ export const SITUACAO_RELATORIO: Record<string, { rotulo: string; tom: StatusTon
   DEVOLVIDO: { rotulo: "Devolvido", tom: "pending" },
 };
 
+export const TIPO_DECLARACAO: Record<string, string> = { CONCLUSAO_ESTAGIO: "Conclusão de estágio", INTEGRALIZACAO_ATIVIDADES: "Integralização de atividades complementares" };
+
 const TODOS: Record<string, string> = Object.fromEntries(
   [SITUACAO_ESTAGIO, SITUACAO_ACADEMICA, SITUACAO_ATIVIDADE, SITUACAO_RELATORIO].flatMap((mapa) =>
     Object.entries(mapa).map(([codigo, { rotulo }]) => [codigo, rotulo.toLowerCase()]),

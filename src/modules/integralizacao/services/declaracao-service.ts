@@ -44,7 +44,7 @@ export async function emitirDeclaracao(identity: Identity, estudanteId: string, 
     const dados = await withUser(identity, (tx) => dadosDeclaracao(tx, input.tipo, estudanteId, input.estagioId));
     const codigo = gerarCodigoVerificacao();
     const emitidaEm = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Sao_Paulo" }).format(new Date());
-    const pdf = await gerarPdfDocumento(documentoDeclaracao(dados, codigo, emitidaEm));
+    const pdf = await gerarPdfDocumento(documentoDeclaracao(dados, codigo, emitidaEm, process.env.BETTER_AUTH_URL));
     const chave = `documentos/${randomUUID()}.pdf`;
     const armazenamento = getArmazenamento();
     await armazenamento.gravar(chave, pdf, "application/pdf");

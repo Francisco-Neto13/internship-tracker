@@ -1,6 +1,7 @@
 import { FileCheck2 } from "lucide-react";
 import { formatarDataHora } from "@/lib/datas";
 import type { Identity } from "@/lib/identity";
+import { TIPO_DECLARACAO } from "@/lib/rotulos";
 import { listDeclaracoes } from "@/modules/integralizacao/services/declaracao-service";
 import { BaixarDocumento } from "@/shared/ui/baixar-documento";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
@@ -8,7 +9,6 @@ import { Painel } from "@/shared/ui/painel";
 
 // RF058: declarações do estudante com o código de verificação; o PDF baixa pela rota de
 // documento, que confere quem lê (RLS) e entrega um link de um minuto.
-const TIPO: Record<string, string> = { CONCLUSAO_ESTAGIO: "Conclusão de estágio", INTEGRALIZACAO_ATIVIDADES: "Integralização de atividades complementares" };
 
 export async function DeclaracoesEstudante({ identity, estudanteId, atividadesCumpridas }: { identity: Identity; estudanteId: string; atividadesCumpridas: boolean }) {
   const declaracoes = await listDeclaracoes(identity, estudanteId);
@@ -43,7 +43,7 @@ export async function DeclaracoesEstudante({ identity, estudanteId, atividadesCu
             <li key={item.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
               <FileCheck2 className="size-5 shrink-0 text-navy-700" aria-hidden />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-navy-900">{TIPO[item.tipo]}</p>
+                <p className="text-sm font-medium text-navy-900">{TIPO_DECLARACAO[item.tipo]}</p>
                 <p className="text-xs text-navy-900/65">
                   Emitida em {formatarDataHora(item.criadoEm)} · código <span className="font-mono text-navy-900">{item.codigoVerificacao}</span>
                 </p>

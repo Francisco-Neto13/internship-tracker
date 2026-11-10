@@ -24,7 +24,9 @@ describe("documentoDeclaracao", () => {
       minutos_homologados: 24030,
       orientador: "Prof. Carlos",
     };
-    const texto = JSON.stringify(documentoDeclaracao(dados, "ABCD-EFGH-IJKL-MNOP", "2027-08-02"));
+    const texto = JSON.stringify(documentoDeclaracao(dados, "ABCD-EFGH-IJKL-MNOP", "2027-08-02", "https://sistema.exemplo"));
+    expect(texto).toContain("https://sistema.exemplo/verificar/ABCD-EFGH-IJKL-MNOP");
+    expect(texto).not.toContain("/api/v1");
     expect(texto).toContain("concluiu estágio obrigatório na concedente Empresa Exemplo Ltda (CNPJ 12.345.678/0001-95), de 03/08/2026 a 30/07/2027");
     expect(texto).toContain("400,5 h");
     expect(texto).toContain("sob orientação de Prof. Carlos");
