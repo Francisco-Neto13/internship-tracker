@@ -1,5 +1,4 @@
 import { TIPO_ESTAGIO } from "@/lib/rotulos";
-import { Download } from "lucide-react";
 import Link from "next/link";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
 import { identidadeDaTela } from "@/lib/acesso-tela";
@@ -9,6 +8,7 @@ import { relatorioQuerySchema } from "@/modules/administracao/schemas/relatorios
 import { gerarRelatorio, tituloRelatorio } from "@/modules/administracao/services/relatorio-gerencial-service";
 import { listConcedentes } from "@/modules/concedentes/services/concedente-service";
 import { Abas } from "@/shared/ui/abas";
+import { BaixarArquivo } from "@/shared/ui/baixar-arquivo";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { cn } from "@/shared/ui/cn";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
@@ -58,7 +58,8 @@ export default async function RelatoriosGerenciaisPage({ searchParams }: { searc
   ]);
   const colunas = Object.keys(ROTULOS).filter((chave) => linhas.some((linha) => chave in linha));
   const filtros = Object.fromEntries(Object.entries(bruto).filter(([chave]) => chave !== "tipo"));
-  const exportar = (formato: "csv" | "pdf") => `/api/v1/relatorios-gerenciais/${tipo}/exportacao?${new URLSearchParams({ ...filtros, formato })}`;
+  // Filtro inválido é ignorado na tabela: a exportação faz o mesmo, em vez de responder erro
+  const exportar = (formato: "csv" | "pdf") => `/api/v1/relatorios-gerenciais/${tipo}/exportacao?${new URLSearchParams({ ...(parsed.success ? filtros : {}), formato })}`;
   const total = (coluna: string) => linhas.reduce((soma, linha) => soma + Number(linha[coluna] ?? 0), 0);
 
   return (
@@ -68,14 +69,8 @@ export default async function RelatoriosGerenciaisPage({ searchParams }: { searc
         description="Visão da operação para decisão, com filtros por curso, concedente e período. Somente leitura."
         acoes={
           <>
-            <a href={exportar("csv")} className={buttonVariants({ variant: "outline" })}>
-              <Download className="size-4" aria-hidden />
-              Exportar CSV
-            </a>
-            <a href={exportar("pdf")} className={buttonVariants({ variant: "outline" })}>
-              <Download className="size-4" aria-hidden />
-              Exportar PDF
-            </a>
+            <BaixarArquivo url={exportar("csv")} rotulo="Exportar CSV" />
+            <BaixarArquivo url={exportar("pdf")} rotulo="Exportar PDF" />
           </>
         }
       />

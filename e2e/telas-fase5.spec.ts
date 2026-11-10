@@ -18,7 +18,7 @@ test("the coordination opens the management reports and an internship", async ({
   await entrar(page, "coordenacao.software@internship.local");
   await page.goto("/administracao/relatorios-gerenciais?tipo=pendencias-integralizacao");
   await expect(page.getByRole("heading", { name: "Relatórios gerenciais", level: 1 })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Exportar PDF" })).toHaveAttribute("href", /formato=pdf/);
+  await expect(page.getByRole("button", { name: "Exportar PDF" })).toBeVisible();
   await expect(page.getByTestId("relatorio-gerencial")).toContainText("Estudante");
 
   // The list is paginated on the server: search instead of relying on the first page

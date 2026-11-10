@@ -1,5 +1,4 @@
 import { LIMITE } from "@/lib/campos";
-import { Download } from "lucide-react";
 import { lerConsulta, lerPaginacao, type SearchParamsBrutos } from "@/lib/consulta";
 import { formatarDataHora } from "@/lib/datas";
 import { descreverOperacao, OPERACAO_AUDITORIA, TABELA_AUDITORIA } from "@/lib/rotulos";
@@ -8,7 +7,8 @@ import { listAuditoriaQuerySchema, toFiltroAuditoria } from "@/modules/administr
 import { listRegistros } from "@/modules/administracao/services/auditoria-service";
 import { Avatar } from "@/shared/ui/avatar";
 import { BarraFiltros } from "@/shared/ui/barra-filtros";
-import { Button, buttonVariants } from "@/shared/ui/button";
+import { BaixarArquivo } from "@/shared/ui/baixar-arquivo";
+import { Button } from "@/shared/ui/button";
 import { DataTable, type DataTableColumn } from "@/shared/ui/data-table";
 import { EstadoVazio } from "@/shared/ui/estado-vazio";
 import { Input } from "@/shared/ui/input";
@@ -112,10 +112,7 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
         title="Auditoria"
         description="Toda operação relevante, com autor, data e o que mudou. Somente leitura: a trilha não aceita alteração nem exclusão (RN-28)."
         acoes={
-          <a href={`/api/v1/auditoria/exportacao?${filtros}`} className={buttonVariants({ variant: "outline" })}>
-            <Download className="size-4" aria-hidden />
-            Exportar CSV
-          </a>
+          <BaixarArquivo url={`/api/v1/auditoria/exportacao?${filtros}`} rotulo="Exportar CSV" />
         }
       />
       <BarraFiltros

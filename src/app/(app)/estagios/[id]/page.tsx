@@ -1,5 +1,4 @@
 import { LIMITE } from "@/lib/campos";
-import { FileDown } from "lucide-react";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
@@ -11,6 +10,7 @@ import { identidadeDaTela } from "@/lib/acesso-tela";
 import { getEstagioDetalhado } from "@/modules/estagios/services/estagio-service";
 import { Abas } from "@/shared/ui/abas";
 import { Avatar } from "@/shared/ui/avatar";
+import { BaixarArquivo } from "@/shared/ui/baixar-arquivo";
 import { BotaoAcao } from "@/shared/ui/botao-acao";
 import { FormularioApi } from "@/shared/ui/formulario-api";
 import { ListaDefinicao, Painel } from "@/shared/ui/painel";
@@ -62,7 +62,6 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
   const restantes = diasEntre(hoje, estagio.dataFimPrevista);
   const ordem = [...abasDoPerfil].sort((a, b) => (a === padrao ? -1 : b === padrao ? 1 : 0));
   const rotulos: Record<string, string> = { resumo: "Resumo", formalizacao: "Formalização", acompanhamento: "Acompanhamento", ocorrencias: "Ocorrências" };
-  const linkDocumento = "inline-flex items-center gap-1.5 rounded-md border border-navy-900/15 bg-white px-3 h-9 text-sm text-navy-900 hover:bg-nevoa-100 focus-visible:ring-2 focus-visible:ring-azul-500 focus-visible:outline-none";
 
   return (
     <div className="flex flex-col gap-6">
@@ -92,14 +91,8 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
         }
         acoes={
           <div className="flex flex-wrap gap-2" data-testid="documentos-estagio">
-            <a className={linkDocumento} href={`${api}/tce/pdf`}>
-              <FileDown className="size-4" aria-hidden />
-              TCE (PDF)
-            </a>
-            <a className={linkDocumento} href={`${api}/plano-atividades/pdf`}>
-              <FileDown className="size-4" aria-hidden />
-              Plano (PDF)
-            </a>
+            <BaixarArquivo url={`${api}/tce/pdf`} rotulo="TCE (PDF)" tamanho="sm" />
+            {detalhe.planos.length > 0 && <BaixarArquivo url={`${api}/plano-atividades/pdf`} rotulo="Plano (PDF)" tamanho="sm" />}
           </div>
         }
       />
@@ -147,9 +140,7 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
                     <StatusBadge tone={SITUACAO_ADITIVO[aditivo.situacao]?.tom ?? "neutral"}>{SITUACAO_ADITIVO[aditivo.situacao]?.rotulo ?? aditivo.situacao}</StatusBadge>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <a className="text-xs font-medium text-azul-500 hover:text-navy-700" href={`/api/v1/aditivos/${aditivo.id}/pdf`}>
-                      Baixar PDF
-                    </a>
+                    <BaixarArquivo url={`/api/v1/aditivos/${aditivo.id}/pdf`} rotulo="Baixar PDF" tamanho="sm" />
                     {aditivo.situacao === "AGUARDANDO_ASSINATURAS" &&
                       acoes.partesQueAssina.map((parte) => (
                         <BotaoAcao key={parte} url={`/api/v1/aditivos/${aditivo.id}/assinaturas`} confirmacao={{ titulo: "Assinar o aditivo?", descricao: "Sua identificação, a data, a hora e o hash deste aditivo ficam registrados.", confirmar: "Assinar" }} rotulo={`Assinar (${parte.toLowerCase()})`} corpo={{ parte }} tamanho="sm" />
