@@ -157,6 +157,16 @@ export const NAVEGACAO: NavItem[] = [
     icon: Building2,
   },
   {
+    href: "/organizacao",
+    titulo: "Minha organização",
+    descricao: "Dados da organização, convênios com a instituição e contatos.",
+    modulo: "Concedentes e Convênios",
+    rf: "RF007",
+    perfis: ["CONCEDENTE"],
+    grupo: "parcerias",
+    icon: Building2,
+  },
+  {
     href: "/administracao/convenios",
     titulo: "Convênios",
     descricao: "Vigência, renovação e convênios a vencer.",
