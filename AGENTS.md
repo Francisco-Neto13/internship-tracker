@@ -151,6 +151,10 @@ ferramenta.
 - Ação de um clique cujo efeito é caro ou impossível de desfazer pede confirmação dizendo a consequência
   (`Confirmacao`, ou a prop `confirmacao` de `BotaoAcao` e `FormularioApi`): sair, decisão final, assinatura,
   rescisão, permissões. Ação reversível não pede: confirmar tudo ensina a clicar sem ler. Cancelar recebe o foco.
+- Cada pessoa vê só a ação que lhe cabe. No estágio, `acoesNoEstagio` (`src/modules/estagios/domain/papeis.ts`) lê os papéis
+  dela naquele estágio pelas mesmas funções `app.*` das políticas, e cada ação cita a regra que a decide: regra de escrita nova
+  entra lá junto com a tela. Fila de decisão lista só o que quem vê decide (`analisaveis` nas atividades). A tela só esconde;
+  quem decide continua sendo a API e o banco (`e2e/acoes-por-perfil.spec.ts`).
 - Estado de listagem mora na URL e é resolvido no servidor: `?busca=&pagina=&por_pagina=&ordem=campo|-campo&<filtros>`
   (`src/lib/consulta.ts`, componentes `Paginacao`, `BarraFiltros`, `DataTable`). Ordem desconhecida cai no padrão.
   O link de volta de um registro leva `?voltar=`, aceito só com o prefixo da própria listagem.
