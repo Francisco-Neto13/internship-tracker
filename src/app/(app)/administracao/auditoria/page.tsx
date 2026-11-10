@@ -108,7 +108,7 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Auditoria"
-        description="Toda operação relevante, com autor, data e o que mudou. Somente leitura: a trilha não aceita alteração nem exclusão (RN-28)."
+        description="Toda operação relevante, com autor, data e o que mudou. Somente leitura: a trilha não aceita alteração nem exclusão."
         acoes={
           <BaixarArquivo url={`/api/v1/auditoria/exportacao?${filtros}`} rotulo="Exportar CSV" />
         }

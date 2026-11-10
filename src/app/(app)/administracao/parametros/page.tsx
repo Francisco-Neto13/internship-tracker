@@ -38,12 +38,12 @@ export default async function ParametrosPage() {
     },
     {
       titulo: "Acompanhamento",
-      efeito: "Quando a diferença entre horas cumpridas e previstas abre um caso para o orientador (RF028).",
+      efeito: "Quando a diferença entre horas cumpridas e previstas abre um caso para o orientador.",
       itens: [["Tolerância de divergência", `${vigente.toleranciaDivergenciaPercentual.toLocaleString("pt-BR")}%`]],
     },
     {
       titulo: "Conformidade",
-      efeito: "Prazo de guarda dos documentos e antecedência do aviso de convênio a vencer (RF012, RF069).",
+      efeito: "Prazo de guarda dos documentos e antecedência do aviso de convênio a vencer.",
       itens: [
         ["Prazo de guarda", `${vigente.prazoGuardaAnos} anos`],
         ["Aviso de convênio a vencer", `${vigente.antecedenciaAlertaConvenioDias} dias antes`],

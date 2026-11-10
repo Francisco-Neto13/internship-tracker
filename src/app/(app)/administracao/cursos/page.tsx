@@ -36,7 +36,7 @@ export default async function CursosPage({ searchParams }: { searchParams: Promi
         description="Exigências curriculares de estágio e de atividades complementares, categorias e periodicidade de relatórios."
         acoes={
           administrador && (
-            <Dialogo gatilho={{ rotulo: "Novo curso", icone: <Plus className="size-4" aria-hidden /> }} titulo="Novo curso" descricao="Código, nome e as cargas exigidas para integralizar (RF004).">
+            <Dialogo gatilho={{ rotulo: "Novo curso", icone: <Plus className="size-4" aria-hidden /> }} titulo="Novo curso" descricao="Código, nome e as cargas exigidas para integralizar.">
               <CursoForm />
             </Dialogo>
           )

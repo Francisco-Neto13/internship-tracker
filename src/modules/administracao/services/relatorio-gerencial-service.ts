@@ -97,7 +97,7 @@ export async function exportarRelatorio(identity: Identity, tipo: TipoRelatorio,
   const emitido = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
   return gerarPdfTabela({
     titulo: definicao.titulo,
-    subtitulo: `Relatório gerencial (RF067) · emitido em ${emitido}`,
+    subtitulo: `Relatório gerencial · emitido em ${emitido}`,
     filtros: descreverFiltros(filtro, nomes),
     cabecalho: definicao.colunas.map((coluna) => coluna.rotulo),
     pesos: definicao.colunas.map((coluna) => coluna.peso),

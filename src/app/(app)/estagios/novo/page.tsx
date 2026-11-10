@@ -31,7 +31,7 @@ export default async function NovoEstagioPage() {
           descricao={
             estudantes.length === 0
               ? "O estágio exige estudante matriculado (Lei 11.788/2008, art. 3º, I). Cadastre ou atualize o estudante em Estudantes."
-              : "O estágio exige convênio vigente com a concedente na data de início (RF010). Registre ou renove o convênio em Concedentes."
+              : "O estágio exige convênio vigente com a concedente na data de início. Registre ou renove o convênio em Concedentes."
           }
         />
       ) : (

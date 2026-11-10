@@ -63,7 +63,7 @@ export default async function ConcedentesPage({ searchParams }: { searchParams: 
         title="Concedentes"
         description="Organizações que recebem estagiários. Suspensa não ativa estágios novos; os em andamento seguem."
         acoes={
-          <Dialogo gatilho={{ rotulo: "Nova concedente", icone: <Plus className="size-4" aria-hidden /> }} titulo="Nova concedente" descricao="Dados da organização e do representante legal (RF007)." largura="lg">
+          <Dialogo gatilho={{ rotulo: "Nova concedente", icone: <Plus className="size-4" aria-hidden /> }} titulo="Nova concedente" descricao="Dados da organização e do representante legal." largura="lg">
             <FormularioApi
               validacao="concedenteNovo"
                   url="/api/v1/concedentes"

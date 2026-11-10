@@ -32,7 +32,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Relatórios" description="Relatórios em análise ou com o período encerrado, por prazo de entrega. O envio e a análise acontecem na página de cada estágio (RF036-RF041)." />
+      <PageHeader title="Relatórios" description="Relatórios em análise ou com o período encerrado, por prazo de entrega. O envio e a análise acontecem na página de cada estágio." />
       <nav aria-label="Filtrar relatórios" className="flex flex-wrap gap-2">
         {VISOES.map((item) => {
           const quantidade = contagens[item.chave];

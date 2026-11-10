@@ -277,7 +277,7 @@ export default async function EstudantePage({ params, searchParams }: { params: 
 
       <p className="text-xs text-navy-900/65">
         <ExternalLink className="mr-1 inline size-3" aria-hidden />
-        Perfil acadêmico (RF005). Conta, perfis e senha ficam em Usuários e acesso.
+        Perfil acadêmico. Conta, perfis e senha ficam em Usuários e acesso.
       </p>
     </div>
   );

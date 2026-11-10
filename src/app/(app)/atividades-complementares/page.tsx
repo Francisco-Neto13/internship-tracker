@@ -114,7 +114,7 @@ export default async function AtividadesComplementaresPage({ searchParams }: { s
               </Painel>
             )}
           </div>
-          <Painel titulo="Registrar atividade" descricao="Comprovante em PDF, JPEG ou PNG; o mesmo arquivo não vale para duas atividades (RF052).">
+          <Painel titulo="Registrar atividade" descricao="Comprovante em PDF, JPEG ou PNG; o mesmo arquivo não vale para duas atividades.">
             {integralizacao.categorias.length > 0 ? (
               <NovaAtividade
                 estudanteId={integralizacao.estudanteId}

@@ -15,7 +15,7 @@ export async function DeclaracoesEstudante({ identity, estudanteId, atividadesCu
   return (
     <Painel
       titulo="Declarações"
-      descricao="Cada declaração tem um código que qualquer pessoa confere sem login (RF058)."
+      descricao="Cada declaração tem um código que qualquer pessoa confere sem login."
       flush
       acoes={
         atividadesCumpridas && (

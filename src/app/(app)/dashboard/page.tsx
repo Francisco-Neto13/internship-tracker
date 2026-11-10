@@ -163,7 +163,7 @@ async function BlocoCoordenacao({ identity }: { identity: Parameters<typeof dado
       </div>
 
       {(dados.convenios?.length ?? 0) > 0 && (
-        <Painel titulo="Convênios a vencer" descricao="Sem renovação, os estágios novos dessas concedentes não podem ser ativados (RF010)" flush verTodos={{ href: "/administracao/convenios" }}>
+        <Painel titulo="Convênios a vencer" descricao="Sem renovação, os estágios novos dessas concedentes não podem ser ativados" flush verTodos={{ href: "/administracao/convenios" }}>
           <ListaCompacta vazio="">
             {dados.convenios!.map((convenio) => (
               <LinhaCompacta
@@ -247,7 +247,7 @@ async function BlocoSupervisor({ identity }: { identity: Parameters<typeof dados
           tom="atencao"
         />
       </div>
-      <Painel titulo="Horas a homologar" descricao="Por estagiário (RF027)" flush verTodos={{ href: "/frequencia" }}>
+      <Painel titulo="Horas a homologar" descricao="Por estagiário" flush verTodos={{ href: "/frequencia" }}>
         <ListaCompacta vazio="Nenhum lançamento aguardando homologação.">
           {comPendencia.map(({ estagio, carga }) => (
             <LinhaCompacta

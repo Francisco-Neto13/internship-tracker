@@ -208,7 +208,7 @@ export function SegurancaConta({ usuario }: { usuario: { id: string; nome: strin
           <KeyRound className="mt-0.5 size-5 shrink-0 text-navy-700" aria-hidden />
           <div className="min-w-0">
             <p className="text-sm font-medium text-navy-900">Senha provisória</p>
-            <p className="text-sm text-navy-900/65">Para quem esqueceu a senha: vale 72 h, é exibida uma vez e exige troca no primeiro acesso (RF002).</p>
+            <p className="text-sm text-navy-900/65">Para quem esqueceu a senha: vale 72 h, é exibida uma vez e exige troca no primeiro acesso.</p>
           </div>
         </div>
         <Button variant="outline" disabled={enviando || !ativo} onClick={() => setConfirmando("senha")} className="w-fit">

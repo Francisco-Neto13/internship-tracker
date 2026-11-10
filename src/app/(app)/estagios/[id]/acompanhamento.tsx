@@ -50,7 +50,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { id
 
   return (
     <div className="flex flex-col gap-4">
-      <Painel titulo="Carga horária" descricao="Só a carga homologada pelo supervisor conta (RF026).">
+      <Painel titulo="Carga horária" descricao="Só a carga homologada pelo supervisor conta.">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]" data-testid="carga-horaria">
           <div className="flex flex-col gap-4">
             <Progresso
@@ -144,7 +144,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { id
         {acoesFrequencia && (
         <div className="flex flex-col gap-4">
           {acoes.lancarFrequencia && (
-          <Painel titulo="Registrar dia" descricao="Um lançamento por dia, até o limite diário e semanal (RF023, RF024).">
+          <Painel titulo="Registrar dia" descricao="Um lançamento por dia, até o limite diário e semanal.">
             <FormularioApi
               validacao="frequencia"
                   url={`/api/v1/estagios/${estagioId}/frequencias`}
@@ -161,7 +161,7 @@ export async function AcompanhamentoEstagio({ identity, estagioId, acoes }: { id
           </Painel>
           )}
           {acoes.homologarFrequencia && (
-          <Painel titulo="Homologar período" descricao="Confirme os dias lançados no período (RF027).">
+          <Painel titulo="Homologar período" descricao="Confirme os dias lançados no período.">
             <FormularioApi
               validacao="homologacao"
                   url={`/api/v1/estagios/${estagioId}/frequencias/homologacao`}
@@ -182,7 +182,7 @@ confirmacao={{ titulo: "Homologar o período?", descricao: "Os lançamentos do p
       </div>
 
       {relatorios && (
-        <Painel titulo="Relatórios" descricao="Periódicos e final, gerados na ativação; o atraso é calculado pelo prazo (RF036-RF041)." flush>
+        <Painel titulo="Relatórios" descricao="Periódicos e final, gerados na ativação; o atraso é calculado pelo prazo." flush>
           <ul className="divide-y divide-navy-900/[0.07]" data-testid="relatorios">
             {relatorios.map((relatorio) => (
               <li key={relatorio.id} className="flex flex-col gap-3 px-5 py-4">
@@ -234,7 +234,7 @@ confirmacao={{ titulo: "Enviar o relatório?", descricao: "Esta versão fica reg
 
       <div className="flex flex-col">
         {acoes.registrarAcompanhamento && (
-        <Painel titulo="Acompanhamento do orientador" descricao="Visitas, contatos e reuniões (RF033).">
+        <Painel titulo="Acompanhamento do orientador" descricao="Visitas, contatos e reuniões.">
           <FormularioApi
             validacao="acompanhamento"
                   url={`/api/v1/estagios/${estagioId}/acompanhamentos`}

@@ -29,7 +29,7 @@ export default async function ConveniosPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Convênios a vencer"
-        description={`Convênios que vencem nos próximos ${dias} dias sem renovação registrada (RF012). O prazo de alerta é um parâmetro institucional; registro e renovação ficam na página da concedente.`}
+        description={`Convênios que vencem nos próximos ${dias} dias sem renovação registrada. O prazo de alerta é um parâmetro institucional; registro e renovação ficam na página da concedente.`}
       />
       {itens.length === 0 ? (
         <EstadoVazio titulo="Nenhum convênio a vencer" descricao={`Nenhum convênio no seu alcance vence nos próximos ${dias} dias.`} />

@@ -71,7 +71,7 @@ export default async function UsuarioPage({ params, searchParams }: { params: Pr
           <Painel titulo="Dados da conta" descricao="Nome exibido e e-mail usado no login.">
             <DadosConta usuario={{ id: usuario.id, nome: usuario.nome, email: usuario.email }} />
           </Painel>
-          <Painel titulo="Perfis e vínculos" descricao="O perfil sozinho não dá acesso: coordenação vale para o curso, supervisor e concedente para a organização escolhida (RF003).">
+          <Painel titulo="Perfis e vínculos" descricao="O perfil sozinho não dá acesso: coordenação vale para o curso, supervisor e concedente para a organização escolhida.">
             <PerfisConta
               usuarioId={usuario.id}
               perfis={usuario.perfis.map((vinculo) => ({ perfil: vinculo.perfil, curso_id: vinculo.cursoId, concedente_id: vinculo.concedenteId }))}

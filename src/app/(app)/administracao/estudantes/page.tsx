@@ -80,7 +80,7 @@ export default async function EstudantesPage({ searchParams }: { searchParams: P
             <Dialogo
               gatilho={{ rotulo: "Cadastrar estudante", icone: <Plus className="size-4" aria-hidden /> }}
               titulo="Cadastrar estudante"
-              descricao="Vincula uma conta existente a um curso, com matrícula e período (RF005)."
+              descricao="Vincula uma conta existente a um curso, com matrícula e período."
             >
               <EstudanteForm cursos={cursos.map((curso) => ({ id: curso.id, nome: curso.nome }))} />
             </Dialogo>

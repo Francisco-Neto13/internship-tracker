@@ -214,7 +214,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
       <div className="colunas-alinhadas grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Painel
           titulo="Responsáveis"
-          descricao="Professor orientador e supervisor da concedente (RF031, RF032)."
+          descricao="Professor orientador e supervisor da concedente."
           flush
         >
           <ul className="divide-y divide-navy-900/[0.07]">
@@ -271,7 +271,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
           titulo="Apólice de seguro"
           descricao={
             estagio.seguroExigido
-              ? "Exigida: precisa estar vigente na ativação (RF018)."
+              ? "Exigida: precisa estar vigente na ativação."
               : "Não exigida neste TCE."
           }
           flush
@@ -338,7 +338,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
 
       <Painel
         titulo="Plano de atividades"
-        descricao="Elaborado com o estudante e aprovado pelo orientador (RF016, RF017)."
+        descricao="Elaborado com o estudante e aprovado pelo orientador."
         acoes={
           planoAtual && (
             <StatusBadge tone={PLANO[planoAtual.situacao].tom}>
@@ -458,7 +458,7 @@ export function FormalizacaoEstagio({ detalhe }: { detalhe: Detalhe }) {
       {assinaturas.length > 0 && (
         <Painel
           titulo="Assinaturas"
-          descricao="Identificação, data, hora e hash do documento assinado (RF019)."
+          descricao="Identificação, data, hora e hash do documento assinado."
           flush
         >
           <ul

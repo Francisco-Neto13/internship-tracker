@@ -37,7 +37,7 @@ export function documentoRelatorio(relatorio: Relatorio, versoes: Versao[], id: 
   ];
   if (atual.anexos.length > 0) secoes.push({ titulo: "Anexos", paragrafos: atual.anexos.map((anexo) => anexo.nomeOriginal ?? "Anexo sem nome") });
   secoes.push({
-    titulo: "Análise do professor orientador (RF038)",
+    titulo: "Análise do professor orientador",
     campos: atual.parecer
       ? [
           ["Decisão", DECISAO[atual.parecer.decisao] ?? atual.parecer.decisao],
@@ -49,7 +49,7 @@ export function documentoRelatorio(relatorio: Relatorio, versoes: Versao[], id: 
   });
   if (anteriores.length > 0) {
     secoes.push({
-      titulo: "Versões anteriores (RF039)",
+      titulo: "Versões anteriores",
       campos: anteriores.map((versao) => [
         `Versão ${versao.numero}, enviada em ${formatarDataHora(versao.criadoEm)}`,
         versao.parecer ? `${DECISAO[versao.parecer.decisao] ?? versao.parecer.decisao}: ${versao.parecer.texto ?? "sem parecer escrito"}` : "Sem parecer",

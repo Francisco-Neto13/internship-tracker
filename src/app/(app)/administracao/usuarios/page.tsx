@@ -109,7 +109,7 @@ export default async function UsuariosPage({ searchParams }: { searchParams: Pro
           <Dialogo
             gatilho={{ rotulo: "Novo usuário", icone: <UserPlus className="size-4" aria-hidden /> }}
             titulo="Novo usuário"
-            descricao="A conta nasce com senha provisória de 72 horas, exibida uma única vez (RF001, RF002)."
+            descricao="A conta nasce com senha provisória de 72 horas, exibida uma única vez."
             largura="lg"
           >
             <UsuarioForm

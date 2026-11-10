@@ -32,7 +32,7 @@ describe("documentoRelatorio (RF037 to RF039)", () => {
     const documento = documentoRelatorio(relatorio, [{ ...versao, numero: 2, conteudo: "Corrigido" }, { ...versao, parecer }], identificacao);
     expect(documento.subtitulo).toContain("versão 2");
     expect(campos(documento, "Atividades do período")?.paragrafos).toEqual(["Corrigido"]);
-    expect(campos(documento, "Versões anteriores (RF039)")?.campos?.[0][1]).toBe("Devolvido: Detalhar as atividades");
+    expect(campos(documento, "Versões anteriores")?.campos?.[0][1]).toBe("Devolvido: Detalhar as atividades");
   });
 
   it("names the final report and renders a valid PDF", async () => {

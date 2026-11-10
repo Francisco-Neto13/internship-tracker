@@ -130,7 +130,7 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
               ]}
             />
           </Painel>
-          <Painel titulo="Aditivos" descricao="Mudanças no TCE depois da ativação, com as três assinaturas (RF020)." flush>
+          <Painel titulo="Aditivos" descricao="Mudanças no TCE depois da ativação, com as três assinaturas." flush>
             <ul className="divide-y divide-navy-900/[0.07]">
               {aditivos.length === 0 && <li className="px-5 py-4 text-sm text-navy-900/65">Nenhum aditivo.</li>}
               {aditivos.map((aditivo) => (

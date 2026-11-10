@@ -18,7 +18,7 @@ const AREAS: { titulo: string; descricao: string; hrefs: { href: string; alcance
       {
         href: "/administracao/usuarios",
         alcance: "Somente administrador",
-        consequencia: "Inativar ou retirar um perfil corta o acesso na requisição seguinte (RNF-03). Contas não são apagadas.",
+        consequencia: "Inativar ou retirar um perfil corta o acesso na requisição seguinte. Contas não são apagadas.",
       },
     ],
   },
@@ -50,7 +50,7 @@ const AREAS: { titulo: string; descricao: string; hrefs: { href: string; alcance
       {
         href: "/administracao/convenios",
         alcance: "Coordenação e administrador",
-        consequencia: "Sem convênio vigente na data de início, o estágio não é ativado (RF010).",
+        consequencia: "Sem convênio vigente na data de início, o estágio não é ativado.",
       },
     ],
   },
@@ -71,7 +71,7 @@ const AREAS: { titulo: string; descricao: string; hrefs: { href: string; alcance
     hrefs: [
       { href: "/administracao/relatorios-gerenciais", alcance: "Administrador vê todos os cursos; coordenação, os seus", consequencia: "Somente leitura, com exportação em CSV e PDF." },
       { href: "/administracao/guarda-documental", alcance: "Somente administrador", consequencia: "Eliminar remove o arquivo de forma definitiva; o registro e o hash permanecem." },
-      { href: "/administracao/auditoria", alcance: "Somente administrador", consequencia: "Somente leitura: a trilha não aceita alteração nem exclusão (RN-28)." },
+      { href: "/administracao/auditoria", alcance: "Somente administrador", consequencia: "Somente leitura: a trilha não aceita alteração nem exclusão." },
     ],
   },
 ];

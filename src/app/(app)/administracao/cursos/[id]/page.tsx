@@ -91,7 +91,7 @@ confirmacao={{ titulo: "Salvar as alterações do curso?", descricao: "Mudar a c
           )}
           <Painel
             titulo="Categorias de atividades"
-            descricao={`Limite de cada categoria no curso (RN-23). Soma dos limites: ${h(somaLimites)}; o total aproveitado nunca passa de ${h(curso.cargaAtividadesComplementaresMinutos)}.`}
+            descricao={`Limite de cada categoria no curso. Soma dos limites: ${h(somaLimites)}; o total aproveitado nunca passa de ${h(curso.cargaAtividadesComplementaresMinutos)}.`}
             flush
           >
             <ul className="divide-y divide-navy-900/[0.07]" data-testid="exigencias">
@@ -122,7 +122,7 @@ confirmacao={{ titulo: "Definir este limite?", descricao: "Mudar o limite da cat
                     campos={[
                       { nome: "categoria_id", rotulo: "Categoria", tipo: "select", obrigatorio: true, opcoes: catalogo.map((categoria) => ({ valor: categoria.id, rotulo: categoria.nome })) },
                       { nome: "limite_horas", rotulo: "Limite (h)", tipo: "number" },
-                      { nome: "admite_estagio_nao_obrigatorio", rotulo: "Recebe estágio não obrigatório (RN-18)", tipo: "checkbox" },
+                      { nome: "admite_estagio_nao_obrigatorio", rotulo: "Recebe estágio não obrigatório", tipo: "checkbox" },
                     ]}
                   />
                 </div>
@@ -130,7 +130,7 @@ confirmacao={{ titulo: "Definir este limite?", descricao: "Mudar o limite da cat
             )}
           </Painel>
         </div>
-        <Painel titulo="Relatórios de estágio" descricao="Periodicidade por tipo de estágio (RF036). Relatórios já gerados mantêm o prazo calculado na época." flush>
+        <Painel titulo="Relatórios de estágio" descricao="Periodicidade por tipo de estágio. Relatórios já gerados mantêm o prazo calculado na época." flush>
           <ul className="divide-y divide-navy-900/[0.07]">
             {periodicidades.map((item) => (
               <li key={item.tipoEstagio} className="flex flex-col gap-1 px-5 py-4 text-sm">

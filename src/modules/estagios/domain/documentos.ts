@@ -63,7 +63,7 @@ export function partes(id: IdentificacaoEstagio): SecaoPdf {
 function assinaturas(lista: Assinatura[], hash: string | null): SecaoPdf {
   const validas = hash ? lista.filter((item) => item.hashDocumento === hash) : [];
   return {
-    titulo: "Assinaturas (RF019)",
+    titulo: "Assinaturas",
     campos: validas.length
       ? validas.map((item) => [PARTE[item.parte] ?? item.parte, `${item.signatarioNome}, em ${instante(item.criadoEm)}`] as [string, string])
       : [["Situação", hash ? "Nenhuma assinatura sobre o hash vigente" : "Documento em edição: ainda não assinável"]],
@@ -131,7 +131,7 @@ export function documentoPlano(plano: Plano, id: IdentificacaoEstagio, orientado
       { titulo: "Atividades previstas", paragrafos: [plano.atividadesPrevistas] },
       { titulo: "Compatibilidade com o curso", paragrafos: [plano.justificativaCompatibilidade] },
       {
-        titulo: "Decisão do professor orientador (RF017)",
+        titulo: "Decisão do professor orientador",
         campos: [
           ["Orientador", orientador ?? "Não informado"],
           ["Decidido em", plano.decididoEm ? instante(plano.decididoEm) : "Aguardando"],
@@ -205,7 +205,7 @@ export function documentoAditivo(aditivo: Aditivo, id: IdentificacaoEstagio, nov
     subtitulo: `${TIPO_ADITIVO[aditivo.tipo] ?? aditivo.tipo} · ${SITUACAO_ADITIVO[aditivo.situacao] ?? aditivo.situacao} · SHA-256 ${aditivo.hashConteudo}`,
     secoes: [
       partes(id),
-      { titulo: "Alterações (RN-06)", campos: alteracoes, paragrafos: [aditivo.justificativa] },
+      { titulo: "Alterações", campos: alteracoes, paragrafos: [aditivo.justificativa] },
       { campos: [["Efetivado em", aditivo.efetivadoEm ? instante(aditivo.efetivadoEm) : "Aguardando as três assinaturas"]] },
       assinaturas(lista.filter((item) => item.aditivoId === aditivo.id), aditivo.hashConteudo),
     ],
