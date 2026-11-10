@@ -13,6 +13,7 @@ import {
   listFilaAnalisePagina,
   reenviarAtividade,
 } from "@/modules/atividades/services/atividade-service";
+import { listNotificacoes } from "@/shared/notificacoes/notificacao-service";
 import {
   closeOwnerDatabase,
   createCategoriaComLimite,
@@ -203,6 +204,9 @@ describe("análise e limites (RF051, RF054, RN-23)", () => {
     const { analise } = await decidirAtividade(como(c.coordenador), atividade.id, "APROVADA", null);
     expect(analise).toMatchObject({ horasAproveitadasMinutos: 1500, minutosExcedentes: 900 });
     expect(analise.motivoExcedente).toContain("Carga total");
+    // RF070: the hours reach the student as a person reads them, not as numeric(20,16)
+    const { itens } = await listNotificacoes(como(c.aluno), { apenasNaoLidas: false, limite: 10 });
+    expect(itens.find((item) => item.tipo === "ATIVIDADE_ANALISADA")?.mensagem).toBe("A coordenação aprovou a atividade: 25 h aproveitadas.");
   });
 
   it("two approvals at once cannot pass the limit together", async () => {
