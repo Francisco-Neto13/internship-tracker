@@ -29,6 +29,7 @@ const ABAS = ["resumo", "formalizacao", "acompanhamento", "ocorrencias"] as cons
 const reais = (valor: string | null) => (valor === null ? "Não se aplica" : Number(valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
 const h = (minutos: number) => `${minutosParaHoras(minutos).toLocaleString("pt-BR")} h`;
 const TIPO_ADITIVO: Record<string, string> = { PRORROGACAO: "Prorrogação", ALTERACAO_CARGA_HORARIA: "Alteração de carga horária", SUBSTITUICAO_SUPERVISOR: "Substituição de supervisor" };
+const PARTE: Record<string, string> = { ESTUDANTE: "Estudante", INSTITUICAO: "Instituição", CONCEDENTE: "Concedente" };
 const SITUACAO_ADITIVO: Record<string, { rotulo: string; tom: "ok" | "pending" | "neutral" }> = {
   AGUARDANDO_ASSINATURAS: { rotulo: "Aguardando assinaturas", tom: "pending" },
   VIGENTE: { rotulo: "Vigente", tom: "ok" },
@@ -143,7 +144,7 @@ export default async function EstagioPage({ params, searchParams }: { params: Pr
                     <BaixarArquivo url={`/api/v1/aditivos/${aditivo.id}/pdf`} rotulo="Baixar PDF" tamanho="sm" />
                     {aditivo.situacao === "AGUARDANDO_ASSINATURAS" &&
                       acoes.partesQueAssina.map((parte) => (
-                        <BotaoAcao key={parte} url={`/api/v1/aditivos/${aditivo.id}/assinaturas`} confirmacao={{ titulo: "Assinar o aditivo?", descricao: "Sua identificação, a data, a hora e o hash deste aditivo ficam registrados.", confirmar: "Assinar" }} rotulo={`Assinar (${parte.toLowerCase()})`} corpo={{ parte }} tamanho="sm" />
+                        <BotaoAcao key={parte} url={`/api/v1/aditivos/${aditivo.id}/assinaturas`} confirmacao={{ titulo: "Assinar o aditivo?", descricao: "Sua identificação, a data, a hora e o hash deste aditivo ficam registrados.", confirmar: "Assinar" }} rotulo={`Assinar como ${PARTE[parte]}`} corpo={{ parte }} tamanho="sm" />
                       ))}
                   </div>
                 </li>

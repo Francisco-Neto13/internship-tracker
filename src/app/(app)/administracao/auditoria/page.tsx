@@ -86,7 +86,7 @@ const COLUNAS: DataTableColumn<Registro>[] = [
       <span className="flex flex-col gap-1">
         <span className="text-navy-900">{descreverOperacao(registro.tabela, registro.operacao)}</span>
         <span className="flex items-center gap-2">
-          <StatusBadge tone={TOM[registro.operacao] ?? "neutral"}>{registro.operacao}</StatusBadge>
+          <StatusBadge tone={TOM[registro.operacao] ?? "neutral"}><span className="first-letter:uppercase">{OPERACAO_AUDITORIA[registro.operacao] ?? registro.operacao}</span></StatusBadge>
           <span className="font-mono text-xs text-navy-900/65">{registro.registroId.slice(0, 8)}</span>
         </span>
       </span>

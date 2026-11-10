@@ -1,4 +1,4 @@
-import { TIPO_ESTAGIO } from "@/lib/rotulos";
+import { SITUACAO_CONCEDENTE, TIPO_ESTAGIO } from "@/lib/rotulos";
 import Link from "next/link";
 import { lerConsulta, type SearchParamsBrutos } from "@/lib/consulta";
 import { identidadeDaTela } from "@/lib/acesso-tela";
@@ -150,7 +150,7 @@ export default async function RelatoriosGerenciaisPage({ searchParams }: { searc
                       const numero = typeof linha[coluna] === "number";
                       return (
                         <td key={coluna} className={cn("px-4 py-2.5 text-navy-900", numero && "text-right tabular-nums")}>
-                          {linha[coluna] === null ? "Sem dado" : numero ? Number(linha[coluna]).toLocaleString("pt-BR") : coluna === "tipo" ? (TIPO_ESTAGIO[String(linha[coluna])] ?? String(linha[coluna])) : String(linha[coluna])}
+                          {linha[coluna] === null ? "Sem dado" : numero ? Number(linha[coluna]).toLocaleString("pt-BR") : coluna === "tipo" ? (TIPO_ESTAGIO[String(linha[coluna])] ?? String(linha[coluna])) : coluna === "situacao" ? (SITUACAO_CONCEDENTE[String(linha[coluna])]?.rotulo ?? String(linha[coluna])) : String(linha[coluna])}
                         </td>
                       );
                     })}

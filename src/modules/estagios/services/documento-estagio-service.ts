@@ -33,13 +33,13 @@ export async function pdfTce(identity: Identity, estagioId: string): Promise<Uin
 /** The latest version of the plan (the approved one once there is one). */
 export async function pdfPlano(identity: Identity, estagioId: string): Promise<Uint8Array> {
   const documento = await withUser(identity, async (tx) => {
-    const { estagio, identificacao } = await carregar(tx, estagioId);
+    const { identificacao } = await carregar(tx, estagioId);
     const planos = await findPlanos(tx, estagioId);
     const plano = planos.filter((item) => item.situacao === "APROVADO").at(-1) ?? planos.at(-1);
     if (!plano) {
       throw new DomainError({ code: "PLANO_NAO_ENCONTRADO", kind: "NOT_FOUND", message: "O estágio ainda não tem plano de atividades.", requisito: "RF016" });
     }
-    return documentoPlano(plano, identificacao, estagio.id, plano.decididoPorUsuarioId ? await nomeDoUsuario(tx, plano.decididoPorUsuarioId) : null);
+    return documentoPlano(plano, identificacao, plano.decididoPorUsuarioId ? await nomeDoUsuario(tx, plano.decididoPorUsuarioId) : null);
   });
   return gerarPdfDocumento(documento);
 }

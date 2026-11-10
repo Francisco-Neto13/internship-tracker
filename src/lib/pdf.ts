@@ -10,6 +10,9 @@ const MARGEM = 48;
 const COR_TEXTO = rgb(0.06, 0.09, 0.16);
 const COR_SUAVE = rgb(0.38, 0.42, 0.5);
 const COR_LINHA = rgb(0.85, 0.87, 0.9);
+// navy-700 and azul-500 of globals.css: the documents carry the identity of the screens
+const COR_TITULO = rgb(0.118, 0.227, 0.373);
+const COR_MARCA = rgb(0.231, 0.435, 0.627);
 
 type Fontes = { normal: PDFFont; negrito: PDFFont };
 
@@ -114,6 +117,13 @@ async function criar(titulo: string): Promise<{ pdf: PDFDocument; fontes: Fontes
   return { pdf, fontes: { normal: await pdf.embedFont(StandardFonts.Helvetica), negrito: await pdf.embedFont(StandardFonts.HelveticaBold) } };
 }
 
+function cabecalho(escritor: Escritor, titulo: string, subtitulo?: string) {
+  escritor.texto("INTERNSHIP TRACKER", { tamanho: 8, negrito: true, cor: COR_MARCA });
+  escritor.espaco(3);
+  escritor.texto(titulo, { tamanho: 16, negrito: true, cor: COR_TITULO });
+  if (subtitulo) escritor.texto(subtitulo, { tamanho: 10, cor: COR_SUAVE });
+}
+
 export type TabelaPdf = {
   titulo: string;
   subtitulo?: string;
@@ -129,8 +139,7 @@ export type TabelaPdf = {
 export async function gerarPdfTabela(tabela: TabelaPdf): Promise<Uint8Array> {
   const { pdf, fontes } = await criar(tabela.titulo);
   const escritor = new Escritor(pdf, fontes, [A4[1], A4[0]]);
-  escritor.texto(tabela.titulo, { tamanho: 16, negrito: true });
-  if (tabela.subtitulo) escritor.texto(tabela.subtitulo, { tamanho: 10, cor: COR_SUAVE });
+  cabecalho(escritor, tabela.titulo, tabela.subtitulo);
   escritor.espaco(4);
   for (const [rotulo, valor] of tabela.filtros) escritor.texto(`${rotulo}: ${valor}`, { tamanho: 9, cor: COR_SUAVE });
   escritor.espaco(8);
@@ -186,8 +195,7 @@ export type DocumentoPdf = {
 export async function gerarPdfDocumento(documento: DocumentoPdf): Promise<Uint8Array> {
   const { pdf, fontes } = await criar(documento.titulo);
   const escritor = new Escritor(pdf, fontes, A4);
-  escritor.texto(documento.titulo, { tamanho: 16, negrito: true });
-  if (documento.subtitulo) escritor.texto(documento.subtitulo, { tamanho: 10, cor: COR_SUAVE });
+  cabecalho(escritor, documento.titulo, documento.subtitulo);
   escritor.espaco(6);
   escritor.regua();
   for (const secao of documento.secoes) {
