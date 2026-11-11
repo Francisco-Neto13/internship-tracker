@@ -70,9 +70,11 @@ begin
     end if;
   end loop;
 
-  insert into public.auditoria (usuario_id, tabela, registro_id, operacao, dados_anteriores, dados_novos, campos_alterados)
+  -- RF003: titular_id is the administrator who acted as usuario_id through the profile switch
+  insert into public.auditoria (usuario_id, titular_id, tabela, registro_id, operacao, dados_anteriores, dados_novos, campos_alterados)
   values (
     app.usuario_atual_id(),
+    app.titular_atual_id(),
     tg_table_name,
     coalesce(v_novos ->> 'id', v_anteriores ->> 'id'),
     tg_op,

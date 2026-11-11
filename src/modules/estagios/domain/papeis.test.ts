@@ -48,6 +48,12 @@ describe("who acts on each step of the internship", () => {
     expect(acoes.partesQueAssina).toEqual([]);
   });
 
+  it("keeps reports away from an administrator acting through the switch (RF003)", () => {
+    const acoes = acoesNoEstagio({ ...NENHUM_PAPEL, estudante: true, orientador: true, contextoAdministrador: true });
+    expect(acoes.enviarRelatorio || acoes.decidirRelatorio).toBe(false);
+    expect(acoes.lancarFrequencia && acoes.partesQueAssina.includes("ESTUDANTE")).toBe(true);
+  });
+
   it("adds up the roles of someone with more than one", () => {
     const acoes = acoesNoEstagio({ ...NENHUM_PAPEL, orientador: true, coordenacao: true });
     expect(acoes.decidirRelatorio && acoes.concluir).toBe(true);

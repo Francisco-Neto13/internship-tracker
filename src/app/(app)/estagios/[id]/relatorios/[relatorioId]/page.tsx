@@ -61,7 +61,7 @@ export default async function RelatorioPage({ params }: { params: Promise<{ id: 
         }
       />
 
-      {versoes.length === 0 && identity.somenteLeitura ? (
+      {versoes.length === 0 && identity.titularId ? (
         // RF003: the switch hides report content, the administrator's rule (versao_relatorio_leitura)
         <EstadoVazio titulo="Conteúdo oculto para o administrador" descricao="O texto e os anexos do relatório não aparecem enquanto você vê o sistema como outra pessoa." />
       ) : versoes.length === 0 ? (

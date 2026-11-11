@@ -12,16 +12,18 @@ export type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
  */
 export async function withUser<T>(identity: Identity, work: (tx: Transaction) => Promise<T>): Promise<T> {
   // Guards against a forged Identity: app.usuario_atual_id() casts the value to uuid
-  if (!isValidUserId(identity.userId)) {
+  if (!isValidUserId(identity.userId) || (identity.titularId !== undefined && !isValidUserId(identity.titularId))) {
     throw new Error("withUser received an identity without a valid user id");
   }
 
   return getAppDatabase().transaction(async (tx) => {
-    // RF003: an administrator viewing as another account reads, never writes, and does not
-    // reach report content or documents (app.em_contexto_administrador)
-    if (identity.somenteLeitura) {
-      await tx.execute(sql`set transaction read only`);
-      await tx.execute(sql`select set_config('app.contexto_administrador', 'on', true)`);
+    // RF003: an administrator acting as another account writes as that account, the trail
+    // records the administrator too (app.titular_atual_id), and report content and documents
+    // stay out of reach (app.em_contexto_administrador)
+    if (identity.titularId) {
+      await tx.execute(
+        sql`select set_config('app.contexto_administrador', 'on', true), set_config('app.titular_id', ${identity.titularId}, true)`,
+      );
     }
     await tx.execute(sql`select set_config('app.usuario_id', ${identity.userId}, true)`);
     return work(tx);

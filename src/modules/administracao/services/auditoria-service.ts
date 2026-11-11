@@ -34,7 +34,7 @@ export async function listRegistros(
   }));
 }
 
-const CABECALHO = ["Número", "Data e hora", "Operação", "Registro", "Referência do registro", "Referência do autor", "Autor", "E-mail do autor", "Campos alterados", "Antes", "Depois"];
+const CABECALHO = ["Número", "Data e hora", "Operação", "Registro", "Referência do registro", "Referência do autor", "Autor", "E-mail do autor", "Feito por, na troca de perfil", "Campos alterados", "Antes", "Depois"];
 
 /**
  * RF066: the filtered trail as CSV (src/lib/csv.ts). Counted and read in one transaction,
@@ -66,6 +66,7 @@ export async function exportarRegistros(identity: Identity, filtro: FiltroAudito
       registro.usuarioId,
       registro.autorNome ?? "Sistema",
       registro.autorEmail,
+      registro.titularId ? (registro.titularNome ?? registro.titularId) : null,
       registro.camposAlterados?.map(rotuloCampo).join(", "),
       textoAuditoria(registro.dadosAnteriores),
       textoAuditoria(registro.dadosNovos),

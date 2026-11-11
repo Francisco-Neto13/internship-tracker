@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "drizzle/migrations/meta/_journal.json": {
-    "mtime": 1794355131.8122182,
-    "seen": 1794356058.710996,
-    "ast_hash": "744716b65a9107cd46e72fbecc83c2ef",
+    "mtime": 1794425870.2369456,
+    "seen": 1794426265.0937421,
+    "ast_hash": "bd8f7ddf7393e3727d3c29afc4a45da4",
     "semantic_hash": ""
   },
   "drizzle/rollback/0002_parametros_categorias.down.sql": {
@@ -366,15 +366,15 @@
     "semantic_hash": ""
   },
   "drizzle/sql/functions/01_identidade.sql": {
-    "mtime": 1794355404.1110096,
-    "seen": 1794356058.7110069,
-    "ast_hash": "ef7d1777893ff9006d8e2b51df74a4b3",
+    "mtime": 1794425867.863267,
+    "seen": 1794426265.093756,
+    "ast_hash": "4168bc1015cda484a03fb123334789ec",
     "semantic_hash": ""
   },
   "drizzle/sql/functions/02_auditoria.sql": {
-    "mtime": 1794277645.4865317,
-    "seen": 1794356058.7110069,
-    "ast_hash": "6e95532f010ed7798ddd01c577340f3c",
+    "mtime": 1794425867.862987,
+    "seen": 1794426265.093757,
+    "ast_hash": "5a74a44de1f2c93d1841a7829b77515f",
     "semantic_hash": ""
   },
   "drizzle/sql/functions/03_senha.sql": {
@@ -570,9 +570,9 @@
     "semantic_hash": ""
   },
   "drizzle/sql/policies/relatorios.sql": {
-    "mtime": 1794355404.1119454,
-    "seen": 1794356058.7110279,
-    "ast_hash": "ea0894d830a4e0e7d757e7b2edf750ce",
+    "mtime": 1794425949.8086188,
+    "seen": 1794426265.093781,
+    "ast_hash": "a4805163be378822c1d833ef80766899",
     "semantic_hash": ""
   },
   "drizzle/sql/policies/rescisao.sql": {
@@ -816,9 +816,9 @@
     "semantic_hash": ""
   },
   "next-env.d.ts": {
-    "mtime": 1794355675.4401038,
-    "seen": 1794356058.711058,
-    "ast_hash": "8195d2c60ce847a459ae9d308d6a5724",
+    "mtime": 1794356067.412047,
+    "seen": 1794426265.093816,
+    "ast_hash": "aa94238a90e7d04b7a47ecc3145ba6a0",
     "semantic_hash": ""
   },
   "next.config.ts": {
@@ -996,9 +996,9 @@
     "semantic_hash": ""
   },
   "src/app/(app)/administracao/auditoria/page.tsx": {
-    "mtime": 1794354983.7242777,
-    "seen": 1794356058.7110772,
-    "ast_hash": "4dec32af950f1bed754c760939504313",
+    "mtime": 1794425905.8291445,
+    "seen": 1794426265.093838,
+    "ast_hash": "0d4961e17e5d90eb0570f559c57bc6ba",
     "semantic_hash": ""
   },
   "src/app/(app)/administracao/concedentes/[id]/novo-convenio.tsx": {
@@ -1446,15 +1446,15 @@
     "semantic_hash": ""
   },
   "src/app/api/v1/auditoria/route.ts": {
-    "mtime": 1794277645.513717,
-    "seen": 1794356058.711134,
-    "ast_hash": "a0d2f0a1b13334df42335c4fb9f6e8f5",
+    "mtime": 1794425905.828853,
+    "seen": 1794426265.093899,
+    "ast_hash": "53572373d2dc0e52f4c25b362fe2ff23",
     "semantic_hash": ""
   },
   "src/app/api/v1/auth/senha/route.ts": {
-    "mtime": 1794277645.5138447,
-    "seen": 1794356058.711135,
-    "ast_hash": "317d8f887ce2b514327c2fe98062e5d6",
+    "mtime": 1794425840.7213776,
+    "seen": 1794426265.0939,
+    "ast_hash": "7497012c5450e89ebf97369e27177881",
     "semantic_hash": ""
   },
   "src/app/api/v1/auth/sessao/route.ts": {
@@ -2100,9 +2100,9 @@
     "semantic_hash": ""
   },
   "src/db/errors.ts": {
-    "mtime": 1794355241.4879067,
-    "seen": 1794356058.711209,
-    "ast_hash": "17fe9750696fc466fce058dd0789f366",
+    "mtime": 1794425855.3282201,
+    "seen": 1794426265.093986,
+    "ast_hash": "39abd8972885f8ad8d21029b5045908d",
     "semantic_hash": ""
   },
   "src/db/identidade-estudante.ts": {
@@ -2154,9 +2154,9 @@
     "semantic_hash": ""
   },
   "src/db/schema/auditoria.ts": {
-    "mtime": 1794277645.529164,
-    "seen": 1794356058.711215,
-    "ast_hash": "f02fe4edf2475bd6472e540f486d2d96",
+    "mtime": 1794425867.8635912,
+    "seen": 1794426265.093993,
+    "ast_hash": "d54698e2c900c7474909e9f1056fa725",
     "semantic_hash": ""
   },
   "src/db/schema/concedentes.ts": {
@@ -2202,9 +2202,9 @@
     "semantic_hash": ""
   },
   "src/db/with-user.ts": {
-    "mtime": 1794355404.112153,
-    "seen": 1794356058.71122,
-    "ast_hash": "0fcd1d2c41c4360aba9e5e0b5d53b0bc",
+    "mtime": 1794425830.3296394,
+    "seen": 1794426265.0939982,
+    "ast_hash": "58ebf71fc2b3ad04b578ff53d264dbfd",
     "semantic_hash": ""
   },
   "src/lib/api.test.ts": {
@@ -2214,9 +2214,9 @@
     "semantic_hash": ""
   },
   "src/lib/api.ts": {
-    "mtime": 1794355404.1128314,
-    "seen": 1794356058.711222,
-    "ast_hash": "00039645db69532a95257628c2e64b45",
+    "mtime": 1794425855.328347,
+    "seen": 1794426265.0940008,
+    "ast_hash": "c3d22b155a5664d7cbd15478ff9a8c0a",
     "semantic_hash": ""
   },
   "src/lib/auth-client.ts": {
@@ -2316,9 +2316,9 @@
     "semantic_hash": ""
   },
   "src/lib/identity.ts": {
-    "mtime": 1794355241.4875371,
-    "seen": 1794356058.711234,
-    "ast_hash": "0f65f6bb56d56dd9e5d3bbc48d5af701",
+    "mtime": 1794425830.329031,
+    "seen": 1794426265.094014,
+    "ast_hash": "13f3391cb4d9295143151f7ae12e7d0e",
     "semantic_hash": ""
   },
   "src/lib/interface.test.ts": {
@@ -2388,9 +2388,9 @@
     "semantic_hash": ""
   },
   "src/lib/session.ts": {
-    "mtime": 1794355257.214938,
-    "seen": 1794356058.711242,
-    "ast_hash": "34bae3fdaddaa975765ef642abc3f927",
+    "mtime": 1794425830.329356,
+    "seen": 1794426265.094023,
+    "ast_hash": "3a95cd15915fb10f3bc0d2cd65c284d8",
     "semantic_hash": ""
   },
   "src/lib/storage.ts": {
@@ -2700,9 +2700,9 @@
     "semantic_hash": ""
   },
   "src/modules/acompanhamento/services/relatorio-service.ts": {
-    "mtime": 1794354983.7397468,
-    "seen": 1794356058.7112808,
-    "ast_hash": "3e139f4141e96b655157c661aed489af",
+    "mtime": 1794426056.5905373,
+    "seen": 1794426265.094068,
+    "ast_hash": "b845df8bc3a275c7052abc9fd6640cd1",
     "semantic_hash": ""
   },
   "src/modules/administracao/domain/relatorios-gerenciais.ts": {
@@ -2712,9 +2712,9 @@
     "semantic_hash": ""
   },
   "src/modules/administracao/repositories/auditoria-repository.ts": {
-    "mtime": 1794277645.5386243,
-    "seen": 1794356058.711282,
-    "ast_hash": "c46ffae5b9d5c2ac961e645decffb7e6",
+    "mtime": 1794425905.8282201,
+    "seen": 1794426265.094069,
+    "ast_hash": "c5d176d4775ed44109978ffb9436aa53",
     "semantic_hash": ""
   },
   "src/modules/administracao/repositories/guarda-repository.ts": {
@@ -2748,9 +2748,9 @@
     "semantic_hash": ""
   },
   "src/modules/administracao/services/auditoria-service.ts": {
-    "mtime": 1794354983.7399735,
-    "seen": 1794356058.711286,
-    "ast_hash": "c7692a476698730f6985f07546b7e4cd",
+    "mtime": 1794425905.828633,
+    "seen": 1794426265.094074,
+    "ast_hash": "a8bdfebea7551ad1340a4a22633570d6",
     "semantic_hash": ""
   },
   "src/modules/administracao/services/guarda-service.ts": {
@@ -2868,15 +2868,15 @@
     "semantic_hash": ""
   },
   "src/modules/estagios/domain/papeis.test.ts": {
-    "mtime": 1794354983.740761,
-    "seen": 1794356058.7113001,
-    "ast_hash": "b404f289c8bc030e29ba4b1b9ae44576",
+    "mtime": 1794425989.9030716,
+    "seen": 1794426265.094089,
+    "ast_hash": "247a03fa6924f6754c3e931444c98248",
     "semantic_hash": ""
   },
   "src/modules/estagios/domain/papeis.ts": {
-    "mtime": 1794354983.7408612,
-    "seen": 1794356058.711301,
-    "ast_hash": "106cf75e9941fbd4aeb694417b161711",
+    "mtime": 1794425949.8069093,
+    "seen": 1794426265.09409,
+    "ast_hash": "cc604206200bd84673f485a8ccc554e0",
     "semantic_hash": ""
   },
   "src/modules/estagios/domain/tce.ts": {
@@ -2898,9 +2898,9 @@
     "semantic_hash": ""
   },
   "src/modules/estagios/repositories/estagio-repository.ts": {
-    "mtime": 1794333165.8201098,
-    "seen": 1794356058.711303,
-    "ast_hash": "9ecaa913ab669f5355aa0d387f0fd2d2",
+    "mtime": 1794425949.8081467,
+    "seen": 1794426265.094093,
+    "ast_hash": "a01d3e632af1a4a735137fa30c008eb9",
     "semantic_hash": ""
   },
   "src/modules/estagios/repositories/formalizacao-repository.ts": {
@@ -3312,9 +3312,9 @@
     "semantic_hash": ""
   },
   "tests/db/auditoria-consulta.test.ts": {
-    "mtime": 1794354983.743605,
-    "seen": 1794356058.7113512,
-    "ast_hash": "d312c72023cf67487873508fa32cf5ec",
+    "mtime": 1794426098.503986,
+    "seen": 1794426265.094146,
+    "ast_hash": "d32c467dad3eb61516a92f6cc5c9fe2a",
     "semantic_hash": ""
   },
   "tests/db/auditoria-mascaramento.test.ts": {
@@ -3546,9 +3546,9 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1794355804.8730128,
-    "seen": 1794356058.711379,
-    "ast_hash": "97f97fd93e272a1614bade8dddd91789",
+    "mtime": 1794426259.9963171,
+    "seen": 1794426265.09418,
+    "ast_hash": "8e01205199631d2e16131df0b7ee0a22",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -3618,9 +3618,9 @@
     "semantic_hash": ""
   },
   "src/app/(app)/estagios/[id]/relatorios/[relatorioId]/page.tsx": {
-    "mtime": 1794355410.865809,
-    "seen": 1794356058.711099,
-    "ast_hash": "940b5a1a6d01a2ebc707884da144fe02",
+    "mtime": 1794425905.8293684,
+    "seen": 1794426265.093863,
+    "ast_hash": "d422f109e71cacae2c67082009e7fc0c",
     "semantic_hash": ""
   },
   "src/app/(app)/estagios/[id]/vincular-responsavel.tsx": {
@@ -3780,9 +3780,9 @@
     "semantic_hash": ""
   },
   "drizzle/sql/functions/21_contexto_administrador.sql": {
-    "mtime": 1794355558.1855516,
-    "seen": 1794356058.711019,
-    "ast_hash": "3bf1147970f01ffeb16cf39937f714fc",
+    "mtime": 1794425867.8626337,
+    "seen": 1794426265.09377,
+    "ast_hash": "0a2585d7bc9219e402e133c91bbe7e59",
     "semantic_hash": ""
   },
   "drizzle/sql/policies/contexto_administrador.sql": {
@@ -3804,15 +3804,15 @@
     "semantic_hash": ""
   },
   "e2e/troca-de-perfil.spec.ts": {
-    "mtime": 1794355648.2674348,
-    "seen": 1794356058.711055,
-    "ast_hash": "7706cc6236836c7d88b85337feccc46c",
+    "mtime": 1794426187.0890446,
+    "seen": 1794426265.0938141,
+    "ast_hash": "7f677fafdb034da9de6ca86279650962",
     "semantic_hash": ""
   },
   "src/app/(app)/troca-de-perfil.tsx": {
-    "mtime": 1794355455.974233,
-    "seen": 1794356058.7111108,
-    "ast_hash": "05d73cebc2064f7b16b1dae068d94d4c",
+    "mtime": 1794425905.8298333,
+    "seen": 1794426265.093877,
+    "ast_hash": "4941c1f8672db556d9d67b79e7810dd6",
     "semantic_hash": ""
   },
   "src/app/api/v1/contexto/contas/route.ts": {
@@ -3852,9 +3852,27 @@
     "semantic_hash": ""
   },
   "tests/db/contexto-administrador.test.ts": {
-    "mtime": 1794355558.185788,
-    "seen": 1794356058.711356,
-    "ast_hash": "3525f2e04953af277cce57e5fb53fff8",
+    "mtime": 1794426077.8136868,
+    "seen": 1794426265.094152,
+    "ast_hash": "b832b0d4fb385b7e8c0257b8ab2032d2",
+    "semantic_hash": ""
+  },
+  "drizzle/migrations/0018_auditoria_titular.sql": {
+    "mtime": 1794425870.2371814,
+    "seen": 1794426265.093726,
+    "ast_hash": "95a1c6d3401cd3e952056d7afc66685a",
+    "semantic_hash": ""
+  },
+  "drizzle/migrations/meta/0018_snapshot.json": {
+    "mtime": 1794425870.2361221,
+    "seen": 1794426265.093741,
+    "ast_hash": "d525aae05342d8eac76f98a8987bb084",
+    "semantic_hash": ""
+  },
+  "drizzle/rollback/0018_auditoria_titular.down.sql": {
+    "mtime": 1794425884.1277578,
+    "seen": 1794426265.0937548,
+    "ast_hash": "2649fcfc78a850254e56bffada54c87e",
     "semantic_hash": ""
   }
 }

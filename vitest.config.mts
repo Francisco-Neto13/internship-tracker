@@ -1,8 +1,12 @@
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { defineConfig } from "vitest/config";
 
-// Test database settings. Variables already set (CI, shell) take precedence, and the
-// db global setup refuses to run unless every URL points at a *_test database.
+// Test database settings. Variables already set (CI, shell) take precedence, then the
+// machine's .env.test.local (ignored by git; another port when 5432 is taken), then .env.test.
+// The db global setup refuses to run unless every URL points at a *_test database.
+const envLocal = path.resolve(import.meta.dirname, ".env.test.local");
+if (existsSync(envLocal)) process.loadEnvFile(envLocal);
 process.loadEnvFile(path.resolve(import.meta.dirname, ".env.test"));
 
 export default defineConfig({

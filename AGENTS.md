@@ -159,13 +159,18 @@ ferramenta.
   dela naquele estágio pelas mesmas funções `app.*` das políticas, e cada ação cita a regra que a decide: regra de escrita nova
   entra lá junto com a tela. Fila de decisão lista só o que quem vê decide (`analisaveis` nas atividades). A tela só esconde;
   quem decide continua sendo a API e o banco (`e2e/acoes-por-perfil.spec.ts`).
-- Troca de perfil (RF003): o administrador vê o sistema como outra conta pelo botão "Ver como". A troca é uma linha de
-  `contexto_administrador` ligada à sessão, auditada e relida a cada requisição em `resolveSession` (`src/lib/session.ts`):
-  `identity` passa a ser a conta vista, com `somenteLeitura`, e `titular` continua sendo quem entrou. `withUser` abre a
-  transação `read only` e liga `app.em_contexto_administrador()`, que esconde o conteúdo do relatório (versões e anexos) e
-  recusa documento: o limite do administrador vale também na troca. `authenticatedRoute` recusa escrita com 403
-  `CONTEXTO_SOMENTE_LEITURA`; só as rotas com `comoTitular` (`/api/v1/contexto`) agem como quem entrou. O cookie
-  `contexto-perfil` só evita a consulta nas outras sessões. Testes: `tests/db/contexto-administrador.test.ts`, `e2e/troca-de-perfil.spec.ts`.
+- Troca de perfil (RF003): o administrador usa o sistema como outra conta pelo botão "Ver como", para conferir o alcance de
+  cada perfil e percorrer um fluxo inteiro (assinar o TCE por cada parte, por exemplo) sem entrar e sair. O perfil é só dos
+  desenvolvedores, e a troca grava em produção. A troca é uma linha de `contexto_administrador` ligada à sessão, auditada e
+  relida a cada requisição em `resolveSession` (`src/lib/session.ts`): `identity` passa a ser a conta escolhida, com
+  `titularId`, e `titular` continua sendo quem entrou. `withUser` define `app.titular_id` e liga `app.em_contexto_administrador()`:
+  a escrita passa como a conta, sob as políticas dela, e o gatilho de auditoria grava o administrador em `auditoria.titular_id`
+  por `app.titular_atual_id()`, que só aceita o valor com troca aberta para aquela conta. O limite do administrador vale
+  também na troca: conteúdo de relatório oculto, relatório não é enviado nem analisado (`CONTEXTO_SEM_RELATORIO`, políticas de
+  `versao_relatorio`, `anexo_relatorio` e `parecer_relatorio`), documento não abre (`CONTEXTO_SEM_DOCUMENTO`). Rota com
+  `foraDaTroca` (troca de senha) responde 403 `CONTEXTO_ACAO_DA_CONTA`; só as rotas com `comoTitular` (`/api/v1/contexto`)
+  agem como quem entrou. O cookie `contexto-perfil` só evita a consulta nas outras sessões. Testes:
+  `tests/db/contexto-administrador.test.ts`, `e2e/troca-de-perfil.spec.ts`.
 - Estado de listagem mora na URL e é resolvido no servidor: `?busca=&pagina=&por_pagina=&ordem=campo|-campo&<filtros>`
   (`src/lib/consulta.ts`, componentes `Paginacao`, `BarraFiltros`, `DataTable`). Ordem desconhecida cai no padrão.
   O link de volta de um registro leva `?voltar=`, aceito só com o prefixo da própria listagem.
@@ -282,7 +287,7 @@ auditoria grava como dono. Com `FORCE`, as políticas e a auditoria quebram.
 são apagadas e recriadas na mesma transação. O arquivo é a fonte da verdade.
 
 Funções auxiliares ficam no schema `app`, em `security definer` com `search_path = ''`:
-`app.usuario_atual_id()`, `app.em_contexto_administrador()`, `app.tem_perfil_vigente(perfil)`, `app.coordena_curso(curso_id)`,
+`app.usuario_atual_id()`, `app.em_contexto_administrador()`, `app.titular_atual_id()`, `app.tem_perfil_vigente(perfil)`, `app.coordena_curso(curso_id)`,
 `app.coordena_estudante_usuario(usuario_id)`, `app.representa_concedente(concedente_id)`,
 `app.e_responsavel_vigente(estagio_id, papel)`, `app.convenio_vigente_em(convenio_id, concedente_id, data)`,
 `app.estagios_legiveis(academico)`, `app.pode_ler_relatorios(estagio_id)`, `app.hoje()` (data em
@@ -305,7 +310,7 @@ Perfil sozinho não basta. A permissão é a interseção de perfil e vínculo:
 | Supervisor | Estágios em que consta como supervisor vigente |
 | Coordenação | Estudantes e estágios do curso sob sua coordenação |
 | Concedente | Estágios da própria concedente |
-| Administrador | Parametrização e auditoria; vê o sistema como outra conta, só para leitura (troca de perfil); sem acesso a conteúdo de relatório ou atestado |
+| Administrador | Parametrização e auditoria; age como outra conta pela troca de perfil, com o próprio nome na auditoria; sem acesso a conteúdo de relatório ou atestado, também na troca |
 
 Política `SELECT` de tabela em que o app insere com `RETURNING` (todo `insert` do Drizzle)
 precisa decidir pelas colunas da própria linha (`estudante_id = ...`, `app.coordena_curso(curso_id)`),
@@ -469,6 +474,9 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
   `DATABASE_AUTH_URL` é `auth_runtime`, e a migração roda num passo separado com
   `DATABASE_MIGRATION_URL`, nunca no build (o build não depende de banco). Conectar a aplicação
   com o dono do banco **contorna toda a RLS**. O PostgreSQL não publica porta na internet.
+- Porta 5432 ocupada na máquina (PostgreSQL instalado fora do Docker): `POSTGRES_PORT` no `.env` muda a porta publicada
+  pelo Compose, as URLs do `.env` usam a mesma porta, e as de teste vão num `.env.test.local` (ignorado pelo git), lido
+  antes do `.env.test` pelo Vitest e pelo `npm run ci`. O `.env.test` e o CI ficam na 5432.
 - O init do Postgres (`docker/postgres/init`) só roda quando o volume é criado. Se o
   container já existia antes dos papéis, recriar: `docker compose down -v` e subir de novo.
 - Fora do init local, a migração cria `app_runtime` e `auth_runtime` sem login. Habilitar uma

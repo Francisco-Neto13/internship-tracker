@@ -4,7 +4,8 @@ import { bigint, check, index, jsonb, pgTable, text, timestamp, uuid } from "dri
 // Append-only trail written by the app.registrar_auditoria() trigger, never by
 // application code (RF065, RN-28). usuario_id has no FK so the trail stands alone. LEITURA
 // rows record each read of a sensitive document (RF072, RN-38), written only by
-// app.registrar_leitura_documento.
+// app.registrar_leitura_documento. titular_id is set only for what an administrator did as
+// another account (RF003), filled by the trigger through app.titular_atual_id().
 export const auditoria = pgTable(
   "auditoria",
   {
@@ -13,6 +14,8 @@ export const auditoria = pgTable(
       .notNull()
       .default(sql`clock_timestamp()`),
     usuarioId: uuid("usuario_id"),
+    /** RF003: the administrator who acted as usuario_id through the profile switch. */
+    titularId: uuid("titular_id"),
     tabela: text("tabela").notNull(),
     registroId: text("registro_id").notNull(),
     operacao: text("operacao").notNull(),

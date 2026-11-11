@@ -189,7 +189,8 @@ export async function findPapeisNoEstagio(tx: Transaction, estagioId: string): P
            app.e_responsavel_vigente(${estagioId}::uuid, 'ORIENTADOR') as orientador,
            app.e_responsavel_vigente(${estagioId}::uuid, 'SUPERVISOR') as supervisor,
            app.coordena_curso_do_estagio(${estagioId}::uuid) as coordenacao,
-           app.representa_concedente_do_estagio(${estagioId}::uuid) as concedente
+           app.representa_concedente_do_estagio(${estagioId}::uuid) as concedente,
+           app.em_contexto_administrador() as "contextoAdministrador"
   `);
   return rows[0];
 }

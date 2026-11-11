@@ -20,9 +20,9 @@ as $$
   select nullif(current_setting('app.usuario_id', true), '')::uuid
 $$;
 
--- RF003: set with app.usuario_id by src/db/with-user.ts while an administrator views the system
--- as another account. It only takes reach away (report content, documents), so a caller that
--- sets it on its own gains nothing.
+-- RF003: set with app.usuario_id by src/db/with-user.ts while an administrator acts as another
+-- account. It only takes reach away (report content, documents), so a caller that sets it on its
+-- own gains nothing.
 create or replace function app.em_contexto_administrador()
 returns boolean
 language sql

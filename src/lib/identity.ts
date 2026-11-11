@@ -10,10 +10,11 @@ declare const identityBrand: unique symbol;
 export type Identity = {
   readonly userId: string;
   /**
-   * RF003: an administrator viewing the system as this account. withUser opens a read-only
-   * transaction, so nothing done in this view is saved, whatever the screen offers.
+   * RF003: set while an administrator acts as this account through the profile switch; holds
+   * the administrator's own id. withUser hands it to the database, so the audit trail records
+   * who acted, and report content and documents stay out of reach.
    */
-  readonly somenteLeitura?: true;
+  readonly titularId?: string;
   readonly [identityBrand]: true;
 };
 

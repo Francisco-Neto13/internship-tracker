@@ -1,22 +1,22 @@
-# Graph Report - internship-tracker  (2026-11-10)
+# Graph Report - internship-tracker  (2026-11-11)
 
 ## Corpus Check
-- 636 files · ~417,739 words
+- 639 files · ~434,462 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 35 file(s) not represented in the graph (top: (none) 31, .example 1, .conf 1)
 
 ## Summary
-- 3637 nodes · 11574 edges · 273 communities (157 shown, 116 thin omitted)
+- 3645 nodes · 11591 edges · 276 communities (158 shown, 118 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 123 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a6bcb2fe`
+- Built from commit: `9e35f2c3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- Testes e suporte compartilhado
+- drizzle-orm
 - API de estágios
 - frequencia-service.ts
 - domain/documentos.ts
@@ -26,29 +26,29 @@
 - _acompanhamento/json.ts
 - @playwright/test
 - Telas de listagem
-- concedentes.test.ts
+- session.ts
 - Barra lateral e navegação
 - 07_estagios.sql
-- esqueleto.tsx
+- cn
 - estagios.ts
-- auditoria-service.ts
+- relatorio-gerencial-service.ts
 - usuario-service.ts
 - Serviço de concedentes
 - atividade-service.ts
 - Migração de estágios
-- lib/api.ts
+- authenticatedRoute
 - registrar_auditoria
 - 18_guarda.sql
-- Formulários da API
+- react
 - Serviço de relatórios
 - Identidade e avaliação
-- DomainError
+- declaracao-service.ts
 - 0008_avaliacao_acompanhamento.sql
 - 08_frequencia.sql
 - Painel por perfil
 - Testes de senha provisória
 - Serviço de integralização
-- formalizacao-service.ts
+- withUser
 - Workflow de deploy
 - Conexão e withUser
 - estudante-service.ts
@@ -56,18 +56,18 @@
 - 09_relatorios.sql
 - Serviço de documentos
 - app.calcular_integralizacao
-- declaracao-service.ts
+- pdf.ts
 - Compose de desenvolvimento
 - Botões e ações de usuário
 - package.json
-- campos.ts
+- troca-de-perfil.tsx
 - telas-decisoes.spec.ts
 - Dados de listagem e desempenho
-- identity.ts
+- usuarios/[id]/page.tsx
 - isRlsViolation
 - frequencia.ts
 - Scripts npm
-- searchParamsOf
+- dataResponse
 - usuario.ts
 - concedente.ts
 - Serviço de cursos
@@ -77,36 +77,36 @@
 - atividade.ts
 - Periodicidade de relatórios
 - triggers/afastamento.sql
-- contexto-service.ts
+- with-user.ts
 - Menu do usuário e senha
 - curso.ts
 - Configuração TypeScript
-- Better Auth
+- auth.ts
 - Schema de acompanhamento
 - 0011_integralizacao.sql
 - 15_notificacoes.sql
 - acessibilidade.spec.ts
-- desempenho.ts
-- rotulos.ts
-- apply-migrations.ts
+- estudante.ts
+- estudantes/[id]/page.tsx
+- documento-acompanhamento.ts
 - Doc: segurança e RLS
 - schemas/parametros.ts
 - Compose prod: variáveis da app
 - Migração de frequência
 - Migração de atividades
-- seed.ts
+- createUsuario
 - categoria-service.ts
-- owner
+- devDependencies
 - Doc: VPS e produção
-- aditivo-service.ts
+- seed.ts
 - CI: passos
 - CI: variáveis
 - CI: jobs
-- documentos/schemas.ts
-- support/estagio.ts
-- versoes/route.ts
-- apuracao/route.ts
-- convenio.ts
+- vinculos.test.ts
+- acoes-por-perfil.spec.ts
+- getCargaHoraria
+- schema/integralizacao.ts
+- (app)/layout.tsx
 - triggers/declaracoes.sql
 - triggers/relatorios.sql
 - Doc: módulos de domínio
@@ -114,26 +114,26 @@
 - Compose prod: ferramentas
 - Compose prod: armazenamento
 - 0002_parametros_categorias.sql
-- Máscaras de campo
-- lib/errors.ts
+- formulario-api.tsx
+- senha-contextual.ts
 - guarda-service.ts
 - Doc: decisões de negócio
 - Doc: autenticação e stack
 - Compose prod: serviço app
 - CI: ações
-- primeiro-acesso.spec.ts
+- navigation.ts
 - estagio.test.ts
 - "notificacao"
 - classificacao-routes.ts
 - 19_relatorios_gerenciais.sql
-- usuario-repository.ts
+- acesso.ts
 - Doc: dados sensíveis
 - Compose prod: healthchecks
 - Compose prod: variáveis Postgres
 - Compose prod: Postgres
 - triggers/estagios.sql
 - Teste de restauração
-- estudantes/[id]/page.tsx
+- cursos/[id]/page.tsx
 - afastamento-service.ts
 - documento-estagio-service.ts
 - SQL de auditoria
@@ -143,7 +143,7 @@
 - Doc: guia e estados
 - CI: fonte de branch
 - CI: gatilhos
-- Identidade do estudante
+- atividades.ts
 - 10_avaliacao_acompanhamento.sql
 - Stub HIBP
 - CI: HIBP real
@@ -172,14 +172,14 @@
 - triggers/notificacoes.sql
 - 16_afastamento.sql
 - app.verificar_declaracao
-- zod
+- novo-estagio-form.tsx
 - "declaracao"
-- parametros/route.ts
+- searchParamsOf
 - parametro-service.ts
 - 01_identidade.sql
 - registrar_auditoria
-- afastamentos/route.ts
-- notificacoes/route.ts
+- exigencias/route.ts
+- jornada.ts
 - concedentes.ts
 - triggers/academico.sql
 - 06_documentos_convenios.sql
@@ -187,25 +187,25 @@
 - triggers/documentos_convenios.sql
 - guarda.sql
 - triggers/rescisao.sql
-- senhas-vazadas.ts
+- [codigo]/route.ts
 - papeis.ts
 - "rescisao"
 - app.impedimentos_conclusao
 - 12_dados_sensiveis.sql
-- percurso-estagio.tsx
-- cnpj.ts
+- campos.ts
+- RecuperarSenhaForm
 - "contexto_administrador"
 - app.representa_concedente
 - triggers/contexto_administrador.sql
 - app.validar_contexto_administrador
 - quality
-- next.config.ts
-- check-hibp-live.mjs
+- use-mobile.ts
+- @aws-sdk/client-s3
 
 ## God Nodes (most connected - your core abstractions)
 1. `dataResponse()` - 236 edges
 2. `withUser()` - 192 edges
-3. `DomainError` - 161 edges
+3. `DomainError` - 162 edges
 4. `authenticatedRoute()` - 116 edges
 5. `drizzle-orm` - 86 edges
 6. `cn()` - 77 edges
@@ -238,91 +238,91 @@
 - **RLS enforcement stack** — agents_with_user_wrapper, agents_role_app_runtime, agents_app_schema_functions, agents_declarative_drizzle_sql, agents_rls [EXTRACTED 1.00]
 - **Encrypted production data handling** — agents_luks_cofre, agents_seaweedfs_storage, agents_backup_layers, scripts_servidor_regras_da_vps_docker_after_vault [INFERRED 0.85]
 
-## Communities (273 total, 116 thin omitted)
+## Communities (276 total, 118 thin omitted)
 
-### Community 0 - "Testes e suporte compartilhado"
-Cohesion: 0.13
-Nodes (42): vitest, afastamento(), atestado(), dataFimPrevista(), cadastrar(), cenario(), administrador(), cenario() (+34 more)
+### Community 0 - "drizzle-orm"
+Cohesion: 0.08
+Nodes (79): drizzle-orm, pg, vitest, hash, criarCriterio(), listCriterios(), registrarAvaliacao(), estagioNaoEncontrado() (+71 more)
 
 ### Community 1 - "API de estágios"
-Cohesion: 0.07
-Nodes (63): POST, POST, GET, POST, GET, POST, GET, POST (+55 more)
+Cohesion: 0.06
+Nodes (68): POST, POST, POST, GET, POST, GET, POST, GET (+60 more)
 
 ### Community 2 - "frequencia-service.ts"
-Cohesion: 0.06
-Nodes (75): estagio, limites, avaliarDivergencia(), diaAnterior(), diasUteis(), Divergencia, EstagioCarga, minutosPrevistosAte() (+67 more)
+Cohesion: 0.07
+Nodes (49): avaliarJornada(), semanaIso(), abrirDivergencia(), analisarDivergencia(), colunasEstagio, DivergenciaRow, EstagioAcompanhado, FiltrosFrequencia (+41 more)
 
 ### Community 3 - "domain/documentos.ts"
-Cohesion: 0.13
-Nodes (24): SecaoPdf, Aditivo, Apolice, Assinatura, assinaturas(), cnpj(), data(), documentoAditivo() (+16 more)
+Cohesion: 0.14
+Nodes (25): Aditivo, Apolice, Assinatura, assinaturas(), cnpj(), data(), documentoAditivo(), documentoPlano() (+17 more)
 
 ### Community 4 - "dependencies"
-Cohesion: 0.05
-Nodes (39): dependencies, @aws-sdk/client-s3, @aws-sdk/s3-request-presigner, better-auth, class-variance-authority, clsx, drizzle-orm, @fontsource-variable/inter (+31 more)
+Cohesion: 0.08
+Nodes (24): dependencies, @aws-sdk/client-s3, @aws-sdk/s3-request-presigner, better-auth, class-variance-authority, clsx, drizzle-orm, @fontsource-variable/inter (+16 more)
 
 ### Community 5 - "Scripts de CI e GitHub"
-Cohesion: 0.07
-Nodes (42): args, CODE_PATHS, fail(), fast, hasDocker(), ok, onlyIndex, requireDocker (+34 more)
+Cohesion: 0.06
+Nodes (49): args, CODE_PATHS, fail(), fast, hasDocker(), ok, onlyIndex, requireDocker (+41 more)
 
 ### Community 6 - "estagios/[id]/page.tsx"
 Cohesion: 0.10
-Nodes (58): ConcedentePage(), ConveniosPage(), ESCOPO, GuardaDocumentalPage(), TIPO_DOCUMENTO, horas(), ParametrosPage(), AcompanhamentoEstagio() (+50 more)
+Nodes (59): ConcedentePage(), horas(), ParametrosPage(), AcompanhamentoEstagio(), h(), seVisivel(), DesempenhoEstagio(), nota() (+51 more)
 
 ### Community 7 - "_acompanhamento/json.ts"
-Cohesion: 0.08
-Nodes (33): acompanhamentoJson(), avaliacaoJson(), cargaHorariaJson(), criterioJson(), divergenciaCalculadaJson(), estagioAcompanhadoJson(), RelatorioExibido, Versao (+25 more)
+Cohesion: 0.09
+Nodes (25): acompanhamentoJson(), avaliacaoJson(), criterioJson(), PATCH, PATCH, GET, POST, GET (+17 more)
 
 ### Community 8 - "@playwright/test"
-Cohesion: 0.10
-Nodes (4): ROTAS, COORDENACAO, isCI, @playwright/test
+Cohesion: 0.08
+Nodes (5): RFC-5737, ROTAS, COORDENACAO, isCI, @playwright/test
 
 ### Community 9 - "Telas de listagem"
-Cohesion: 0.12
-Nodes (63): lucide-react, AuditoriaPage(), COLUNAS, Registro, TOM, Concedente, ConcedentesPage(), SITUACOES (+55 more)
+Cohesion: 0.13
+Nodes (48): AuditoriaPage(), COLUNAS, Registro, TOM, Concedente, ConcedentesPage(), SITUACOES, CursosPage() (+40 more)
 
-### Community 10 - "concedentes.test.ts"
-Cohesion: 0.10
-Nodes (23): estudante, auditoria, createEstudante(), Scenario, Scenario, trailOf(), dados(), Scenario (+15 more)
+### Community 10 - "session.ts"
+Cohesion: 0.11
+Nodes (19): POST, GET, GET, limparContexto(), marcarContexto(), contextoJson(), DELETE, GET (+11 more)
 
 ### Community 11 - "Barra lateral e navegação"
-Cohesion: 0.07
-Nodes (47): class-variance-authority, @radix-ui/react-tooltip, AppSidebar(), ItemDeMenu(), AppLayout(), TopbarTitle(), cobre(), encontrarItem() (+39 more)
+Cohesion: 0.13
+Nodes (27): @radix-ui/react-tooltip, AppSidebar(), ItemDeMenu(), gruposVisiveis(), SheetContent(), SheetOverlay(), SheetTitle(), sheetVariants (+19 more)
 
 ### Community 12 - "07_estagios.sql"
 Cohesion: 0.11
 Nodes (14): app.coordena_curso_do_estagio(), app.dias_usados_no_par(), app.e_estudante_do_estagio(), app.e_responsavel_vigente(), app.efetivar_aditivo(), app.estagios_legiveis(), app.estudante_atual_id(), app.historico_estagios_concedente() (+6 more)
 
-### Community 13 - "esqueleto.tsx"
-Cohesion: 0.70
-Nodes (3): Carregando(), Esqueleto(), EsqueletoDePagina()
+### Community 13 - "cn"
+Cohesion: 0.11
+Nodes (33): nextConfig, securityHeaders, next, ConveniosPage(), ESCOPO, GuardaDocumentalPage(), TIPO_DOCUMENTO, DESCRICAO (+25 more)
 
 ### Community 14 - "estagios.ts"
-Cohesion: 0.05
-Nodes (41): categoriaAtividade, curso, exigenciaCategoria, periodicidadeRelatorio, situacaoAcademica, limiteRequisicao, situacaoUsuario, verificacao (+33 more)
+Cohesion: 0.11
+Nodes (15): afastamento, apoliceSeguro, assinatura, papelResponsavel, parteAssinatura, parteRescisao, planoAtividades, rescisao (+7 more)
 
-### Community 15 - "auditoria-service.ts"
-Cohesion: 0.15
-Nodes (20): RFC-4180, BOM, celulaCsv(), CSV_SEPARADOR, gerarCsv(), TABELA_AUDITORIA, AuditoriaDetalhadaRow, AuditoriaRow (+12 more)
+### Community 15 - "relatorio-gerencial-service.ts"
+Cohesion: 0.10
+Nodes (25): RFC-4180, GET, BOM, celulaCsv(), CSV_SEPARADOR, gerarCsv(), TipoRelatorio, TIPOS_RELATORIO (+17 more)
 
 ### Community 16 - "usuario-service.ts"
-Cohesion: 0.12
-Nodes (37): definirSenha(), revogarSessoes(), expiracaoSenhaProvisoria(), impedirAutoemissaoSenha(), VALIDADE_SENHA_PROVISORIA_HORAS, chave(), diferencaVinculos(), impedirAutoinativacao() (+29 more)
+Cohesion: 0.11
+Nodes (38): vinculoPerfil, revogarSessoes(), impedirAutoinativacao(), impedirAutorremocaoAdministrador(), colunas, findContasEstudante(), findUsuarioById(), insertUsuario() (+30 more)
 
 ### Community 17 - "Serviço de concedentes"
-Cohesion: 0.12
-Nodes (29): POST, Catalogo, CATALOGOS, classificacaoAtiva(), ClassificacaoRow, ConcedenteRow, ConcedenteValues, findClassificacoes() (+21 more)
+Cohesion: 0.11
+Nodes (34): cnpjValido(), digito(), normalizarCnpj(), PESOS_PRIMEIRO, PESOS_SEGUNDO, Catalogo, CATALOGOS, classificacaoAtiva() (+26 more)
 
 ### Community 18 - "atividade-service.ts"
-Cohesion: 0.09
-Nodes (36): Aproveitamento, calcularAproveitamento(), periodoValido(), SaldoAproveitamento, base, AnaliseRow, AtividadeRow, ComprovanteRow (+28 more)
+Cohesion: 0.08
+Nodes (35): calcularAproveitamento(), periodoValido(), SaldoAproveitamento, base, AtividadeRow, condicoesAtividade(), estudanteAtualId(), FiltrosAtividade (+27 more)
 
 ### Community 19 - "Migração de estágios"
 Cohesion: 0.05
 Nodes (52): "convenio", convenio_concedente_idx, "convenio_vigencia", convenio_vigencia_documento_idx, convenio_vigencia_fim_idx, convenio_vigencia_registrado_por_idx, "documento", documento_concedente_idx (+44 more)
 
-### Community 20 - "lib/api.ts"
-Cohesion: 0.09
-Nodes (27): GET, POST, GET, GET, POST, GET, paramsSchema, GET (+19 more)
+### Community 20 - "authenticatedRoute"
+Cohesion: 0.18
+Nodes (12): GET, GET, paramsSchema, GET, GET, GET, GET, pdfResponse() (+4 more)
 
 ### Community 21 - "registrar_auditoria"
 Cohesion: 0.36
@@ -332,21 +332,21 @@ Nodes (4): bloquear_alteracao, definir_atualizado_em, registrar_auditoria, valid
 Cohesion: 0.13
 Nodes (3): app.definir_guarda_convenio(), app.documentos_em_guarda(), app.prazo_guarda_em()
 
-### Community 23 - "Formulários da API"
-Cohesion: 0.11
-Nodes (44): next, @radix-ui/react-dialog, react, NovoConvenio(), onSubmit(), onSubmit(), NovaAtividade(), onSubmit() (+36 more)
+### Community 23 - "react"
+Cohesion: 0.15
+Nodes (29): react, NovoConvenio(), onSubmit(), EstudanteForm(), onSubmit(), EstudanteInput, EstudanteOutput, estudanteSchema (+21 more)
 
 ### Community 24 - "Serviço de relatórios"
 Cohesion: 0.10
-Nodes (31): enviadoComAtraso(), pendenteDe(), relatorioEmAtraso(), SituacaoRelatorio, VisaoRelatorio, VISOES_RELATORIO, AnexoRow, countRelatoriosPendentes() (+23 more)
+Nodes (38): enviadoComAtraso(), pendenteDe(), relatorioEmAtraso(), SituacaoRelatorio, VisaoRelatorio, VISOES_RELATORIO, AnexoRow, countRelatoriosPendentes() (+30 more)
 
 ### Community 25 - "Identidade e avaliação"
-Cohesion: 0.09
-Nodes (46): GET, withUser(), AcompanhamentoRow, AvaliacaoRow, CriterioRow, findAcompanhamentoById(), findAcompanhamentos(), findAvaliacoes() (+38 more)
+Cohesion: 0.13
+Nodes (28): conferirRespostas(), AcompanhamentoRow, CriterioRow, findAcompanhamentoById(), findAcompanhamentos(), findAvaliacoes(), findCriterios(), findRespostas() (+20 more)
 
-### Community 26 - "DomainError"
-Cohesion: 0.14
-Nodes (34): DomainError, hashTce(), booleano(), convenioVigenteEm(), cursoDoEstudante(), EstagioResumo, EstagioRow, findEstagios() (+26 more)
+### Community 26 - "declaracao-service.ts"
+Cohesion: 0.17
+Nodes (19): GET, params, POST, declaracaoJson(), cnpj(), DadosDeclaracao, data(), documentoDeclaracao() (+11 more)
 
 ### Community 27 - "0008_avaliacao_acompanhamento.sql"
 Cohesion: 0.19
@@ -357,32 +357,32 @@ Cohesion: 0.15
 Nodes (6): app.conferir_homologacao(), app.em_afastamento(), app.parametros_em(), app.validar_alteracao_frequencia(), app.validar_homologacao(), app.validar_registro_frequencia()
 
 ### Community 29 - "Painel por perfil"
-Cohesion: 0.15
-Nodes (32): DistribuicaoEstagios(), LinhaCompacta(), ListaCompacta(), SITUACOES, notificacoesRecentes(), BlocoAdministrador(), BlocoConcedente(), BlocoCoordenacao() (+24 more)
+Cohesion: 0.14
+Nodes (34): lucide-react, DistribuicaoEstagios(), LinhaCompacta(), ListaCompacta(), SITUACOES, BlocoAdministrador(), BlocoConcedente(), BlocoCoordenacao() (+26 more)
 
 ### Community 30 - "Testes de senha provisória"
-Cohesion: 0.13
-Nodes (20): GET(), POST(), conta, sessao, usuario, Auth, getAuth(), ContextoDaSessao (+12 more)
+Cohesion: 0.15
+Nodes (18): conta, sessao, usuario, auditoria, alterarSenhaPropria(), resolveSession(), concluirTrocaSenha(), trocarSenha() (+10 more)
 
 ### Community 31 - "Serviço de integralização"
-Cohesion: 0.14
-Nodes (21): Apuracao, CategoriaApurada, progresso(), Situacao, base, ApuracaoRow, apurar(), calcular() (+13 more)
-
-### Community 32 - "formalizacao-service.ts"
 Cohesion: 0.12
-Nodes (33): planoAtividades, podeAssinar(), ApoliceRow, AssinaturaRow, encerrarResponsavel(), findContasResponsavel(), findPlanoById(), findPlanos() (+25 more)
+Nodes (27): POST, GET, integralizacaoJson(), GET, Apuracao, CategoriaApurada, progresso(), Situacao (+19 more)
+
+### Community 32 - "withUser"
+Cohesion: 0.05
+Nodes (122): correspondencia, identidadeEstudante, juncao, aditivo, estagio, withUser(), DomainError, conferirComprovantes() (+114 more)
 
 ### Community 33 - "Workflow de deploy"
 Cohesion: 0.06
 Nodes (32): concurrency, cancel-in-progress, group, env, if, name, runs-on, steps (+24 more)
 
 ### Community 34 - "Conexão e withUser"
-Cohesion: 0.08
-Nodes (31): drizzle-orm, autorizado(), GET(), GET(), closeDatabases(), Database, ENV_BY_POOL, getAppDatabase() (+23 more)
+Cohesion: 0.11
+Nodes (24): autorizado(), GET(), Database, ENV_BY_POOL, getAppDatabase(), getAuthDatabase(), getDatabase(), globalForDb (+16 more)
 
 ### Community 35 - "estudante-service.ts"
-Cohesion: 0.06
-Nodes (44): GET, PATCH, estudanteJson(), GET, POST, padraoContendo(), SITUACAO_ACADEMICA_INICIAL, SituacaoAcademica (+36 more)
+Cohesion: 0.09
+Nodes (31): curso, estudante, SITUACAO_ACADEMICA_INICIAL, SituacaoAcademica, TODAS, transicaoPermitida(), TRANSICOES_SITUACAO_ACADEMICA, validarTransicaoSituacaoAcademica() (+23 more)
 
 ### Community 36 - "13_atividades.sql"
 Cohesion: 0.15
@@ -393,76 +393,76 @@ Cohesion: 0.16
 Nodes (8): app.aplicar_parecer_relatorio(), app.estagio_da_versao(), app.estagio_do_relatorio(), app.gerar_relatorios(), app.periodicidade_de(), app.validar_anexo_relatorio(), app.validar_parecer_relatorio(), app.validar_versao_relatorio()
 
 ### Community 38 - "Serviço de documentos"
-Cohesion: 0.14
-Nodes (27): main(), getArmazenamento(), ASSINATURAS, extensaoDoTipo(), sha256Hex(), tipoPeloConteudo(), AcessoDocumento, DocumentoRow (+19 more)
+Cohesion: 0.09
+Nodes (36): main(), documentoJson(), POST, TAMANHO_MAXIMO_BYTES, TIPOS_MIME_PERMITIDOS, armazenamentoS3(), configuracaoS3(), getArmazenamento() (+28 more)
 
 ### Community 39 - "app.calcular_integralizacao"
 Cohesion: 0.16
 Nodes (3): app.calcular_integralizacao(), app.reapurar_por_curso(), app.reapurar_por_exigencia()
 
-### Community 40 - "declaracao-service.ts"
-Cohesion: 0.07
-Nodes (44): pdf-lib, GET, params, POST, declaracaoJson(), A4, cabecalho(), COR_LINHA (+36 more)
+### Community 40 - "pdf.ts"
+Cohesion: 0.14
+Nodes (20): pdf-lib, A4, cabecalho(), COR_LINHA, COR_MARCA, COR_SUAVE, COR_TEXTO, COR_TITULO (+12 more)
 
 ### Community 41 - "Compose de desenvolvimento"
 Cohesion: 0.09
 Nodes (26): AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_USER, interval, retries, test (+18 more)
 
 ### Community 42 - "Botões e ações de usuário"
-Cohesion: 0.23
-Nodes (14): Confirmar(), DadosConta(), PerfisConta(), SegurancaConta(), useEnvio(), enviar(), mensagemDeErro(), Opcao (+6 more)
+Cohesion: 0.15
+Nodes (20): @radix-ui/react-dialog, Confirmar(), DadosConta(), PerfisConta(), SegurancaConta(), useEnvio(), enviar(), mensagemDeErro() (+12 more)
 
 ### Community 43 - "package.json"
-Cohesion: 0.06
-Nodes (29): DATABASE_CLIENT, MODULES, PG_DRIVER, engines, node, name, private, version (+21 more)
+Cohesion: 0.07
+Nodes (27): DATABASE_CLIENT, MODULES, PG_DRIVER, engines, node, name, private, version (+19 more)
 
-### Community 44 - "campos.ts"
-Cohesion: 0.09
-Nodes (38): better-auth, @hookform/resolvers, react-hook-form, CursoForm(), CursoInput, CursoOutput, cursoSchema, EstudanteForm() (+30 more)
+### Community 44 - "troca-de-perfil.tsx"
+Cohesion: 0.17
+Nodes (13): @hookform/resolvers, react-hook-form, CursoForm(), CursoInput, CursoOutput, cursoSchema, Conta, EscolhaDeConta() (+5 more)
 
 ### Community 45 - "telas-decisoes.spec.ts"
 Cohesion: 0.18
 Nodes (7): telaDe(), entrar(), sessao, entrar(), MATRIZ, sessao, TELAS
 
 ### Community 46 - "Dados de listagem e desempenho"
-Cohesion: 0.29
-Nodes (16): contagemPorSituacao(), dadosAdministrador(), dadosConcedente(), dadosCoordenacao(), dadosEstudante(), dadosOrientador(), dadosSupervisor(), SITUACOES (+8 more)
+Cohesion: 0.15
+Nodes (27): AQUECIMENTO, exigirBancoDeTeste(), main(), Medicao, medir(), REPETICOES, contagemPorSituacao(), dadosAdministrador() (+19 more)
 
-### Community 47 - "identity.ts"
-Cohesion: 0.14
-Nodes (20): CursoPage(), h(), AdministracaoPage(), AREAS, Cartao(), UsuarioPage(), NovoEstagioPage(), Identity (+12 more)
+### Community 47 - "usuarios/[id]/page.tsx"
+Cohesion: 0.24
+Nodes (10): AdministracaoPage(), AREAS, Cartao(), UsuarioPage(), ALCANCE, catalogoPerfis(), EntradaCatalogo, EXIGEM_CONCEDENTE (+2 more)
 
 ### Community 48 - "isRlsViolation"
 Cohesion: 0.21
-Nodes (18): findPgError(), isExclusionViolation(), isForeignKeyViolation(), isReadOnlyTransaction(), isRlsViolation(), isTriggerRule(), isUniqueViolation(), PgError (+10 more)
+Nodes (18): findPgError(), isExclusionViolation(), isForeignKeyViolation(), isRlsViolation(), isTriggerRule(), isUniqueViolation(), PgError, triggerRuleDetail() (+10 more)
 
 ### Community 49 - "frequencia.ts"
-Cohesion: 0.11
-Nodes (25): divergenciaJson(), frequenciaJson(), hhmm(), homologacaoJson(), POST, GET, POST, GET (+17 more)
+Cohesion: 0.07
+Nodes (44): cargaHorariaJson(), divergenciaCalculadaJson(), divergenciaJson(), estagioAcompanhadoJson(), frequenciaJson(), hhmm(), homologacaoJson(), instante() (+36 more)
 
 ### Community 50 - "Scripts npm"
 Cohesion: 0.09
 Nodes (23): scripts, batch:integrate, batch:pr, build, ci, db:desempenho, db:generate, db:migrate (+15 more)
 
-### Community 51 - "searchParamsOf"
+### Community 51 - "dataResponse"
 Cohesion: 0.08
-Nodes (27): GET, GET, GET, GET, GET, POST, GET, POST (+19 more)
+Nodes (29): GET, GET, GET, GET, POST, GET, GET, GET (+21 more)
 
 ### Community 52 - "usuario.ts"
 Cohesion: 0.14
-Nodes (24): POST, PUT, POST, GET, PATCH, POST, usuarioJson(), Vinculo (+16 more)
+Nodes (21): PUT, GET, PATCH, usuarioJson(), Vinculo, vinculoJson(), GET, POST (+13 more)
 
 ### Community 53 - "concedente.ts"
-Cohesion: 0.12
-Nodes (20): GET, PATCH, POST, concedenteJson(), POST, cepSchema, telefoneSchema, concedente (+12 more)
+Cohesion: 0.08
+Nodes (33): GET, POST, POST, GET, PATCH, POST, concedenteJson(), GET (+25 more)
 
 ### Community 54 - "Serviço de cursos"
-Cohesion: 0.24
-Nodes (11): colunas, CursoResumo, CursoRow, CursoValues, insertCurso(), updateCurso(), acessoNegado(), CursoInput (+3 more)
+Cohesion: 0.23
+Nodes (12): colunas, CursoResumo, CursoRow, CursoValues, findCursos(), insertCurso(), updateCurso(), acessoNegado() (+4 more)
 
 ### Community 55 - "support/api.ts"
-Cohesion: 0.26
-Nodes (11): enviarComprovante(), sessao, sessao, enviarAtestado(), sessao, contextos, dados(), erro() (+3 more)
+Cohesion: 0.20
+Nodes (17): estagioAtivoDesdeAgosto(), sessao, enviarComprovante(), sessao, sessao, enviarAtestado(), sessao, contextos (+9 more)
 
 ### Community 56 - "Migração de fundação"
 Cohesion: 0.08
@@ -470,11 +470,11 @@ Nodes (31): "auditoria", auditoria_ocorrido_em_idx, auditoria_tabela_registro_id
 
 ### Community 57 - "Serviço de convênios"
 Cohesion: 0.23
-Nodes (19): ConvenioRow, findConvenioById(), findConveniosAVencer(), findConveniosDaConcedente(), findVigencias(), insertConvenio(), insertVigencia(), updateConvenio() (+11 more)
+Nodes (17): ConvenioRow, findConvenioById(), findConveniosAVencer(), findConveniosDaConcedente(), findVigencias(), insertConvenio(), insertVigencia(), updateConvenio() (+9 more)
 
 ### Community 58 - "atividade.ts"
-Cohesion: 0.18
-Nodes (21): POST, POST, POST, POST, GET, PATCH, POST, analiseJson() (+13 more)
+Cohesion: 0.14
+Nodes (26): POST, POST, POST, POST, GET, PATCH, GET, GET (+18 more)
 
 ### Community 59 - "Periodicidade de relatórios"
 Cohesion: 0.21
@@ -484,25 +484,25 @@ Nodes (15): GET, periodicidadeJson(), PUT, Periodicidade, PERIODICIDADE_PADRAO, 
 Cohesion: 0.43
 Nodes (6): aplicar_afastamento, definir_atualizado_em, exigir_substituto_afastamento, registrar_auditoria, validar_afastamento, validar_alteracao_afastamento
 
-### Community 61 - "contexto-service.ts"
+### Community 61 - "with-user.ts"
 Cohesion: 0.14
-Nodes (22): limparContexto(), marcarContexto(), contextoJson(), DELETE, GET, POST, contextoAdministrador, vinculoPerfil (+14 more)
+Nodes (20): padraoContendo(), Identity, isValidUserId(), ContaParaContexto, ContextoAberto, encerrarContextos(), findContasParaContexto(), findContextoAberto() (+12 more)
 
 ### Community 62 - "Menu do usuário e senha"
-Cohesion: 0.16
-Nodes (11): ModalTrocarSenha(), iniciaisDoNome(), UserMenu(), signOut(), dataHora, TrocarSenhaPage(), TrocarSenhaForm(), DropdownMenuContent() (+3 more)
+Cohesion: 0.27
+Nodes (8): @radix-ui/react-dropdown-menu, iniciaisDoNome(), UserMenu(), signOut(), DropdownMenuContent(), DropdownMenuItem(), DropdownMenuLabel(), DropdownMenuSeparator()
 
 ### Community 63 - "curso.ts"
-Cohesion: 0.16
-Nodes (18): GET, PATCH, cursoJson(), GET, POST, HORAS_CURSO_MAXIMO, cargaComplementares, cargaMinimaEstagio (+10 more)
+Cohesion: 0.17
+Nodes (17): GET, PATCH, cursoJson(), GET, POST, cargaComplementares, cargaMinimaEstagio, codigo (+9 more)
 
 ### Community 64 - "Configuração TypeScript"
 Cohesion: 0.11
 Nodes (18): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+10 more)
 
-### Community 65 - "Better Auth"
-Cohesion: 0.30
-Nodes (8): createAuth(), cidrValido(), Env, lista(), opcoesEnderecoIp(), urlRangeSenhasVazadas(), verificacaoSenhaVazadaAtiva(), recuperacaoSenha()
+### Community 65 - "auth.ts"
+Cohesion: 0.13
+Nodes (20): better-auth, GET(), POST(), solicitarRecuperacaoSenha(), Auth, createAuth(), getAuth(), cidrValido() (+12 more)
 
 ### Community 66 - "Schema de acompanhamento"
 Cohesion: 0.09
@@ -516,25 +516,25 @@ Nodes (5): app.notificar(), app.notificar_parecer_relatorio(), app.pessoas_do_es
 Cohesion: 0.12
 Nodes (3): PERFIS, @axe-core/playwright, final()
 
-### Community 70 - "desempenho.ts"
-Cohesion: 0.13
-Nodes (21): AQUECIMENTO, exigirBancoDeTeste(), main(), Medicao, medir(), REPETICOES, GET, GET (+13 more)
+### Community 70 - "estudante.ts"
+Cohesion: 0.21
+Nodes (12): GET, PATCH, estudanteJson(), GET, POST, createEstudanteBodySchema, estudanteIdParamSchema, listEstudantesQuerySchema (+4 more)
 
-### Community 71 - "rotulos.ts"
-Cohesion: 0.06
-Nodes (48): Alteracao(), valor(), DESCRICAO, ROTULOS, SOMAVEIS, acentuar(), capitalizar(), CODIGOS (+40 more)
+### Community 71 - "estudantes/[id]/page.tsx"
+Cohesion: 0.09
+Nodes (41): Alteracao(), valor(), DadosAcademicos(), destinoDeVolta(), EstudantePage(), h(), semAlcance(), AtividadesComplementaresPage() (+33 more)
 
-### Community 72 - "apply-migrations.ts"
-Cohesion: 0.27
-Nodes (8): pg, applyMigrations(), assertRuntimeRolesCannotBypassRls(), MIGRATIONS_DIR, ROOT, SQL_STAGES, setup(), URL_VARIABLES
+### Community 72 - "documento-acompanhamento.ts"
+Cohesion: 0.16
+Nodes (14): DocumentoPdf, TabelaPdf, Avaliacao, Criterio, documentoAvaliacao(), folhaFrequencia(), horas(), Lancamento (+6 more)
 
 ### Community 73 - "Doc: segurança e RLS"
 Cohesion: 0.17
 Nodes (10): Audit by database trigger with masked sensitive columns, Declarative drizzle/sql security layer, Identity (produced only by session.ts), Layered architecture (presentation, API, domain, persistence, database), Row Level Security on every table, migrator database role, withUser identity transaction wrapper, Write flow from Route Handler to audit trigger (+2 more)
 
 ### Community 74 - "schemas/parametros.ts"
-Cohesion: 0.19
-Nodes (12): Exigencias, exigenciasJson(), GET, PUT, createCategoriaBodySchema, dataQuerySchema, definirExigenciasBodySchema, definirPeriodicidadesBodySchema (+4 more)
+Cohesion: 0.20
+Nodes (12): PATCH, categoriaJson(), GET, findCategorias(), createCategoriaBodySchema, dataQuerySchema, definirParametrosBodySchema, definirPeriodicidadesBodySchema (+4 more)
 
 ### Community 75 - "Compose prod: variáveis da app"
 Cohesion: 0.25
@@ -548,25 +548,25 @@ Nodes (12): divergencia_analisada_por_idx, "divergencia_carga_horaria", divergen
 Cohesion: 0.17
 Nodes (13): analise_analisado_por_idx, "analise_atividade", analise_atividade_idx, atividade_categoria_idx, "atividade_complementar", atividade_estudante_situacao_idx, atividade_fila_analise_idx, atividade_registrada_por_idx (+5 more)
 
-### Community 79 - "seed.ts"
-Cohesion: 0.12
-Nodes (22): @node-rs/argon2, Banco, criarAdministrador(), existeAdministrador(), main(), CATEGORIAS, CRITERIOS, db (+14 more)
+### Community 79 - "createUsuario"
+Cohesion: 0.20
+Nodes (12): @node-rs/argon2, Banco, criarAdministrador(), existeAdministrador(), main(), definirSenha(), generateTemporaryPassword(), hashPassword() (+4 more)
 
 ### Community 80 - "categoria-service.ts"
-Cohesion: 0.19
-Nodes (18): PATCH, categoriaJson(), GET, POST, CategoriaRow, clearDestinoEstagio(), ExigenciaRow, findCategoriaById() (+10 more)
+Cohesion: 0.24
+Nodes (14): POST, CategoriaRow, clearDestinoEstagio(), ExigenciaRow, findCategoriaById(), findExigencias(), insertCategoria(), updateCategoria() (+6 more)
 
-### Community 81 - "owner"
-Cohesion: 0.10
-Nodes (25): findRescisao(), insertRescisao(), RescisaoRow, concluirEstagio(), getRescisao(), naoAtivo(), NovaRescisao, rescindirEstagio() (+17 more)
+### Community 81 - "devDependencies"
+Cohesion: 0.13
+Nodes (15): devDependencies, @axe-core/playwright, drizzle-kit, eslint, eslint-config-next, @playwright/test, tailwindcss, @tailwindcss/postcss (+7 more)
 
 ### Community 82 - "Doc: VPS e produção"
 Cohesion: 0.19
 Nodes (9): Backup layers (pgBackRest, restic and rclone, Contabo Auto Backup), LUKS vault at /srv/dados, Production deployment on Contabo VPS, New server setup scripts (cofre-criar, publicar, configurar-deploy, backup-configurar), Encrypted vault limited to 30% of the disk, SeaweedFS volumeSizeLimitMB=128, Shared server proxy at /srv/proxy, vps-espaco disk check (+1 more)
 
-### Community 83 - "aditivo-service.ts"
-Cohesion: 0.16
-Nodes (20): Transaction, parametrosVigentesEm(), AditivoRow, cancelarAditivo(), efetivarAditivo(), findAditivos(), findAssinaturasAditivo(), insertAditivo() (+12 more)
+### Community 83 - "seed.ts"
+Cohesion: 0.23
+Nodes (13): CATEGORIAS, CRITERIOS, db, ensurePerfil(), main(), pool, upsertCategorias(), upsertConcedenteComConvenio() (+5 more)
 
 ### Community 84 - "CI: passos"
 Cohesion: 0.46
@@ -580,25 +580,21 @@ Nodes (12): env, AUTH_IP_HEADERS, BETTER_AUTH_SECRET, BETTER_AUTH_URL, DATABASE_
 Cohesion: 0.18
 Nodes (10): concurrency, cancel-in-progress, group, name, runs-on, jobs, database, name (+2 more)
 
-### Community 87 - "documentos/schemas.ts"
-Cohesion: 0.22
-Nodes (7): GET, documentoJson(), POST, TIPOS_MIME_PERMITIDOS, confirmarUploadBodySchema, documentoIdParamSchema, solicitarUploadBodySchema
+### Community 87 - "vinculos.test.ts"
+Cohesion: 0.23
+Nodes (10): impedirAutoemissaoSenha(), senhaProvisoriaExpirada(), VALIDADE_SENHA_PROVISORIA_HORAS, chave(), diferencaVinculos(), PERFIS_QUE_EXIGEM_CONCEDENTE, validarVinculos(), VinculoAtual (+2 more)
 
-### Community 88 - "support/estagio.ts"
-Cohesion: 0.25
-Nodes (7): botao(), sessao, estagioAtivoDesdeAgosto(), sessao, criarEstagioAtivoDesdeAgosto(), criarEstagioEmFormalizacao(), Sessao
+### Community 89 - "getCargaHoraria"
+Cohesion: 0.27
+Nodes (12): estagio, limites, avaliarDivergencia(), diaAnterior(), diasUteis(), Divergencia, EstagioCarga, minutosPrevistosAte() (+4 more)
 
-### Community 89 - "versoes/route.ts"
+### Community 90 - "schema/integralizacao.ts"
 Cohesion: 0.17
-Nodes (14): instante(), parecerJson(), relatorioJson(), versaoJson(), GET, POST, POST, GET (+6 more)
+Nodes (11): categoriaAtividade, exigenciaCategoria, periodicidadeRelatorio, situacaoAcademica, apuracaoCategoria, apuracaoIntegralizacao, declaracao, gatilhoApuracao (+3 more)
 
-### Community 90 - "apuracao/route.ts"
+### Community 91 - "(app)/layout.tsx"
 Cohesion: 0.35
-Nodes (6): POST, GET, integralizacaoJson(), GET, estudanteIdParamSchema, Integralizacao
-
-### Community 91 - "convenio.ts"
-Cohesion: 0.18
-Nodes (15): GET, POST, POST, GET, PATCH, convenioJson(), idParamSchema, aVencerQuerySchema (+7 more)
+Nodes (8): AppLayout(), TopbarTitle(), FaixaContexto(), TrocaDePerfil(), encontrarItem(), SidebarInset(), SidebarProvider(), SidebarTrigger()
 
 ### Community 92 - "triggers/declaracoes.sql"
 Cohesion: 0.60
@@ -624,17 +620,17 @@ Nodes (9): depends_on, postgres, storage, depends_on, image, profiles, condition
 Cohesion: 0.22
 Nodes (9): AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, storage, command, environment, image, mem_limit, restart (+1 more)
 
-### Community 99 - "Máscaras de campo"
-Cohesion: 0.25
-Nodes (4): aplicarMascara(), Mascara, MASCARAS, TECLADO
+### Community 99 - "formulario-api.tsx"
+Cohesion: 0.13
+Nodes (14): zod, aplicarMascara(), Mascara, MASCARAS, TECLADO, concedente, aprovacaoRelatorioBodySchema, devolucaoRelatorioBodySchema (+6 more)
 
-### Community 100 - "lib/errors.ts"
-Cohesion: 0.18
-Nodes (14): alterarSenhaPropria(), DomainErrorDetail, normalizar(), PALAVRAS_DO_SERVICO, palavrasDeContexto(), semDigitosNasPontas(), senhaPrevisivel(), MARIA (+6 more)
+### Community 100 - "senha-contextual.ts"
+Cohesion: 0.42
+Nodes (7): normalizar(), PALAVRAS_DO_SERVICO, palavrasDeContexto(), semDigitosNasPontas(), senhaPrevisivel(), MARIA, validarSenhaContextual()
 
 ### Community 101 - "guarda-service.ts"
-Cohesion: 0.39
-Nodes (7): chaveParaEliminacao(), DocumentoEmGuarda, eliminarDocumento(), findDocumentosEmGuarda(), eliminarDocumentoVencido(), REGRAS, traduzir()
+Cohesion: 0.36
+Nodes (8): chaveParaEliminacao(), DocumentoEmGuarda, eliminarDocumento(), findDocumentosEmGuarda(), eliminarDocumentoVencido(), listDocumentosEmGuarda(), REGRAS, traduzir()
 
 ### Community 102 - "Doc: decisões de negócio"
 Cohesion: 0.25
@@ -652,25 +648,29 @@ Nodes (7): build, image, mem_limit, restart, name, services, app
 Cohesion: 0.25
 Nodes (8): with, cache, key, name, node-version-file, path, restore-keys, retention-days
 
+### Community 106 - "navigation.ts"
+Cohesion: 0.29
+Nodes (9): cobre(), GRUPOS, itensVisiveis(), NAVEGACAO, NavGrupo, NavItem, pertence(), podeAbrir() (+1 more)
+
 ### Community 107 - "estagio.test.ts"
-Cohesion: 0.18
-Nodes (14): diaSeguinte(), exigirAtivavel(), FatosAtivacao, impedimentosAtivacao(), PARTES, Periodo, periodoCoberto(), LIMITES (+6 more)
+Cohesion: 0.17
+Nodes (13): DomainErrorDetail, diaSeguinte(), exigirAtivavel(), FatosAtivacao, impedimentosAtivacao(), PARTES, Periodo, periodoCoberto() (+5 more)
 
 ### Community 108 - ""notificacao""
 Cohesion: 0.60
 Nodes (3): "notificacao", notificacao_destinatario_recente_idx, notificacao_nao_lidas_idx
 
 ### Community 109 - "classificacao-routes.ts"
-Cohesion: 0.17
-Nodes (12): classificacaoJson(), rotasColecao(), rotasItem(), PATCH, GET, POST, rotas, PATCH (+4 more)
+Cohesion: 0.14
+Nodes (15): classificacaoJson(), rotasColecao(), rotasItem(), PATCH, GET, POST, rotas, PATCH (+7 more)
 
 ### Community 110 - "19_relatorios_gerenciais.sql"
 Cohesion: 0.17
 Nodes (6): app.cursos_gerenciaveis(), app.estagios_no_periodo(), app.relatorio_concedentes_parceiras(), app.relatorio_estagiarios_ativos(), app.relatorio_pendencias_integralizacao(), app.relatorio_taxa_conclusao()
 
-### Community 111 - "usuario-repository.ts"
-Cohesion: 0.16
-Nodes (13): colunas, findUsuarios(), OrdemUsuario, ORDENS_USUARIO, Perfil, Situacao, UsuarioRow, colunas (+5 more)
+### Community 111 - "acesso.ts"
+Cohesion: 0.22
+Nodes (6): contextoAdministrador, limiteRequisicao, situacaoUsuario, verificacao, perfil, tipoEstagio
 
 ### Community 112 - "Doc: dados sensíveis"
 Cohesion: 0.29
@@ -696,17 +696,17 @@ Nodes (8): bloquear_alteracao, definir_atualizado_em, registrar_auditoria, valid
 Cohesion: 0.38
 Nodes (6): limpar(), RCLONE_CONFIG, RESTIC_PASSWORD_FILE, RESTIC_REPOSITORY, backup-testar-restauracao.sh script, sql()
 
-### Community 118 - "estudantes/[id]/page.tsx"
-Cohesion: 0.17
-Nodes (16): DadosAcademicos(), destinoDeVolta(), EstudantePage(), h(), semAlcance(), DeclaracoesEstudante(), IntegralizacaoPage(), h() (+8 more)
+### Community 118 - "cursos/[id]/page.tsx"
+Cohesion: 0.36
+Nodes (7): CursoPage(), h(), TIPO_ESTAGIO, listEstudantes(), CapaCurso(), tomDe(), TONS
 
 ### Community 119 - "afastamento-service.ts"
-Cohesion: 0.25
-Nodes (12): AfastamentoRow, findAfastamentoById(), findAfastamentos(), insertAfastamento(), periodosAfastamento(), lockEstagio(), gravar(), listAfastamentos() (+4 more)
+Cohesion: 0.23
+Nodes (12): AfastamentoRow, findAfastamentoById(), findAfastamentos(), insertAfastamento(), periodosAfastamento(), listAfastamentos(), listPeriodosAfastamento(), NovoAfastamento (+4 more)
 
 ### Community 120 - "documento-estagio-service.ts"
-Cohesion: 0.30
-Nodes (14): documentoPlano(), findAditivoById(), findIdentificacaoEstagio(), findApolices(), findAssinaturas(), findResponsaveis(), nomeDoUsuario(), carregar() (+6 more)
+Cohesion: 0.44
+Nodes (9): findIdentificacaoEstagio(), findAssinaturas(), nomeDoUsuario(), findRescisao(), carregar(), pdfAditivo(), pdfPlano(), pdfRescisao() (+1 more)
 
 ### Community 122 - "Script de backup"
 Cohesion: 0.40
@@ -732,9 +732,9 @@ Nodes (9): BASE, EVENT, HEAD, HIBP_LIVE_STRICT, source-branch, name, runs-on, st
 Cohesion: 0.40
 Nodes (5): on, pull_request, push, branches, branches
 
-### Community 128 - "Identidade do estudante"
-Cohesion: 0.33
-Nodes (4): correspondencia, identidadeEstudante, juncao, estagio
+### Community 128 - "atividades.ts"
+Cohesion: 0.25
+Nodes (5): analiseAtividade, atividadeComplementar, comprovanteAtividade, decisaoAnalise, situacaoAtividade
 
 ### Community 129 - "10_avaliacao_acompanhamento.sql"
 Cohesion: 0.23
@@ -788,21 +788,21 @@ Nodes (3): app.periodos_afastamento(), app.teto_duracao_estagio(), app.validar_a
 Cohesion: 0.20
 Nodes (3): app.apuracao_atividades_cumpridas(), app.pode_emitir_declaracao(), app.verificar_declaracao()
 
-### Community 205 - "zod"
-Cohesion: 0.26
-Nodes (9): zod, errosPorCampo(), faixa(), mensagemDoProblema(), Problema, concedente, mostrar(), NomeValidacao (+1 more)
+### Community 205 - "novo-estagio-form.tsx"
+Cohesion: 0.12
+Nodes (26): Criterio, NovaAvaliacao(), enviar(), montar(), onSubmit(), regras, Campo(), Convenio (+18 more)
 
 ### Community 206 - ""declaracao""
 Cohesion: 0.25
 Nodes (5): "declaracao", declaracao_apuracao_idx, declaracao_emitida_por_idx, declaracao_estagio_idx, declaracao_estudante_idx
 
-### Community 207 - "parametros/route.ts"
-Cohesion: 0.29
-Nodes (8): GET, GET, parametrosJson(), GET, PUT, definirParametrosBodySchema, toParametros(), getParametrosVigentes()
+### Community 207 - "searchParamsOf"
+Cohesion: 0.10
+Nodes (25): GET, GET, GET, POST, notificacaoJson(), GET, GET, parametrosJson() (+17 more)
 
 ### Community 208 - "parametro-service.ts"
-Cohesion: 0.31
-Nodes (8): parametroInstitucional, colunas, findHistoricoParametros(), findParametroVigente(), insertParametro(), paraDominio(), ParametroRow, definirParametros()
+Cohesion: 0.18
+Nodes (14): parametroInstitucional, Transaction, Parametros, PARAMETROS_PADRAO, colunas, findHistoricoParametros(), findParametroVigente(), insertParametro() (+6 more)
 
 ### Community 209 - "01_identidade.sql"
 Cohesion: 0.31
@@ -812,17 +812,17 @@ Nodes (4): app.buscar_contas_estudante(), app.coordena_curso(), app.coordena_est
 Cohesion: 0.29
 Nodes (4): auditoria_sem_truncate, auditoria_somente_inclusao, definir_atualizado_em, registrar_auditoria
 
-### Community 211 - "afastamentos/route.ts"
-Cohesion: 0.36
-Nodes (8): POST, GET, POST, afastamentoJson(), afastamentoBodySchema, substituicaoAfastamentoBodySchema, toNovoAfastamento(), registrarAfastamento()
+### Community 211 - "exigencias/route.ts"
+Cohesion: 0.38
+Nodes (6): Exigencias, exigenciasJson(), GET, PUT, definirExigenciasBodySchema, uuidParamSchema
 
-### Community 212 - "notificacoes/route.ts"
-Cohesion: 0.36
-Nodes (6): POST, notificacaoJson(), GET, NotificacaoRow, notificacaoIdParamSchema, notificacoesQuerySchema
+### Community 212 - "jornada.ts"
+Cohesion: 0.33
+Nodes (6): AvaliacaoJornada, duracaoDoHorario(), HorarioDoDia, Limites, minutosDoHorario(), ProblemaHorario
 
 ### Community 213 - "concedentes.ts"
-Cohesion: 0.20
-Nodes (7): convenio, convenioVigencia, historicoSituacaoConcedente, porteConcedente, setorAtuacao, situacaoConcedente, situacaoConvenio
+Cohesion: 0.16
+Nodes (10): concedente, convenio, convenioVigencia, historicoSituacaoConcedente, porteConcedente, setorAtuacao, situacaoConcedente, situacaoConvenio (+2 more)
 
 ### Community 214 - "triggers/academico.sql"
 Cohesion: 0.31
@@ -840,9 +840,9 @@ Nodes (4): bloquear_exclusao_documento, definir_guarda_convenio, definir_guarda_
 Cohesion: 0.36
 Nodes (5): aplicar_rescisao, bloquear_alteracao_rescisao, registrar_auditoria, registrar_encerramento, validar_rescisao
 
-### Community 220 - "senhas-vazadas.ts"
-Cohesion: 0.39
-Nodes (6): CAMINHOS_VERIFICADOS, contagemNoRange(), Opcoes, senhaComprometida(), senhasVazadas(), sha1Hex()
+### Community 220 - "[codigo]/route.ts"
+Cohesion: 0.47
+Nodes (4): GET(), verificarDeclaracao(), codigoVerificacaoParamSchema, declaracaoBodySchema
 
 ### Community 221 - "papeis.ts"
 Cohesion: 0.43
@@ -852,13 +852,13 @@ Nodes (6): AcoesNoEstagio, NENHUM_PAPEL, PapeisNoEstagio, ParteAssinatura, como(
 Cohesion: 0.38
 Nodes (3): "rescisao", rescisao_decidido_por_idx, rescisao_documento_idx
 
-### Community 225 - "percurso-estagio.tsx"
-Cohesion: 0.38
-Nodes (5): LoginPage(), ETAPAS, PercursoEstagio(), Perfil, PERFIS
+### Community 225 - "campos.ts"
+Cohesion: 0.16
+Nodes (13): LoginForm(), loginSchema, LoginValues, LoginPage(), ETAPAS, PercursoEstagio(), Perfil, PERFIS (+5 more)
 
-### Community 226 - "cnpj.ts"
-Cohesion: 0.48
-Nodes (5): cnpjValido(), digito(), normalizarCnpj(), PESOS_PRIMEIRO, PESOS_SEGUNDO
+### Community 226 - "RecuperarSenhaForm"
+Cohesion: 0.50
+Nodes (3): metadata, RecuperarSenhaPage(), RecuperarSenhaForm()
 
 ### Community 227 - ""contexto_administrador""
 Cohesion: 0.60
@@ -868,25 +868,29 @@ Nodes (3): "contexto_administrador", contexto_administrador_administrador_idx, c
 Cohesion: 0.67
 Nodes (3): quality, name, runs-on
 
+### Community 232 - "use-mobile.ts"
+Cohesion: 0.70
+Nodes (4): getServerSnapshot(), getSnapshot(), subscribe(), useIsMobile()
+
 ## Knowledge Gaps
 - **47 isolated node(s):** `RFC-5737`, `@fontsource-variable/inter`, `@fontsource-variable/jetbrains-mono`, `react-dom`, `@tailwindcss/postcss` (+42 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1041 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **116 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1044 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **118 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `drizzle-orm` connect `Conexão e withUser` to `Identidade do estudante`, `Testes e suporte compartilhado`, `frequencia-service.ts`, `concedentes.test.ts`, `estagios.ts`, `auditoria-service.ts`, `Serviço de concedentes`, `atividade-service.ts`, `Serviço de relatórios`, `Identidade e avaliação`, `DomainError`, `Testes de senha provisória`, `Serviço de integralização`, `formalizacao-service.ts`, `estudante-service.ts`, `Serviço de documentos`, `declaracao-service.ts`, `package.json`, `Serviço de cursos`, `Serviço de convênios`, `Periodicidade de relatórios`, `contexto-service.ts`, `Schema de acompanhamento`, `apply-migrations.ts`, `seed.ts`, `categoria-service.ts`, `parametro-service.ts`, `owner`, `aditivo-service.ts`, `concedentes.ts`, `guarda-service.ts`, `usuario-repository.ts`, `afastamento-service.ts`?**
-  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+- **Why does `drizzle-orm` connect `drizzle-orm` to `atividades.ts`, `frequencia-service.ts`, `Scripts de CI e GitHub`, `estagios.ts`, `relatorio-gerencial-service.ts`, `usuario-service.ts`, `Serviço de concedentes`, `atividade-service.ts`, `Serviço de relatórios`, `Identidade e avaliação`, `declaracao-service.ts`, `Testes de senha provisória`, `Serviço de integralização`, `withUser`, `Conexão e withUser`, `estudante-service.ts`, `Serviço de documentos`, `package.json`, `Serviço de cursos`, `Serviço de convênios`, `Periodicidade de relatórios`, `with-user.ts`, `auth.ts`, `Schema de acompanhamento`, `estudantes/[id]/page.tsx`, `createUsuario`, `categoria-service.ts`, `parametro-service.ts`, `seed.ts`, `concedentes.ts`, `schema/integralizacao.ts`, `guarda-service.ts`, `acesso.ts`, `afastamento-service.ts`?**
+  _High betweenness centrality (0.051) - this node is a cross-community bridge._
 - **What connects `RFC-5737`, `@fontsource-variable/inter`, `@fontsource-variable/jetbrains-mono` to the rest of the system?**
   _47 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Testes e suporte compartilhado` be split into smaller, more focused modules?**
-  _Cohesion score 0.13388937664618086 - nodes in this community are weakly interconnected._
-- **Why does `dataResponse()` connect `API de estágios` to `_acompanhamento/json.ts`, `Serviço de concedentes`, `lib/api.ts`, `Identidade e avaliação`, `estudante-service.ts`, `declaracao-service.ts`, `frequencia.ts`, `searchParamsOf`, `usuario.ts`, `concedente.ts`, `atividade.ts`, `Periodicidade de relatórios`, `contexto-service.ts`, `curso.ts`, `desempenho.ts`, `schemas/parametros.ts`, `parametros/route.ts`, `categoria-service.ts`, `afastamentos/route.ts`, `notificacoes/route.ts`, `documentos/schemas.ts`, `versoes/route.ts`, `apuracao/route.ts`, `convenio.ts`, `classificacao-routes.ts`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+- **Should `drizzle-orm` be split into smaller, more focused modules?**
+  _Cohesion score 0.07534539239424583 - nodes in this community are weakly interconnected._
+- **Why does `dataResponse()` connect `dataResponse` to `API de estágios`, `declaracao-service.ts`, `Serviço de documentos`, `_acompanhamento/json.ts`, `estudante.ts`, `session.ts`, `schemas/parametros.ts`, `classificacao-routes.ts`, `searchParamsOf`, `categoria-service.ts`, `frequencia.ts`, `exigencias/route.ts`, `usuario.ts`, `concedente.ts`, `atividade.ts`, `Periodicidade de relatórios`, `Serviço de integralização`, `curso.ts`?**
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
 - **Should `API de estágios` be split into smaller, more focused modules?**
-  _Cohesion score 0.07338935574229692 - nodes in this community are weakly interconnected._
-- **Why does `withUser()` connect `Identidade e avaliação` to `Testes e suporte compartilhado`, `API de estágios`, `frequencia-service.ts`, `estagios/[id]/page.tsx`, `Telas de listagem`, `concedentes.test.ts`, `auditoria-service.ts`, `usuario-service.ts`, `Serviço de concedentes`, `atividade-service.ts`, `Serviço de relatórios`, `DomainError`, `Serviço de integralização`, `formalizacao-service.ts`, `Conexão e withUser`, `estudante-service.ts`, `Serviço de documentos`, `declaracao-service.ts`, `Dados de listagem e desempenho`, `identity.ts`, `frequencia.ts`, `searchParamsOf`, `usuario.ts`, `Serviço de cursos`, `Serviço de convênios`, `atividade.ts`, `Periodicidade de relatórios`, `contexto-service.ts`, `curso.ts`, `desempenho.ts`, `rotulos.ts`, `parametros/route.ts`, `categoria-service.ts`, `parametro-service.ts`, `owner`, `aditivo-service.ts`, `lib/errors.ts`, `guarda-service.ts`, `classificacao-routes.ts`, `afastamento-service.ts`, `documento-estagio-service.ts`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+  _Cohesion score 0.05586722767648434 - nodes in this community are weakly interconnected._
+- **Why does `withUser()` connect `withUser` to `drizzle-orm`, `frequencia-service.ts`, `estagios/[id]/page.tsx`, `Telas de listagem`, `cn`, `relatorio-gerencial-service.ts`, `usuario-service.ts`, `Serviço de concedentes`, `atividade-service.ts`, `Serviço de relatórios`, `Identidade e avaliação`, `declaracao-service.ts`, `Testes de senha provisória`, `Serviço de integralização`, `Conexão e withUser`, `estudante-service.ts`, `Serviço de documentos`, `Dados de listagem e desempenho`, `frequencia.ts`, `usuario.ts`, `Serviço de cursos`, `Serviço de convênios`, `atividade.ts`, `Periodicidade de relatórios`, `with-user.ts`, `curso.ts`, `estudantes/[id]/page.tsx`, `schemas/parametros.ts`, `searchParamsOf`, `categoria-service.ts`, `parametro-service.ts`, `createUsuario`, `getCargaHoraria`, `guarda-service.ts`, `classificacao-routes.ts`, `cursos/[id]/page.tsx`, `afastamento-service.ts`, `documento-estagio-service.ts`?**
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
 - **Should `frequencia-service.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.05798319327731093 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07272727272727272 - nodes in this community are weakly interconnected._
