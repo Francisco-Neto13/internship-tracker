@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { isReadOnlyTransaction, isTriggerRule } from "@/db/errors";
 import { DomainError, type DomainErrorDetail, type DomainErrorKind } from "./errors";
 import type { Identity } from "./identity";
 import { getSession } from "./session";
@@ -28,6 +29,7 @@ type AuthenticatedRequest<TParams> = {
   request: Request;
   identity: Identity;
   params: TParams;
+  sessaoId: string;
 };
 
 export function errorResponse(status: number, body: ErrorBody) {
@@ -60,6 +62,19 @@ export async function corpoOpcional(request: Request): Promise<unknown> {
 type RouteOptions = {
   /** RF002: reachable while a temporary password is still in use (change password, session). */
   permitirTrocaSenhaPendente?: boolean;
+  /**
+   * RF003: the route acts as the person signed in, even while they view the system as another
+   * account (open, change or end the switch). Every other route sees the account being viewed.
+   */
+  comoTitular?: boolean;
+};
+
+const LEITURA = new Set(["GET", "HEAD", "OPTIONS"]);
+
+const SOMENTE_LEITURA: ErrorBody = {
+  code: "CONTEXTO_SOMENTE_LEITURA",
+  message: "Você está vendo o sistema como outra pessoa, e nada é alterado nesse modo. Volte ao seu perfil para fazer essa ação.",
+  requisito: "RF003",
 };
 
 export function authenticatedRoute<TParams = Record<string, never>>(
@@ -79,7 +94,11 @@ export function authenticatedRoute<TParams = Record<string, never>>(
           requisito: "RF002",
         });
       }
-      return await handler({ request, identity: session.identity, params: await context.params });
+      if (options.comoTitular) {
+        return await handler({ request, identity: session.titular, params: await context.params, sessaoId: session.sessaoId });
+      }
+      if (session.contexto && !LEITURA.has(request.method)) return errorResponse(403, SOMENTE_LEITURA);
+      return await handler({ request, identity: session.identity, params: await context.params, sessaoId: session.sessaoId });
     } catch (error) {
       return toErrorResponse(error);
     }
@@ -97,6 +116,16 @@ export function toErrorResponse(error: unknown): Response {
       code: "PAYLOAD_INVALIDO",
       message: "O payload não atende ao formato esperado.",
       details: error.issues.map((issue) => ({ field: issue.path.join("."), issue: issue.message })),
+    });
+  }
+
+  // A read that writes its own trail (sensitive document) inside a switch: read only (RF003)
+  if (isReadOnlyTransaction(error)) return errorResponse(403, SOMENTE_LEITURA);
+  if (isTriggerRule(error, "CONTEXTO_SEM_DOCUMENTO")) {
+    return errorResponse(403, {
+      code: "CONTEXTO_SEM_DOCUMENTO",
+      message: "Documentos não abrem enquanto você vê o sistema como outra pessoa.",
+      requisito: "RF003",
     });
   }
 

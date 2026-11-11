@@ -19,6 +19,8 @@ export const GET = authenticatedRoute(
           }
         : null,
       perfis: perfis.map((vinculo) => ({ perfil: vinculo.perfil, curso_id: vinculo.cursoId })),
+      // RF003: an administrator viewing as this account; nothing is saved meanwhile
+      contexto: session?.contexto ? { titular: { id: session.titular.userId, nome: session.contexto.nomeTitular }, somente_leitura: true } : null,
     });
   },
   { permitirTrocaSenhaPendente: true },
