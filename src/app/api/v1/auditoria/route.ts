@@ -17,6 +17,9 @@ export const GET = authenticatedRoute(async ({ request, identity }) => {
       registro_id: registro.registroId,
       usuario_id: registro.usuarioId,
       autor: registro.usuarioId ? { nome: registro.autorNome, email: registro.autorEmail } : null,
+      // RF003: the administrator who acted as the author through the profile switch
+      titular_id: registro.titularId,
+      titular: registro.titularId ? { nome: registro.titularNome, email: registro.titularEmail } : null,
       campos_alterados: registro.camposAlterados,
       dados_anteriores: registro.dadosAnteriores,
       dados_novos: registro.dadosNovos,

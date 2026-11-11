@@ -4,7 +4,8 @@ import { trocarSenhaBodySchema } from "@/modules/acesso/schemas/senha";
 import { trocarSenha } from "@/modules/acesso/services/senha-service";
 
 // RF002: the signed-in user replaces their password. Reachable during a pending change,
-// which is the point; the session cookie is reissued and every other session ends.
+// which is the point; the session cookie is reissued and every other session ends. Refused
+// during a profile switch (RF003): the session is the administrator's, the account is not.
 export const POST = authenticatedRoute(
   async ({ request, identity }) => {
     const body = trocarSenhaBodySchema.parse(await request.json());
@@ -15,5 +16,5 @@ export const POST = authenticatedRoute(
     });
     return dataResponse({ troca_senha_obrigatoria: false });
   },
-  { permitirTrocaSenhaPendente: true },
+  { permitirTrocaSenhaPendente: true, foraDaTroca: true },
 );

@@ -105,6 +105,7 @@ export async function pdfRelatorio(identity: Identity, id: string): Promise<Uint
  * and/or attachments already uploaded (D8). Late sending is accepted and shown as late.
  */
 export async function enviarRelatorio(identity: Identity, relatorioId: string, input: { conteudo: string | null; documentoIds: string[] }) {
+  if (identity.titularId) throw relatorioForaDaTroca("enviar");
   const conteudo = input.conteudo?.trim() || null;
   if (!conteudo && input.documentoIds.length === 0) {
     throw new DomainError({ code: "RELATORIO_VAZIO", kind: "UNPROCESSABLE", message: "O relatório precisa de texto ou de ao menos um anexo.", requisito: "RF037" });
@@ -134,10 +135,25 @@ export async function enviarRelatorio(identity: Identity, relatorioId: string, i
 }
 
 /**
+ * RF003, RN-38: the administrator acting as another account does not read report content, so it
+ * neither sends nor decides one. The policies of versao_relatorio and parecer_relatorio refuse it
+ * too; this only says why, instead of a version that seems missing.
+ */
+function relatorioForaDaTroca(acao: "enviar" | "analisar") {
+  return new DomainError({
+    code: "CONTEXTO_SEM_RELATORIO",
+    kind: "FORBIDDEN",
+    message: `O administrador não lê relatórios, então não pode ${acao} um relatório pela troca de perfil.`,
+    requisito: "RF003",
+  });
+}
+
+/**
  * RF038, RN-14: the advisor approves (opinion optional) or returns (opinion required) the
  * latest version; the date and time of the decision are recorded (RN-28).
  */
 export async function decidirRelatorio(identity: Identity, relatorioId: string, decisao: "APROVADO" | "DEVOLVIDO", texto: string | null) {
+  if (identity.titularId) throw relatorioForaDaTroca("analisar");
   const parecer = texto?.trim() || null;
   if (decisao === "DEVOLVIDO" && !parecer) {
     throw new DomainError({ code: "PARECER_OBRIGATORIO", kind: "UNPROCESSABLE", message: "A devolução exige parecer.", requisito: "RF038" });

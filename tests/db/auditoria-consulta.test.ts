@@ -86,7 +86,7 @@ describe("audit trail export (RF066)", () => {
 
     expect(csv.startsWith(BOM)).toBe(true);
     expect(linhas[0]).toBe(
-      `${BOM}"Número";"Data e hora";"Operação";"Registro";"Referência do registro";"Referência do autor";"Autor";"E-mail do autor";"Campos alterados";"Antes";"Depois"`,
+      `${BOM}"Número";"Data e hora";"Operação";"Registro";"Referência do registro";"Referência do autor";"Autor";"E-mail do autor";"Feito por, na troca de perfil";"Campos alterados";"Antes";"Depois"`,
     );
     expect(csv).toContain('"Estudante"');
     expect(csv).toContain('"Alterado"');

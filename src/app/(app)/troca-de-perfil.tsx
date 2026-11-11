@@ -10,9 +10,9 @@ import { cn } from "@/shared/ui/cn";
 import { Dialogo, useFecharDialogo } from "@/shared/ui/dialogo";
 import { Input } from "@/shared/ui/input";
 
-// RF003: the administrator sees the system as another account, to check what each profile
-// reaches. The server reads the switch on every request and refuses every write meanwhile;
-// this component only opens and closes it. The router cache is refreshed after each change,
+// RF003: the administrator uses the system as another account, to check what each profile
+// reaches and to run its steps without signing in again. The server reads the switch on every
+// request and records the administrator with every write; this component only opens and closes it. The router cache is refreshed after each change,
 // so no screen keeps data read under the previous identity.
 
 type Conta = { id: string; nome: string; email: string; perfis: string[] };
@@ -152,7 +152,7 @@ export function TrocaDePerfil({ rotulos, rotulo = "Ver como" }: { rotulos: Recor
     <Dialogo
       gatilho={{ rotulo, icone: <Eye className="size-4" aria-hidden />, variante: "outline" }}
       titulo="Ver o sistema como outra conta"
-      descricao="Você verá as telas e os dados exatamente como essa pessoa vê. Nada pode ser alterado enquanto isso, e a troca fica registrada na auditoria."
+      descricao="Você usa o sistema como essa pessoa: vê as mesmas telas e pode agir por ela, como assinar um contrato. Cada ação fica na auditoria em nome dela e como feita por você. Relatórios e documentos continuam fechados."
       largura="lg"
     >
       <EscolhaDeConta rotulos={rotulos} />
@@ -160,7 +160,7 @@ export function TrocaDePerfil({ rotulos, rotulo = "Ver como" }: { rotulos: Recor
   );
 }
 
-/** Shown on every screen while the administrator views the system as another account. */
+/** Shown on every screen while the administrator acts as another account. */
 export function FaixaContexto({ nome, perfis, nomeTitular, rotulos }: { nome: string; perfis: string[]; nomeTitular: string; rotulos: Record<string, string> }) {
   const [voltando, setVoltando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -182,8 +182,8 @@ export function FaixaContexto({ nome, perfis, nomeTitular, rotulos }: { nome: st
     >
       <Eye className="size-4 shrink-0" aria-hidden />
       <p className="min-w-0 flex-1">
-        Você ({nomeTitular}) está vendo o sistema como <strong className="font-semibold">{nome}</strong>
-        {perfis.length > 0 && <> · {perfis.join(", ")}</>}. Só leitura: nada é alterado neste modo.
+        Você ({nomeTitular}) está usando o sistema como <strong className="font-semibold">{nome}</strong>
+        {perfis.length > 0 && <> · {perfis.join(", ")}</>}. O que você fizer fica no nome dessa conta e registrado como feito por você.
         {erro && <span role="alert" className="ml-2 font-medium text-status-danger-text">{erro}</span>}
       </p>
       <div className="flex shrink-0 flex-wrap gap-2">

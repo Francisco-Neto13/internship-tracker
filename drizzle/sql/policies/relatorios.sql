@@ -36,8 +36,10 @@ grant select, insert on public.versao_relatorio to app_runtime;
 create policy versao_relatorio_leitura on public.versao_relatorio for select to app_runtime
   using (not (select app.em_contexto_administrador()) and app.pode_ler_relatorios(app.estagio_do_relatorio(relatorio_id)));
 
+-- RF003, RN-38: nor does it send one, or decide one below, since it cannot read the content
 create policy versao_relatorio_insercao on public.versao_relatorio for insert to app_runtime with check (
-  enviado_por_usuario_id = (select app.usuario_atual_id())
+  not (select app.em_contexto_administrador())
+  and enviado_por_usuario_id = (select app.usuario_atual_id())
   and app.e_estudante_do_estagio(app.estagio_do_relatorio(relatorio_id))
 );
 
@@ -50,7 +52,7 @@ create policy anexo_relatorio_leitura on public.anexo_relatorio for select to ap
   using (not (select app.em_contexto_administrador()) and app.pode_ler_relatorios(app.estagio_da_versao(versao_relatorio_id)));
 
 create policy anexo_relatorio_insercao on public.anexo_relatorio for insert to app_runtime
-  with check (app.e_estudante_do_estagio(app.estagio_da_versao(versao_relatorio_id)));
+  with check (not (select app.em_contexto_administrador()) and app.e_estudante_do_estagio(app.estagio_da_versao(versao_relatorio_id)));
 
 -- parecer_relatorio (RF038): the advisor in force
 alter table public.parecer_relatorio enable row level security;
@@ -61,6 +63,7 @@ create policy parecer_relatorio_leitura on public.parecer_relatorio for select t
   using (app.pode_ler_relatorios(app.estagio_da_versao(versao_relatorio_id)));
 
 create policy parecer_relatorio_insercao on public.parecer_relatorio for insert to app_runtime with check (
-  emitido_por_usuario_id = (select app.usuario_atual_id())
+  not (select app.em_contexto_administrador())
+  and emitido_por_usuario_id = (select app.usuario_atual_id())
   and app.e_responsavel_vigente(app.estagio_da_versao(versao_relatorio_id), 'ORIENTADOR')
 );

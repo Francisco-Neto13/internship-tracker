@@ -6,7 +6,9 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - "5432:5432"
+      # POSTGRES_PORT comes from .env (read by Compose) when 5432 is taken on the machine;
+      # CI has no .env and keeps 5432, the port of .env.test
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # Runs only when the volume is created: roles and databases (RF003, RN-37)

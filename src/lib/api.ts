@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { isReadOnlyTransaction, isTriggerRule } from "@/db/errors";
+import { isTriggerRule } from "@/db/errors";
 import { DomainError, type DomainErrorDetail, type DomainErrorKind } from "./errors";
 import type { Identity } from "./identity";
 import { getSession } from "./session";
@@ -67,13 +67,16 @@ type RouteOptions = {
    * account (open, change or end the switch). Every other route sees the account being viewed.
    */
   comoTitular?: boolean;
+  /**
+   * RF003: refused while the administrator acts as another account. For what belongs to the
+   * account itself and not to its work in the system, like the password.
+   */
+  foraDaTroca?: boolean;
 };
 
-const LEITURA = new Set(["GET", "HEAD", "OPTIONS"]);
-
-const SOMENTE_LEITURA: ErrorBody = {
-  code: "CONTEXTO_SOMENTE_LEITURA",
-  message: "Você está vendo o sistema como outra pessoa, e nada é alterado nesse modo. Volte ao seu perfil para fazer essa ação.",
+const FORA_DA_TROCA: ErrorBody = {
+  code: "CONTEXTO_ACAO_DA_CONTA",
+  message: "Essa ação é da própria conta e não é feita pela troca de perfil. Volte ao seu perfil para fazê-la.",
   requisito: "RF003",
 };
 
@@ -97,7 +100,7 @@ export function authenticatedRoute<TParams = Record<string, never>>(
       if (options.comoTitular) {
         return await handler({ request, identity: session.titular, params: await context.params, sessaoId: session.sessaoId });
       }
-      if (session.contexto && !LEITURA.has(request.method)) return errorResponse(403, SOMENTE_LEITURA);
+      if (session.contexto && options.foraDaTroca) return errorResponse(403, FORA_DA_TROCA);
       return await handler({ request, identity: session.identity, params: await context.params, sessaoId: session.sessaoId });
     } catch (error) {
       return toErrorResponse(error);
@@ -119,12 +122,10 @@ export function toErrorResponse(error: unknown): Response {
     });
   }
 
-  // A read that writes its own trail (sensitive document) inside a switch: read only (RF003)
-  if (isReadOnlyTransaction(error)) return errorResponse(403, SOMENTE_LEITURA);
   if (isTriggerRule(error, "CONTEXTO_SEM_DOCUMENTO")) {
     return errorResponse(403, {
       code: "CONTEXTO_SEM_DOCUMENTO",
-      message: "Documentos não abrem enquanto você vê o sistema como outra pessoa.",
+      message: "Documentos não abrem enquanto você usa o sistema como outra pessoa.",
       requisito: "RF003",
     });
   }
