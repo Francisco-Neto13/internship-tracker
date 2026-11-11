@@ -127,6 +127,13 @@
       "when": 1794355131811,
       "tag": "0017_contexto_administrador",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794425870236,
+      "tag": "0018_auditoria_titular",
+      "breakpoints": true
     }
   ]
 }
