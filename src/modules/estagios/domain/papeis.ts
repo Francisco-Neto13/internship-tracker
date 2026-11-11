@@ -14,14 +14,19 @@ export type PapeisNoEstagio = {
   coordenacao: boolean;
   /** app.representa_concedente_do_estagio */
   concedente: boolean;
+  /** app.em_contexto_administrador: an administrator acting as this account (RF003) */
+  contextoAdministrador: boolean;
 };
 
-export const NENHUM_PAPEL: PapeisNoEstagio = { estudante: false, orientador: false, supervisor: false, coordenacao: false, concedente: false };
+export const NENHUM_PAPEL: PapeisNoEstagio = { estudante: false, orientador: false, supervisor: false, coordenacao: false, concedente: false, contextoAdministrador: false };
 
 export type ParteAssinatura = "ESTUDANTE" | "INSTITUICAO" | "CONCEDENTE";
 
 export function acoesNoEstagio(papeis: PapeisNoEstagio) {
-  const { estudante, orientador, supervisor, coordenacao, concedente } = papeis;
+  const { estudante, orientador, supervisor, coordenacao, concedente, contextoAdministrador } = papeis;
+  // RF003, RN-38: through the switch the administrator does not reach report content, so it
+  // neither sends nor decides a report (versao_relatorio_insercao, parecer_relatorio_insercao)
+  const leRelatorio = !contextoAdministrador;
   // app.pode_assinar (RF019): each party signs for itself
   const assina: Record<ParteAssinatura, boolean> = { ESTUDANTE: estudante, INSTITUICAO: coordenacao, CONCEDENTE: concedente };
   return {
@@ -46,8 +51,8 @@ export function acoesNoEstagio(papeis: PapeisNoEstagio) {
     cancelarFrequencia: estudante || coordenacao,
     homologarFrequencia: supervisor,
     // ENVIO_RESTRITO_AO_ESTUDANTE (RF037), ANALISE_RESTRITA_AO_ORIENTADOR (RF038)
-    enviarRelatorio: estudante,
-    decidirRelatorio: orientador,
+    enviarRelatorio: estudante && leRelatorio,
+    decidirRelatorio: orientador && leRelatorio,
     // ACOMPANHAMENTO_RESTRITO_AO_ORIENTADOR (RF033)
     registrarAcompanhamento: orientador,
     // avaliacao_insercao (RF042)

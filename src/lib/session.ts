@@ -18,7 +18,7 @@ export type SessionUser = {
 export type ContextoDaSessao = { nomeTitular: string };
 
 export type ResolvedSession = {
-  /** Whose eyes the request sees through: the account being viewed while a switch is open. */
+  /** Who the request acts as: the account switched to while a switch is open. */
   identity: Identity;
   user: SessionUser;
   /** The person signed in. Differs from identity only during a switch (RF003). */
@@ -68,7 +68,7 @@ export async function resolveSession(requestHeaders: Headers): Promise<ResolvedS
   if (!aberto) return proprio;
   return {
     ...proprio,
-    identity: { userId: aberto.usuarioId, somenteLeitura: true } as Identity,
+    identity: { userId: aberto.usuarioId, titularId: titular.userId } as Identity,
     contexto: { nomeTitular: proprio.user.nome },
     user: { id: aberto.usuarioId, nome: aberto.nome, email: aberto.email, trocaSenhaObrigatoria: false, senhaProvisoriaExpiraEm: null },
   };
