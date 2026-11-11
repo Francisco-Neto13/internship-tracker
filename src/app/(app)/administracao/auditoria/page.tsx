@@ -71,6 +71,11 @@ const COLUNAS: DataTableColumn<Registro>[] = [
           <span className="min-w-0">
             <span className="block truncate text-navy-900">{registro.autorNome ?? "Sem autor"}</span>
             <span className="block truncate text-xs text-navy-900/65">{registro.autorEmail}</span>
+            {registro.titularId && (
+              <span className="block truncate text-xs text-status-pending-text" data-testid="auditoria-feito-por">
+                Feito por {registro.titularNome ?? "administrador"}, na troca de perfil
+              </span>
+            )}
           </span>
         </span>
       ) : (

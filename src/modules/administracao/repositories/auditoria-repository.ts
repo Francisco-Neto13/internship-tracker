@@ -1,4 +1,5 @@
 import { and, count, desc, eq, sql, type SQL } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { auditoria, usuario } from "@/db/schema";
 import type { Transaction } from "@/db/with-user";
 
@@ -22,6 +23,10 @@ export type AuditoriaRow = {
 export type AuditoriaDetalhadaRow = AuditoriaRow & {
   autorNome: string | null;
   autorEmail: string | null;
+  /** RF003: the administrator who acted as the author through the profile switch. */
+  titularId: string | null;
+  titularNome: string | null;
+  titularEmail: string | null;
   dadosAnteriores: unknown;
   dadosNovos: unknown;
 };
@@ -68,6 +73,8 @@ export async function findUltimosRegistros(tx: Transaction, limit: number): Prom
   return tx.select(colunas).from(auditoria).orderBy(desc(auditoria.id)).limit(limit);
 }
 
+const titular = alias(usuario, "titular");
+
 /** Newest first, with the author's name and the row data before and after (RF066). */
 export async function findRegistros(
   tx: Transaction,
@@ -79,11 +86,15 @@ export async function findRegistros(
       ...colunas,
       autorNome: usuario.nome,
       autorEmail: usuario.email,
+      titularId: auditoria.titularId,
+      titularNome: titular.nome,
+      titularEmail: titular.email,
       dadosAnteriores: auditoria.dadosAnteriores,
       dadosNovos: auditoria.dadosNovos,
     })
     .from(auditoria)
     .leftJoin(usuario, eq(usuario.id, auditoria.usuarioId))
+    .leftJoin(titular, eq(titular.id, auditoria.titularId))
     .where(condicoes(filtro))
     .orderBy(desc(auditoria.id))
     .limit(pagina.limit)
