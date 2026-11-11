@@ -146,3 +146,29 @@ export const vinculoPerfil = pgTable(
     check("vinculo_perfil_vigencia_valida", sql`${t.vigenciaFim} is null or ${t.vigenciaFim} > ${t.vigenciaInicio}`),
   ],
 );
+
+// RF003: the administrator sees the system as another account, read only, to check what each
+// profile reaches. One row per switch, tied to the administrator's session; ending it fills
+// encerrado_em and the row stays as the record of who looked through whose eyes (RN-28).
+export const contextoAdministrador = pgTable(
+  "contexto_administrador",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    administradorId: uuid("administrador_id")
+      .notNull()
+      .references(() => usuario.id),
+    usuarioId: uuid("usuario_id")
+      .notNull()
+      .references(() => usuario.id),
+    // No foreign key: the session row is deleted at sign-out, the record of the switch is not
+    sessaoId: uuid("sessao_id").notNull(),
+    iniciadoEm: timestamp("iniciado_em", { withTimezone: true }).notNull().defaultNow(),
+    encerradoEm: timestamp("encerrado_em", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("contexto_administrador_sessao_aberta").on(t.sessaoId).where(sql`${t.encerradoEm} is null`),
+    index("contexto_administrador_administrador_idx").on(t.administradorId, t.iniciadoEm.desc()),
+    check("contexto_administrador_outra_conta", sql`${t.administradorId} <> ${t.usuarioId}`),
+    check("contexto_administrador_encerramento_valido", sql`${t.encerradoEm} is null or ${t.encerradoEm} >= ${t.iniciadoEm}`),
+  ],
+);

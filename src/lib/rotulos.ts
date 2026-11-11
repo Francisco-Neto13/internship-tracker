@@ -72,6 +72,7 @@ export function humanizarCodigos(texto: string): string {
 export const TABELA_AUDITORIA: Record<string, string> = {
   usuario: "Conta de usuário",
   vinculo_perfil: "Perfil e vínculo",
+  contexto_administrador: "Registro de troca de perfil",
   curso: "Curso",
   estudante: "Estudante",
   parametro_institucional: "Parâmetro institucional",

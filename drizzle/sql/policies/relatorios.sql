@@ -32,8 +32,9 @@ alter table public.versao_relatorio enable row level security;
 
 grant select, insert on public.versao_relatorio to app_runtime;
 
+-- RF003: the administrator viewing as another account does not read report content
 create policy versao_relatorio_leitura on public.versao_relatorio for select to app_runtime
-  using (app.pode_ler_relatorios(app.estagio_do_relatorio(relatorio_id)));
+  using (not (select app.em_contexto_administrador()) and app.pode_ler_relatorios(app.estagio_do_relatorio(relatorio_id)));
 
 create policy versao_relatorio_insercao on public.versao_relatorio for insert to app_runtime with check (
   enviado_por_usuario_id = (select app.usuario_atual_id())
@@ -46,7 +47,7 @@ alter table public.anexo_relatorio enable row level security;
 grant select, insert on public.anexo_relatorio to app_runtime;
 
 create policy anexo_relatorio_leitura on public.anexo_relatorio for select to app_runtime
-  using (app.pode_ler_relatorios(app.estagio_da_versao(versao_relatorio_id)));
+  using (not (select app.em_contexto_administrador()) and app.pode_ler_relatorios(app.estagio_da_versao(versao_relatorio_id)));
 
 create policy anexo_relatorio_insercao on public.anexo_relatorio for insert to app_runtime
   with check (app.e_estudante_do_estagio(app.estagio_da_versao(versao_relatorio_id)));

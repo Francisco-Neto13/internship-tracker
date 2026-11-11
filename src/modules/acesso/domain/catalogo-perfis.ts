@@ -21,7 +21,7 @@ const ALCANCE: Record<Perfil, string> = {
   SUPERVISOR: "Estágios em que consta como supervisor vigente",
   COORDENACAO: "Estudantes e estágios do curso sob sua coordenação",
   CONCEDENTE: "Estágios da própria concedente",
-  ADMINISTRADOR: "Parametrização, usuários e auditoria; sem acesso a conteúdo de relatório ou atestado",
+  ADMINISTRADOR: "Parametrização, usuários e auditoria; vê o sistema como outra conta, só para leitura; sem acesso a conteúdo de relatório ou atestado",
 };
 
 const EXIGEM_CONCEDENTE: readonly Perfil[] = ["SUPERVISOR", "CONCEDENTE"];

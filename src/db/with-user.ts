@@ -17,6 +17,12 @@ export async function withUser<T>(identity: Identity, work: (tx: Transaction) =>
   }
 
   return getAppDatabase().transaction(async (tx) => {
+    // RF003: an administrator viewing as another account reads, never writes, and does not
+    // reach report content or documents (app.em_contexto_administrador)
+    if (identity.somenteLeitura) {
+      await tx.execute(sql`set transaction read only`);
+      await tx.execute(sql`select set_config('app.contexto_administrador', 'on', true)`);
+    }
     await tx.execute(sql`select set_config('app.usuario_id', ${identity.userId}, true)`);
     return work(tx);
   });

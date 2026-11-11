@@ -149,6 +149,7 @@ ferramenta.
 - Tela restrita por perfil começa com `identidadeDaTela(rota)` (`src/lib/acesso-tela.ts`), que lê o registro do menu e leva a `/sem-acesso`. Rota nova entra em `NAVEGACAO` ou em `ROTAS_SEM_MENU`, e na matriz de `e2e/visibilidade-por-perfil.spec.ts`. Aba ou formulário que o perfil não usa não aparece: não mostrar a aba só para dizer que está fora do alcance.
 - Arquivo gerado por rota `/api/v1` baixa com `BaixarArquivo`, nunca por link direto: num link, a recusa da API abre o JSON na tela. PDF e CSV mostram nomes de `rotulos.ts` e datas de `datas.ts`, não códigos nem UUID.
 - Texto que a pessoa lê não cita RF, RN nem DER: a rastreabilidade fica nos comentários e no campo `requisito` da API. Escolher uma pessoa é por nome (`BuscaConta`), nunca por código interno. A auditoria aparece em palavras por `src/lib/auditoria-texto.ts`; os valores exatos ficam no banco e na API.
+- Cabeçalhos de segurança de toda resposta ficam em `next.config.ts`, e `e2e/cabecalhos.spec.ts` confere: o proxy do servidor não define nenhum. Não há CSP de script, porque exigiria nonce em cada render; quem incluir uma mede as telas antes.
 - Limite e formato de campo saem de `src/lib/campos.ts`, lido pelo schema Zod e pela tela (issue #97): a tela só ajuda, o servidor decide. Campo de texto sem limite não passa no lint nem compila em `FormularioApi`. Senha não usa `maxLength`, porque colar cortaria sem avisar: o formulário confere. CNPJ aceita letras nos 12 primeiros caracteres (IN RFB 2.229/2024).
 - Formulário avisa o erro ao sair do campo, com o schema da rota que recebe o envio (`useValidacao`, `src/shared/ui/validacoes.ts`; `FormularioApi` exige `validacao`). Salvar confere tudo e leva ao primeiro erro, sem enviar. Schema que lê `@/db/schema` não vai ao navegador: ali, escrever a regra em `validacoes.ts` com os valores de `LIMITE`.
 - Ação de um clique cujo efeito é caro ou impossível de desfazer pede confirmação dizendo a consequência
@@ -158,6 +159,13 @@ ferramenta.
   dela naquele estágio pelas mesmas funções `app.*` das políticas, e cada ação cita a regra que a decide: regra de escrita nova
   entra lá junto com a tela. Fila de decisão lista só o que quem vê decide (`analisaveis` nas atividades). A tela só esconde;
   quem decide continua sendo a API e o banco (`e2e/acoes-por-perfil.spec.ts`).
+- Troca de perfil (RF003): o administrador vê o sistema como outra conta pelo botão "Ver como". A troca é uma linha de
+  `contexto_administrador` ligada à sessão, auditada e relida a cada requisição em `resolveSession` (`src/lib/session.ts`):
+  `identity` passa a ser a conta vista, com `somenteLeitura`, e `titular` continua sendo quem entrou. `withUser` abre a
+  transação `read only` e liga `app.em_contexto_administrador()`, que esconde o conteúdo do relatório (versões e anexos) e
+  recusa documento: o limite do administrador vale também na troca. `authenticatedRoute` recusa escrita com 403
+  `CONTEXTO_SOMENTE_LEITURA`; só as rotas com `comoTitular` (`/api/v1/contexto`) agem como quem entrou. O cookie
+  `contexto-perfil` só evita a consulta nas outras sessões. Testes: `tests/db/contexto-administrador.test.ts`, `e2e/troca-de-perfil.spec.ts`.
 - Estado de listagem mora na URL e é resolvido no servidor: `?busca=&pagina=&por_pagina=&ordem=campo|-campo&<filtros>`
   (`src/lib/consulta.ts`, componentes `Paginacao`, `BarraFiltros`, `DataTable`). Ordem desconhecida cai no padrão.
   O link de volta de um registro leva `?voltar=`, aceito só com o prefixo da própria listagem.
@@ -274,7 +282,7 @@ auditoria grava como dono. Com `FORCE`, as políticas e a auditoria quebram.
 são apagadas e recriadas na mesma transação. O arquivo é a fonte da verdade.
 
 Funções auxiliares ficam no schema `app`, em `security definer` com `search_path = ''`:
-`app.usuario_atual_id()`, `app.tem_perfil_vigente(perfil)`, `app.coordena_curso(curso_id)`,
+`app.usuario_atual_id()`, `app.em_contexto_administrador()`, `app.tem_perfil_vigente(perfil)`, `app.coordena_curso(curso_id)`,
 `app.coordena_estudante_usuario(usuario_id)`, `app.representa_concedente(concedente_id)`,
 `app.e_responsavel_vigente(estagio_id, papel)`, `app.convenio_vigente_em(convenio_id, concedente_id, data)`,
 `app.estagios_legiveis(academico)`, `app.pode_ler_relatorios(estagio_id)`, `app.hoje()` (data em
@@ -297,7 +305,7 @@ Perfil sozinho não basta. A permissão é a interseção de perfil e vínculo:
 | Supervisor | Estágios em que consta como supervisor vigente |
 | Coordenação | Estudantes e estágios do curso sob sua coordenação |
 | Concedente | Estágios da própria concedente |
-| Administrador | Parametrização e auditoria; sem acesso a conteúdo de relatório ou atestado |
+| Administrador | Parametrização e auditoria; vê o sistema como outra conta, só para leitura (troca de perfil); sem acesso a conteúdo de relatório ou atestado |
 
 Política `SELECT` de tabela em que o app insere com `RETURNING` (todo `insert` do Drizzle)
 precisa decidir pelas colunas da própria linha (`estudante_id = ...`, `app.coordena_curso(curso_id)`),

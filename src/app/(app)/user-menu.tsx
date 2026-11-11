@@ -25,7 +25,7 @@ function iniciaisDoNome(nome: string) {
   );
 }
 
-export function UserMenu({ nome, perfis }: { nome: string; perfis: string[] }) {
+export function UserMenu({ nome, perfis, emContexto = false }: { nome: string; perfis: string[]; emContexto?: boolean }) {
   const router = useRouter();
   const [saindo, setSaindo] = useState(false);
   const [trocandoSenha, setTrocandoSenha] = useState(false);
@@ -81,10 +81,13 @@ export function UserMenu({ nome, perfis }: { nome: string; perfis: string[] }) {
         <DropdownMenuSeparator className="m-0" />
 
         <div className="p-1">
-          <DropdownMenuItem onSelect={() => setTrocandoSenha(true)} className="gap-2.5 px-3 py-2 text-sm font-medium">
-            <KeyRound className="size-4" />
-            Trocar senha
-          </DropdownMenuItem>
+          {/* RF003: the password belongs to the account being viewed, which the switch never changes */}
+          {!emContexto && (
+            <DropdownMenuItem onSelect={() => setTrocandoSenha(true)} className="gap-2.5 px-3 py-2 text-sm font-medium">
+              <KeyRound className="size-4" />
+              Trocar senha
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             variant="destructive"
             disabled={saindo}

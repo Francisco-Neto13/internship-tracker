@@ -52,3 +52,8 @@ export function triggerRuleDetail(error: unknown, code: string): string | undefi
   if (pg?.code !== "P0001" || !pg.message.startsWith(`${code}:`)) return undefined;
   return pg.message.slice(code.length + 1).trim();
 }
+
+/** A write inside a read-only transaction: the administrator is viewing as another account (RF003). */
+export function isReadOnlyTransaction(error: unknown): boolean {
+  return findPgError(error)?.code === "25006";
+}
