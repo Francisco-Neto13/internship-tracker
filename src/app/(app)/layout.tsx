@@ -9,6 +9,7 @@ import { listNotificacoes } from "@/shared/notificacoes/notificacao-service";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/shared/ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
 import { TopbarTitle } from "./topbar-title";
+import { FaixaContexto, TrocaDePerfil } from "./troca-de-perfil";
 import { UserMenu } from "./user-menu";
 
 // Redirect e conveniencia de navegacao; o dado continua protegido pela RLS via withUser mesmo
@@ -27,6 +28,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const perfis = vinculos.map((vinculo) => vinculo.perfil);
   const rotulosPerfis = perfis.map((perfil) => ROTULO_PERFIL[perfil]);
   const { naoLidas } = await listNotificacoes(session.identity, { apenasNaoLidas: true, limite: 1 });
+  // RF003: during a switch the profiles above are the viewed account's; the banner offers the switch
+  const podeTrocarPerfil = !session.contexto && perfis.includes("ADMINISTRADOR");
 
   return (
     <SidebarProvider
@@ -42,11 +45,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </a>
       <AppSidebar perfis={perfis} naoLidas={naoLidas} />
       <SidebarInset>
+        {session.contexto && (
+          <FaixaContexto nome={session.user.nome} perfis={rotulosPerfis} nomeTitular={session.contexto.nomeTitular} rotulos={ROTULO_PERFIL} />
+        )}
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-navy-900/10 bg-white/95 px-4 backdrop-blur md:px-6">
           <SidebarTrigger />
           <div className="h-6 w-px bg-navy-900/10" />
           <TopbarTitle />
           <div className="flex-1" />
+          {podeTrocarPerfil && <TrocaDePerfil rotulos={ROTULO_PERFIL} />}
           <Link
             href="/notificacoes"
             aria-label={naoLidas > 0 ? `Notificações: ${naoLidas} não lidas` : "Notificações"}
@@ -59,7 +66,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </span>
             )}
           </Link>
-          <UserMenu nome={session.user.nome} perfis={rotulosPerfis} />
+          <UserMenu nome={session.user.nome} perfis={rotulosPerfis} emContexto={session.contexto !== null} />
         </header>
         {/* Sem bg proprio: o cartao branco so se destaca se a pagina atras for levemente
             tingida (nevoa-50 no body). Tres planos: sidebar navy, pagina tingida, cartao branco. */}

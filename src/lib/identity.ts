@@ -9,6 +9,11 @@ declare const identityBrand: unique symbol;
  */
 export type Identity = {
   readonly userId: string;
+  /**
+   * RF003: an administrator viewing the system as this account. withUser opens a read-only
+   * transaction, so nothing done in this view is saved, whatever the screen offers.
+   */
+  readonly somenteLeitura?: true;
   readonly [identityBrand]: true;
 };
 

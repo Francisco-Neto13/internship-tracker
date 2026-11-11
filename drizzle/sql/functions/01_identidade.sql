@@ -20,6 +20,18 @@ as $$
   select nullif(current_setting('app.usuario_id', true), '')::uuid
 $$;
 
+-- RF003: set with app.usuario_id by src/db/with-user.ts while an administrator views the system
+-- as another account. It only takes reach away (report content, documents), so a caller that
+-- sets it on its own gains nothing.
+create or replace function app.em_contexto_administrador()
+returns boolean
+language sql
+stable
+set search_path = ''
+as $$
+  select coalesce(current_setting('app.contexto_administrador', true), '') = 'on'
+$$;
+
 create or replace function app.tem_perfil_vigente(p_perfil public.perfil)
 returns boolean
 language sql
@@ -108,11 +120,13 @@ revoke all on function app.buscar_contas_estudante(text) from public;
 grant execute on function app.buscar_contas_estudante(text) to app_runtime;
 
 revoke all on function app.usuario_atual_id() from public;
+revoke all on function app.em_contexto_administrador() from public;
 revoke all on function app.tem_perfil_vigente(public.perfil) from public;
 revoke all on function app.coordena_curso(uuid) from public;
 revoke all on function app.coordena_estudante_usuario(uuid) from public;
 
 grant execute on function app.usuario_atual_id() to app_runtime;
+grant execute on function app.em_contexto_administrador() to app_runtime;
 grant execute on function app.tem_perfil_vigente(public.perfil) to app_runtime;
 grant execute on function app.coordena_curso(uuid) to app_runtime;
 grant execute on function app.coordena_estudante_usuario(uuid) to app_runtime;

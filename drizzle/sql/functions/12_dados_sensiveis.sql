@@ -15,6 +15,10 @@ declare
   v_documento record;
   v_perfil text;
 begin
+  -- RF003: the administrator viewing as another account does not open documents (RN-38)
+  if app.em_contexto_administrador() then
+    raise exception 'CONTEXTO_SEM_DOCUMENTO: documentos não abrem enquanto o administrador vê o sistema como outra conta';
+  end if;
   if not app.pode_baixar_documento(p_documento_id) then
     return false;
   end if;
