@@ -474,6 +474,9 @@ PDF em 5 s, uptime ≥ 99%) são alvo da equipe, não requisito.
   `DATABASE_AUTH_URL` é `auth_runtime`, e a migração roda num passo separado com
   `DATABASE_MIGRATION_URL`, nunca no build (o build não depende de banco). Conectar a aplicação
   com o dono do banco **contorna toda a RLS**. O PostgreSQL não publica porta na internet.
+- Porta 5432 ocupada na máquina (PostgreSQL instalado fora do Docker): `POSTGRES_PORT` no `.env` muda a porta publicada
+  pelo Compose, as URLs do `.env` usam a mesma porta, e as de teste vão num `.env.test.local` (ignorado pelo git), lido
+  antes do `.env.test` pelo Vitest e pelo `npm run ci`. O `.env.test` e o CI ficam na 5432.
 - O init do Postgres (`docker/postgres/init`) só roda quando o volume é criado. Se o
   container já existia antes dos papéis, recriar: `docker compose down -v` e subir de novo.
 - Fora do init local, a migração cria `app_runtime` e `auth_runtime` sem login. Habilitar uma

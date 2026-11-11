@@ -86,8 +86,13 @@ function startDatabase() {
   return run("docker", ["compose", "up", "-d", "postgres", "--wait"]);
 }
 
+/** .env.test, overridden by the machine's .env.test.local when present (same order as vitest.config.mts). */
 function readTestEnv() {
-  return parseEnv(readFileSync(path.join(ROOT, ".env.test"), "utf8"));
+  const local = path.join(ROOT, ".env.test.local");
+  return {
+    ...parseEnv(readFileSync(path.join(ROOT, ".env.test"), "utf8")),
+    ...(existsSync(local) ? parseEnv(readFileSync(local, "utf8")) : {}),
+  };
 }
 
 function portInUse(port) {
