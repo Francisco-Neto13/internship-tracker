@@ -1,8 +1,9 @@
 # Production on the own server (issue #63). Everything lives in the encrypted volume at
 # DIR_DADOS, secrets included, so nothing starts until scripts/servidor/cofre-abrir.sh opens it.
 #   docker compose --env-file /srv/dados/.env -f docker-compose.prod.yml up -d --wait
-# The server proxy, outside this project (/srv/proxy), owns ports 80 and 443 and joins this
-# network. Docker bypasses ufw for published ports: never add one here.
+# The server proxy, outside this project (/srv/proxy), owns ports 80 and 443 and reaches the app and
+# the storage through borda-internship, a network only the two of them share (created on the server,
+# outside both composes). Docker bypasses ufw for published ports: never add one here.
 name: internship-tracker-prod
 
 services:
@@ -13,6 +14,12 @@ services:
     # The server is shared with other projects: each service has a memory ceiling, so a leak or a
     # spike here stops this container instead of the whole machine (/srv/REGRAS-DA-VPS.md)
     mem_limit: 768m
+    # CPU and process ceilings, and no privilege escalation (CIS Docker 5.11, 5.25, 5.28)
+    cpus: 2
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    networks: [default, borda-internship]
     depends_on:
       postgres:
         condition: service_healthy
@@ -34,9 +41,13 @@ services:
       CRON_SECRET: ${CRON_SECRET:?}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
-      interval: 5s
+      # Every 30 s once up; while starting, every 5 s for up to 150 s (start_interval), so
+      # depends_on and up --wait stay fast. Each check starts a whole node process.
+      interval: 30s
       timeout: 5s
-      retries: 30
+      retries: 3
+      start_period: 150s
+      start_interval: 5s
 
   # Runs on demand: migration, bucket and first administrator
   ferramentas:
@@ -54,6 +65,10 @@ services:
     image: internship-tracker-postgres
     restart: unless-stopped
     mem_limit: 768m
+    cpus: 1
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
     # RNF-12: every change is archived, at most 5 minutes after it happens on a quiet system
     command: ["postgres", "-c", "archive_mode=on", "-c", "archive_command=pgbackrest --stanza=main archive-push %p", "-c", "archive_timeout=300"]
     environment:
@@ -70,9 +85,11 @@ services:
       - ${DIR_DADOS:?}/backup:/backup
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d internship_tracker"]
-      interval: 2s
+      interval: 30s
       timeout: 3s
-      retries: 30
+      retries: 3
+      start_period: 60s
+      start_interval: 2s
 
   # Each bucket reserves 7 volumes × this limit on the disk: 896 MB here, 7 GB with the default.
   # Tag pinned: change it on purpose, after running
@@ -85,6 +102,11 @@ services:
       -master.volumeSizeLimitMB=128
     restart: unless-stopped
     mem_limit: 768m
+    cpus: 1
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    networks: [default, borda-internship]
     environment:
       AWS_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?}
       AWS_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?}
@@ -92,6 +114,14 @@ services:
       - ${DIR_DADOS:?}/armazenamento:/data
     healthcheck:
       test: ["CMD", "nc", "-z", "127.0.0.1", "8333"]
-      interval: 5s
+      interval: 30s
       timeout: 3s
-      retries: 30
+      retries: 3
+      start_period: 150s
+      start_interval: 5s
+
+networks:
+  # Shared only with the server proxy (/srv/proxy). Created once on the server, outside both
+  # composes, so neither one removes it: docker network create borda-internship
+  borda-internship:
+    external: true
