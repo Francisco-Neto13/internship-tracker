@@ -97,7 +97,7 @@ services:
   storage:
     image: chrislusf/seaweedfs:4.06
     command: >-
-      server -dir=/data -ip=storage -filer -s3 -s3.port=8333
+      server -dir=/data -ip=storage -ip.bind=0.0.0.0 -filer -s3 -s3.port=8333
       -filer.encryptVolumeData -s3.encryptVolumeData
       -master.volumeSizeLimitMB=128
     restart: unless-stopped
