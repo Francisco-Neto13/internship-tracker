@@ -42,8 +42,9 @@ mkdir -p "$PONTO/postgres" "$PONTO/armazenamento" "$PONTO/backup/pgbackrest" "$P
 # The user of the postgres image writes the database backups
 chown -R 999:999 "$PONTO/backup/pgbackrest" "$PONTO/backup/log"
 
+# The server rules, vps-espaco and the Docker defaults belong to the vps-chiconeto repository
+# (/srv/servidor), which applies them; this deploy no longer does.
 cd "$CODIGO"
-sh scripts/servidor/configurar-vps.sh
 # The build needs room, and a full disk stops the database along with it
 LIVRE_GB=$(df -BG --output=avail /srv | tail -1 | tr -dc 0-9)
 if [ "$LIVRE_GB" -lt 8 ]; then
