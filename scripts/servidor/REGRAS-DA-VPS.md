@@ -28,12 +28,12 @@ Não remover.
 
 ## Memória
 
-A VPS tem 8 GB e nenhum swap. Contêiner sem teto pode consumir a máquina inteira e derrubar todos os
+A VPS tem 12 GB e nenhum swap. Contêiner sem teto pode consumir a máquina inteira e derrubar todos os
 projetos, não só o dele.
 
 1. **Todo serviço que fica no ar tem `mem_limit` no compose.** Estourou, o kernel mata só aquele
    contêiner e o `restart` o sobe de novo.
-2. **A soma dos tetos fica abaixo de 5 GB.** O resto é do sistema e dos builds, que rodam fora dos
+2. **A soma dos tetos fica abaixo de 8 GB.** O resto é do sistema e dos builds, que rodam fora dos
    contêineres e pedem cerca de 2 GB cada.
 3. **Tmpfs conta como memória do contêiner:** sempre com `size=`.
 4. **Ver uso e teto:** `docker stats --no-stream`. Mortes por falta de memória:
@@ -59,7 +59,13 @@ Quem mexer aqui não pode derrubar o que já está no ar.
   sem autorização. Outro projeto com acesso de administrador alcança esses dados: com dados reais, a
   recomendação é separar a VPS.
 - **Docker só sobe depois do cofre.** Depois de reiniciar, todos os contêineres, de qualquer projeto,
-  ficam parados até alguém rodar `cofre-abrir.sh`. Nunca habilitar o Docker no boot.
+  ficam parados até alguém rodar `cofre-abrir.sh`. Nunca habilitar o Docker no boot. Depois de um reboot:
+  1. `sh /srv/internship-tracker/scripts/servidor/cofre-abrir.sh` (pede a senha do cofre). O script sobe
+     só o tracker.
+  2. Gastos: `docker start gastos-prod-postgres-1` e, depois de o banco ficar healthy,
+     `docker start gastos-prod-gastos-1`. Não usar `docker compose up -d` sem `-f` em `/srv/gastos`: o
+     compose padrão da pasta é o de dev.
+  3. Conferir com `docker ps -a`.
 - **Portas 80 e 443 são do proxy do servidor, em `/srv/proxy`.** Ele não pertence a nenhum projeto. O
   projeto novo entra com um arquivo em `/srv/proxy/sites/`, a rede `borda` no compose dele e
   `sh /srv/proxy/recarregar.sh`, sem mexer no tracker. O Docker ignora o ufw: contêiner não publica porta.
