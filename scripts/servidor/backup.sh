@@ -48,6 +48,12 @@ trap - EXIT
 export RESTIC_REPOSITORY=rclone:backup:internship-tracker
 export RESTIC_PASSWORD_FILE="$CONFIG/senha"
 export RCLONE_CONFIG="$CONFIG/rclone.conf"
+# The timer runs without HOME: with no cache, restic reads the whole index from Drive every hour,
+# and those extra requests are what hits the Drive quota
+export RESTIC_CACHE_DIR=/var/cache/restic-tracker
+# A lock Drive refused to delete would make every later run fail (it happened to the Gastos and the
+# Muda, 13/11 to 15/11). unlock only removes locks of processes that no longer exist
+restic unlock --quiet
 restic backup --quiet --exclude "$ARMAZENAMENTO/filerldb2" "$PONTO/backup" "$ARMAZENAMENTO" "$PONTO/.env"
 if [ "$HORA" = 07 ]; then
   restic forget --quiet --prune --keep-hourly 24 --keep-daily 14 --keep-weekly 8
