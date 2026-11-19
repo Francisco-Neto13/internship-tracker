@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
     # The server is shared with other projects: each service has a memory ceiling, so a leak or a
     # spike here stops this container instead of the whole machine (/srv/REGRAS-DA-VPS.md)
-    mem_limit: 768m
+    mem_limit: 512m
     # CPU and process ceilings, and no privilege escalation (CIS Docker 5.11, 5.25, 5.28)
     cpus: 2
     pids_limit: 256
@@ -101,7 +101,7 @@ services:
       -filer.encryptVolumeData -s3.encryptVolumeData
       -master.volumeSizeLimitMB=128
     restart: unless-stopped
-    mem_limit: 768m
+    mem_limit: 384m
     cpus: 1
     pids_limit: 256
     security_opt:
